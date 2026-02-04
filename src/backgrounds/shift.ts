@@ -196,8 +196,8 @@ class SimplexNoise {
 const circleCount = 150;
 const circlePropCount = 8;
 const circlePropsLength = circleCount * circlePropCount;
-const baseSpeed = 0.05;
-const rangeSpeed = 0.4;
+const baseSpeed = 0.1;
+const rangeSpeed = 1;
 const baseTTL = 150;
 const rangeTTL = 200;
 const baseRadius = 100;
@@ -211,7 +211,6 @@ const backgroundColor = 'hsla(0,0%,5%,1)';
 let container: Element | null;
 let canvas: { a: HTMLCanvasElement; b: HTMLCanvasElement };
 let ctx: { a: CanvasRenderingContext2D; b: CanvasRenderingContext2D };
-let dpr: number;
 let circleProps: Float32Array;
 let simplex: SimplexNoise;
 let baseHue: number;
@@ -228,8 +227,6 @@ function setup() {
   initCircles();
   draw();
   window.addEventListener('resize', resize);
-  window.visualViewport?.addEventListener('resize', resize);
-  window.addEventListener('orientationchange', resize);
 }
 
 function initCircles() {
@@ -262,7 +259,7 @@ function initCircle(i: number) {
 }
 
 function updateCircles() {
-  baseHue += 0.2;
+  baseHue++;
   for (let i = 0; i < circlePropsLength; i += circlePropCount) {
     updateCircle(i);
   }
@@ -330,23 +327,15 @@ function createCanvas() {
 }
 
 function resize() {
-  const viewport = window.visualViewport;
-  const width = viewport?.width ?? window.innerWidth;
-  const height = viewport?.height ?? window.innerHeight;
-  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const { innerWidth, innerHeight } = window;
 
-  canvas.a.width = width * dpr;
-  canvas.a.height = height * dpr;
-  canvas.b.width = width * dpr;
-  canvas.b.height = height * dpr;
+  canvas.a.width = innerWidth;
+  canvas.a.height = innerHeight;
+  ctx.a.drawImage(canvas.b, 0, 0);
 
-  canvas.a.style.width = `${width}px`;
-  canvas.a.style.height = `${height}px`;
-  canvas.b.style.width = `${width}px`;
-  canvas.b.style.height = `${height}px`;
-
-  ctx.a.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.b.setTransform(dpr, 0, 0, dpr, 0, 0);
+  canvas.b.width = innerWidth;
+  canvas.b.height = innerHeight;
+  ctx.b.drawImage(canvas.a, 0, 0);
 }
 
 function renderLayer() {
