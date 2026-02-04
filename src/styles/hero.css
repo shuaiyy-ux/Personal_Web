@@ -146,10 +146,9 @@
 
 /* ---------- Scroll Cue ---------- */
 .hero__scroll-cue {
-  position: absolute;
-  bottom: var(--space-14);
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
+  margin-top: var(--space-6);
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -219,7 +218,7 @@
   }
   
   .hero__scroll-cue {
-    bottom: var(--space-14);
+    margin-top: var(--space-5);
   }
 }
 

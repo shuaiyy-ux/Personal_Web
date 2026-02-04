@@ -25,7 +25,7 @@ export function renderHero(): string {
           <h1 id="hero-headline" class="hero__headline">Let Machine Work, So We Don't Have To</h1>
           <p class="hero__subheadline">Automating the mundane. Amplifying the meaningful.</p>
         </div>
-        
+
         <!-- Scroll Cue -->
         <div class="hero__scroll-cue" aria-hidden="true">
           <span class="hero__scroll-text">scroll</span>
