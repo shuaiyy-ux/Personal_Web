@@ -10,6 +10,7 @@
   justify-content: center;
   min-height: 100vh;
   padding: var(--space-8) var(--space-4);
+  padding-bottom: var(--space-14);
   overflow: hidden;
 }
 
@@ -19,6 +20,7 @@
   text-align: center;
   max-width: 56rem;
   padding: var(--space-12);
+  gap: var(--space-6);
 }
 
 /* ---------- Index Label ---------- */
@@ -116,6 +118,9 @@
   transform: translateY(20px);
   animation: hero-reveal var(--duration-reveal) var(--ease-smooth) forwards;
   animation-delay: var(--stagger-3);
+  display: grid;
+  gap: var(--space-5);
+  margin-bottom: var(--space-10);
 }
 
 .hero__headline {
@@ -142,15 +147,15 @@
 /* ---------- Scroll Cue ---------- */
 .hero__scroll-cue {
   position: absolute;
-  bottom: var(--space-8);
+  bottom: var(--space-14);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-1);
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-2xs);
   letter-spacing: var(--letter-spacing-wide);
   text-transform: lowercase;
   color: var(--color-fg-subtle);
@@ -191,8 +196,9 @@
 /* ---------- Mobile Adjustments ---------- */
 @media (max-width: 640px) {
   .hero {
-    min-height: 90vh;
+    min-height: 100vh;
     padding: var(--space-6) var(--space-4);
+    padding-bottom: var(--space-16);
   }
 
   .hero__content {
@@ -213,7 +219,7 @@
   }
   
   .hero__scroll-cue {
-    bottom: var(--space-6);
+    bottom: var(--space-14);
   }
 }
 

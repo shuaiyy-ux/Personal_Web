@@ -211,6 +211,7 @@ const backgroundColor = 'hsla(0,0%,5%,1)';
 let container: Element | null;
 let canvas: { a: HTMLCanvasElement; b: HTMLCanvasElement };
 let ctx: { a: CanvasRenderingContext2D; b: CanvasRenderingContext2D };
+let dpr: number;
 let circleProps: Float32Array;
 let simplex: SimplexNoise;
 let baseHue: number;
@@ -227,6 +228,8 @@ function setup() {
   initCircles();
   draw();
   window.addEventListener('resize', resize);
+  window.visualViewport?.addEventListener('resize', resize);
+  window.addEventListener('orientationchange', resize);
 }
 
 function initCircles() {
@@ -318,7 +321,7 @@ function createCanvas() {
     b: document.createElement('canvas'),
   };
   canvas.b.className = 'shift-canvas-layer';
-  canvas.b.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:var(--z-background, -1);`;
+  canvas.b.style.cssText = `position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:var(--z-background, -1);`;
   container?.appendChild(canvas.b);
   ctx = {
     a: canvas.a.getContext('2d') as CanvasRenderingContext2D,
@@ -327,15 +330,23 @@ function createCanvas() {
 }
 
 function resize() {
-  const { innerWidth, innerHeight } = window;
+  const viewport = window.visualViewport;
+  const width = viewport?.width ?? window.innerWidth;
+  const height = viewport?.height ?? window.innerHeight;
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-  canvas.a.width = innerWidth;
-  canvas.a.height = innerHeight;
-  ctx.a.drawImage(canvas.b, 0, 0);
+  canvas.a.width = width * dpr;
+  canvas.a.height = height * dpr;
+  canvas.b.width = width * dpr;
+  canvas.b.height = height * dpr;
 
-  canvas.b.width = innerWidth;
-  canvas.b.height = innerHeight;
-  ctx.b.drawImage(canvas.a, 0, 0);
+  canvas.a.style.width = `${width}px`;
+  canvas.a.style.height = `${height}px`;
+  canvas.b.style.width = `${width}px`;
+  canvas.b.style.height = `${height}px`;
+
+  ctx.a.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.b.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 function renderLayer() {
