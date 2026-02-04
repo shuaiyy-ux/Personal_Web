@@ -3,21 +3,21 @@
     "id": "email",
     "type": "email",
     "label": "Email",
-    "value": "mailto:hello@cmyao.com",
+    "value": "mailto:shuaiyy@uci.edu",
     "required": true
   },
   {
     "id": "linkedin",
     "type": "linkedin",
     "label": "LinkedIn",
-    "value": "https://linkedin.com/in/cmyao",
+    "value": "https://www.linkedin.com/in/shuaiyu-yao-b44631247/",
     "required": true
   },
   {
     "id": "github",
     "type": "github",
     "label": "GitHub",
-    "value": "https://github.com/cmyao",
+    "value": "https://github.com/shuaiyy-ux?tab=repositories",
     "required": true
   }
 ]

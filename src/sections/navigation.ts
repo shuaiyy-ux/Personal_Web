@@ -1,3 +1,13 @@
+import contactsData from '../data/contacts.json';
+
+interface ContactLink {
+  id: string;
+  type: string;
+  label: string;
+  value: string;
+  required: boolean;
+}
+
 interface NavBlock {
   label: string;
   description: string;
@@ -5,6 +15,25 @@ interface NavBlock {
   href: string;
   external: boolean;
 }
+
+// Per-contact copy so navigation stays curated while links stay single-sourced.
+const contactCopy: Record<string, { description: string; actionLabel: string }> = {
+  linkedin: {
+    description: "Let's connect — always open to new opportunities and conversations.",
+    actionLabel: 'Connect',
+  },
+  github: {
+    description: 'Code speaks louder. Check out my projects and experiments.',
+    actionLabel: 'View code',
+  },
+  email: {
+    description: 'Prefer inbox? Drop me a line.',
+    actionLabel: 'Send email',
+  },
+};
+
+const contacts = contactsData as ContactLink[];
+const requiredContacts = contacts.filter((c) => c.required);
 
 const navBlocks: NavBlock[] = [
   {
@@ -14,20 +43,20 @@ const navBlocks: NavBlock[] = [
     href: '/blog',
     external: false,
   },
-  {
-    label: 'LinkedIn',
-    description: "Let's connect — always open to new opportunities and conversations.",
-    actionLabel: 'Connect',
-    href: 'https://linkedin.com/in/cmyao',
-    external: true,
-  },
-  {
-    label: 'GitHub',
-    description: 'Code speaks louder. Check out my projects and experiments.',
-    actionLabel: 'View code',
-    href: 'https://github.com/cmyao',
-    external: true,
-  },
+  ...requiredContacts.map((contact) => {
+    const copy = contactCopy[contact.type] ?? {
+      description: 'Learn more or reach out here.',
+      actionLabel: 'Open link',
+    };
+
+    return {
+      label: contact.label,
+      description: copy.description,
+      actionLabel: copy.actionLabel,
+      href: contact.value,
+      external: contact.type !== 'email',
+    };
+  }),
 ];
 
 export function renderNavigation(): string {
