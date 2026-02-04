@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cmy.site/contracts/content-schema.json",
+  "title": "CM Yao Personal Site Content",
+  "type": "object",
+  "required": ["meta", "writing", "projects", "contacts"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["lastUpdated", "accent", "theme"],
+      "properties": {
+        "lastUpdated": { "type": "string", "format": "date" },
+        "accent": { "type": "string", "enum": ["red", "pink"] },
+        "theme": { "type": "string", "enum": ["light", "dark", "auto"] }
+      },
+      "additionalProperties": false
+    },
+    "writing": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "summary", "tags", "publishedAt", "url", "external"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "summary": { "type": "string", "minLength": 1, "maxLength": 160 },
+          "tags": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 5,
+            "items": { "type": "string", "minLength": 1, "maxLength": 24 },
+            "uniqueItems": true
+          },
+          "publishedAt": { "type": "string", "format": "date" },
+          "url": { "type": "string", "minLength": 1 },
+          "external": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "projects": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "summary", "tags", "githubUrl"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "summary": { "type": "string", "minLength": 1, "maxLength": 160 },
+          "tags": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 8,
+            "items": { "type": "string", "minLength": 1, "maxLength": 24 },
+            "uniqueItems": true
+          },
+          "githubUrl": { "type": "string", "minLength": 1 },
+          "liveUrl": { "type": "string" },
+          "thumbnail": { "type": "string" },
+          "order": { "type": "number" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "contacts": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "label", "value", "required"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "type": { "type": "string", "enum": ["email", "linkedin", "github", "other"] },
+          "label": { "type": "string", "minLength": 1, "maxLength": 60 },
+          "value": { "type": "string", "minLength": 1 },
+          "required": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

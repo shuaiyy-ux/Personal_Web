@@ -1,0 +1,23 @@
+[
+  {
+    "id": "speckit",
+    "title": "SpecKit",
+    "summary": "A specification-driven development toolkit for agentic workflows.",
+    "tags": ["TypeScript", "AI", "CLI"],
+    "githubUrl": "https://github.com/cmyao/speckit"
+  },
+  {
+    "id": "auto-pr-review",
+    "title": "Auto PR Review",
+    "summary": "GitHub Action that uses LLMs to leave meaningful code review comments.",
+    "tags": ["GitHub Actions", "AI"],
+    "githubUrl": "https://github.com/cmyao/auto-pr-review"
+  },
+  {
+    "id": "dotfiles",
+    "title": "Dotfiles",
+    "summary": "Opinionated macOS/Linux dev environment managed with chezmoi.",
+    "tags": ["Shell", "DevOps"],
+    "githubUrl": "https://github.com/cmyao/dotfiles"
+  }
+]

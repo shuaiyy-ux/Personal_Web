@@ -1,0 +1,76 @@
+/* ==========================================================================
+   CTA Section Styles
+   ========================================================================== */
+
+.cta {
+  padding: var(--space-16) var(--space-4);
+  text-align: center;
+}
+
+.cta__heading {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-fg);
+  margin-bottom: var(--space-6);
+}
+
+.cta__button {
+  display: inline-block;
+  padding: var(--space-4) var(--space-8);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--color-bg);
+  background: var(--color-accent);
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.cta__button:hover,
+.cta__button:focus-visible {
+  background: var(--color-fg);
+  transform: translateY(-2px);
+}
+
+.cta__button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+.cta__contacts {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+}
+
+.cta__contact-link {
+  font-size: var(--font-size-base);
+  color: var(--color-fg-muted);
+  font-weight: 500;
+  transition: color var(--transition-fast);
+}
+
+.cta__contact-link:hover,
+.cta__contact-link:focus-visible {
+  color: var(--color-accent);
+}
+
+@media (max-width: 640px) {
+  .cta__heading {
+    font-size: var(--font-size-xl);
+  }
+
+  .cta__button {
+    font-size: var(--font-size-base);
+    padding: var(--space-3) var(--space-6);
+  }
+
+  .cta__contacts {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+}

@@ -1,0 +1,35 @@
+/* ==========================================================================
+   Statement Section Styles
+   ========================================================================== */
+
+.statement {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+}
+
+.statement__icon {
+  font-size: var(--font-size-xl);
+  color: var(--color-accent);
+}
+
+.statement__text {
+  font-size: var(--font-size-xl);
+  font-weight: 500;
+  color: var(--color-fg-muted);
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 640px) {
+  .statement {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .statement__text {
+    font-size: var(--font-size-lg);
+  }
+}

@@ -1,50 +1,48 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+Version: 0.0.0 → 1.0.0
+Modified Principles: Initialized (Static Simplicity; Accessible by Default; Privacy and Minimal Data; Authentic Content and Traceability; Preview-Gated Deployments)
+Added Sections: Core Principles; Operational Constraints; Development Workflow; Governance
+Removed Sections: None
+Templates requiring updates:
+- ✅ .specify/templates/plan-template.md (Constitution Check remains aligned)
+- ✅ .specify/templates/spec-template.md (No constitution-driven changes)
+- ✅ .specify/templates/tasks-template.md (No constitution-driven changes)
+- ✅ .specify/templates/agent-file-template.md (No constitution-driven changes)
+- ✅ .specify/templates/checklist-template.md (No constitution-driven changes)
+- ⚠ .specify/templates/commands (directory not present; create if command docs needed)
+Follow-up TODOs: None
+-->
+
+# CMYAO_Personal_Web Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### Static Simplicity
+Keep the site static-first with minimal build tooling; prefer plain HTML/CSS/JS, no server-side runtimes, and only essential dependencies to reduce complexity and hosting risk.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### Accessible by Default
+Meet or exceed WCAG 2.1 AA for content, including keyboard navigation, color contrast, focus states, and text alternatives; no deployment passes without an accessibility pass (manual or automated).
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### Privacy and Minimal Data
+Avoid collecting personal data; use privacy-preserving, first-party analytics only when necessary, honor Do Not Track, and keep no long-term identifiers or user-level logs.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### Authentic Content and Traceability
+Publish only owner-authored or clearly attributed content; track edits through version control, include visible last-updated metadata on pages, and avoid auto-generated content without disclosure.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### Preview-Gated Deployments
+All changes ship through Vercel preview deployments with checks green; production promotions require explicit approval after preview review, and production must point to the custom domain only.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Operational Constraints
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+Host on Vercel using the custom domain; keep the build output static assets only; enforce HTTPS; set caching headers to favor fast first paint while allowing quick content updates; avoid serverless/edge functions unless a future principle amendment approves them.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Development Workflow
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+Work on short-lived branches; open pull requests for every change; require preview URL evidence plus accessibility and privacy confirmations before merge; only maintainers can promote preview to production; roll back immediately if authenticity or privacy is compromised.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes other process documents. Amendments require a pull request that redlines changes, updates the Sync Impact Report, and notes any template implications. Versioning follows semantic rules (MAJOR for principle or governance redefinitions, MINOR for new principles/sections, PATCH for clarifications). Reviews and releases MUST confirm alignment with Core Principles, Operational Constraints, and Development Workflow; non-compliance blocks deployment until resolved or formally amended.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-02-03 | **Last Amended**: 2026-02-03

@@ -1,0 +1,132 @@
+/* ==========================================================================
+   CM Yao Personal Site – Design Tokens
+   ========================================================================== */
+
+:root {
+  /* ---------- Base Palette ---------- */
+  --color-base: #0a0a0a;
+  --color-surface: #0d0d0d;
+  --color-surface-elevated: #1a1a1a;
+  --color-fg: #f5f5f5;
+  --color-fg-muted: #a0a0a0;
+  --color-fg-subtle: #8a8a8a;
+  
+  /* Accent */
+  --color-accent: #e63946;
+  --color-accent-glow: rgba(230, 57, 70, 0.15);
+  
+  /* ---------- Depth System ---------- */
+  /* Guide lines and brackets */
+  --color-guide: rgba(255, 255, 255, 0.06);
+  --color-bracket: rgba(255, 255, 255, 0.12);
+  --border-guide: 1px solid var(--color-guide);
+  
+  /* Glow system */
+  --glow-primary: radial-gradient(ellipse 600px 400px at var(--glow-x, 50%) var(--glow-y, 30%), 
+    rgba(230, 57, 70, 0.08) 0%, 
+    rgba(230, 57, 70, 0.02) 50%, 
+    transparent 100%);
+  --glow-secondary: radial-gradient(ellipse 400px 300px at var(--glow2-x, 70%) var(--glow2-y, 60%), 
+    rgba(255, 255, 255, 0.03) 0%, 
+    transparent 100%);
+  
+  /* Noise overlay */
+  --noise-opacity: 0.04;
+  
+  /* Scanline */
+  --scanline-opacity: 0.02;
+  --scanline-speed: 10s;
+  
+  /* ---------- Typography Scale ---------- */
+  --font-family-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+  
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --font-size-3xl: 2rem;      /* 32px */
+  --font-size-4xl: 2.5rem;    /* 40px */
+  --font-size-hero: clamp(2rem, 5vw + 1rem, 4rem);
+  
+  --line-height-tight: 1.1;
+  --line-height-snug: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.05em;
+  --letter-spacing-wider: 0.1em;
+  
+  /* ---------- Spacing ---------- */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+  --space-24: 6rem;     /* 96px */
+  
+  /* ---------- Motion Tokens ---------- */
+  /* Core easing - smooth, slightly bouncy feel */
+  --ease-smooth: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-linear: linear;
+  
+  /* Durations */
+  --duration-instant: 100ms;
+  --duration-fast: 200ms;
+  --duration-normal: 400ms;
+  --duration-slow: 700ms;
+  --duration-reveal: 600ms;
+  
+  /* Stagger delays for sequenced animations */
+  --stagger-1: 0ms;
+  --stagger-2: 100ms;
+  --stagger-3: 200ms;
+  --stagger-4: 300ms;
+  --stagger-5: 400ms;
+  
+  /* Background animation speeds */
+  --bg-drift-duration: 30s;
+  --bg-scanline-duration: 10s;
+  --symbol-rotation-duration: 90s;
+  
+  /* Interaction distances */
+  --hover-lift: -4px;
+  --press-scale: 0.99;
+  --arrow-nudge: 4px;
+  
+  /* ---------- Borders & Radii ---------- */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  
+  /* ---------- Shadows ---------- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 20px var(--color-accent-glow);
+  
+  /* ---------- Z-Index Scale ---------- */
+  --z-background: -1;
+  --z-base: 0;
+  --z-elevated: 10;
+  --z-overlay: 100;
+  --z-modal: 1000;
+}
+
+/* Pink accent variant */
+html[data-accent='pink'] {
+  --color-accent: #ff6b81;
+  --color-accent-glow: rgba(255, 107, 129, 0.15);
+}

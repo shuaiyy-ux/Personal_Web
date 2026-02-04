@@ -1,0 +1,147 @@
+/* ==========================================================================
+   Navigation Blocks Styles – Enhanced Interactions
+   Hover lift, focus outline, press compression, action labels
+   ========================================================================== */
+
+.navigation {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-4);
+  max-width: 72rem;
+  margin-inline: auto;
+}
+
+.nav-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  background: var(--color-surface-elevated);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  text-decoration: none;
+  position: relative;
+  
+  /* Smooth transitions for all interactive states */
+  transition: 
+    transform var(--duration-normal) var(--ease-smooth),
+    border-color var(--duration-normal) var(--ease-smooth),
+    background-color var(--duration-normal) var(--ease-smooth),
+    box-shadow var(--duration-normal) var(--ease-smooth);
+}
+
+/* ---------- Hover State ---------- */
+.nav-block:hover {
+  border-color: var(--color-bracket);
+  background: rgba(255, 255, 255, 0.03);
+  transform: translateY(var(--hover-lift));
+  box-shadow: var(--shadow-md);
+}
+
+.nav-block:hover .nav-block__arrow {
+  transform: translateX(var(--arrow-nudge));
+  opacity: 1;
+}
+
+.nav-block:hover .nav-block__action {
+  color: var(--color-accent);
+}
+
+/* ---------- Focus State ---------- */
+.nav-block:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+  border-color: var(--color-accent);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ---------- Active/Press State ---------- */
+.nav-block:active {
+  transform: scale(var(--press-scale));
+  box-shadow: none;
+  transition-duration: var(--duration-instant);
+}
+
+/* ---------- Header Row ---------- */
+.nav-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.nav-block__label {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-fg);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.nav-block__arrow {
+  font-size: var(--font-size-lg);
+  color: var(--color-fg-muted);
+  opacity: 0.4;
+  transition: 
+    transform var(--duration-normal) var(--ease-smooth),
+    opacity var(--duration-normal) var(--ease-smooth);
+}
+
+/* ---------- Description ---------- */
+.nav-block__description {
+  font-size: var(--font-size-base);
+  color: var(--color-fg-muted);
+  line-height: var(--line-height-relaxed);
+  flex-grow: 1;
+}
+
+/* ---------- Action Label ---------- */
+.nav-block__action {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-fg-subtle);
+  margin-top: var(--space-2);
+  transition: color var(--duration-normal) var(--ease-smooth);
+}
+
+/* ---------- Mobile: Stack Vertically ---------- */
+@media (max-width: 768px) {
+  .navigation {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+
+  .nav-block {
+    padding: var(--space-5);
+  }
+  
+  /* Reduce hover lift on mobile for touch */
+  .nav-block:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* ---------- Reduced Motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .nav-block {
+    transition: none;
+  }
+  
+  .nav-block:hover {
+    transform: none;
+  }
+  
+  .nav-block:active {
+    transform: none;
+  }
+  
+  .nav-block__arrow {
+    transition: none;
+  }
+  
+  .nav-block:hover .nav-block__arrow {
+    transform: none;
+  }
+}

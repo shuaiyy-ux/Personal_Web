@@ -1,0 +1,139 @@
+/* ==========================================================================
+   Animations & Motion System
+   All animations use design tokens from tokens.css
+   ========================================================================== */
+
+/* ---------- Shared Animation Keyframes ---------- */
+
+/* Fade in from below - for content reveals */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fade in from above - for labels and secondary content */
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Simple fade in - for brackets and static elements */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Scale in - for interactive reveals */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ---------- Section Reveal Animations ---------- */
+
+/* Staggered reveal for sections entering viewport */
+.reveal-section {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fade-in-up var(--duration-slow) var(--ease-smooth) forwards;
+}
+
+.reveal-section:nth-child(1) { animation-delay: 0ms; }
+.reveal-section:nth-child(2) { animation-delay: 100ms; }
+.reveal-section:nth-child(3) { animation-delay: 200ms; }
+.reveal-section:nth-child(4) { animation-delay: 300ms; }
+
+/* ---------- Card & Item Reveals ---------- */
+
+/* For lists of items with staggered entry */
+.reveal-item {
+  opacity: 0;
+  transform: translateY(15px);
+  animation: fade-in-up var(--duration-normal) var(--ease-smooth) forwards;
+}
+
+/* CSS custom property for dynamic stagger */
+.reveal-item {
+  animation-delay: calc(var(--item-index, 0) * 50ms);
+}
+
+/* ---------- Interactive Feedback ---------- */
+
+/* Subtle pulse for clickable elements */
+@keyframes subtle-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: 0 0 0 4px var(--color-accent-glow);
+  }
+}
+
+/* Arrow nudge for navigation hints */
+@keyframes arrow-nudge {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(var(--arrow-nudge));
+  }
+}
+
+/* ---------- Brand Symbol Animation ---------- */
+
+@keyframes symbol-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.brand-symbol {
+  animation: symbol-rotate var(--symbol-rotation-duration) linear infinite;
+}
+
+/* ---------- Global Reduced Motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  /* Disable all animations but keep final states visible */
+  .reveal-section,
+  .reveal-item {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  
+  .brand-symbol {
+    animation: none;
+  }
+  
+  /* Ensure interactive feedback still works via instant changes */
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

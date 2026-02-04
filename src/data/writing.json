@@ -1,0 +1,56 @@
+[
+  {
+    "id": "automation-mindset",
+    "title": "Building an Automation Mindset",
+    "summary": "How to identify repetitive tasks and systematically eliminate them.",
+    "tags": ["automation", "productivity"],
+    "publishedAt": "2026-01-28",
+    "url": "/blog/automation-mindset",
+    "external": false
+  },
+  {
+    "id": "llm-workflows",
+    "title": "LLM-Powered Workflows",
+    "summary": "Practical patterns for integrating large language models into daily work.",
+    "tags": ["AI", "workflow"],
+    "publishedAt": "2026-01-15",
+    "url": "/blog/llm-workflows",
+    "external": false
+  },
+  {
+    "id": "static-sites-done-right",
+    "title": "Static Sites Done Right",
+    "summary": "Why simplicity wins and how to keep your personal site blazing fast.",
+    "tags": ["web", "performance"],
+    "publishedAt": "2026-01-02",
+    "url": "/blog/static-sites-done-right",
+    "external": false
+  },
+  {
+    "id": "testing-for-humans",
+    "title": "Testing for Humans",
+    "summary": "Write tests that describe intent, not implementation details.",
+    "tags": ["testing", "best practices"],
+    "publishedAt": "2025-12-20",
+    "url": "/blog/testing-for-humans",
+    "external": false
+  },
+  {
+    "id": "keyboard-first-ux",
+    "title": "Keyboard-First UX",
+    "summary": "Design principles for interfaces that respect power users.",
+    "tags": ["accessibility", "UX"],
+    "publishedAt": "2025-12-05",
+    "url": "/blog/keyboard-first-ux",
+    "external": false
+  },
+  {
+    "id": "reduce-cognitive-load",
+    "title": "Reduce Cognitive Load",
+    "summary": "Simple heuristics for cleaner code and clearer thinking.",
+    "tags": ["productivity", "design"],
+    "publishedAt": "2025-11-18",
+    "url": "/blog/reduce-cognitive-load",
+    "external": false
+  }
+]

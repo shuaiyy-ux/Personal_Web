@@ -1,0 +1,23 @@
+[
+  {
+    "id": "email",
+    "type": "email",
+    "label": "Email",
+    "value": "mailto:hello@cmyao.com",
+    "required": true
+  },
+  {
+    "id": "linkedin",
+    "type": "linkedin",
+    "label": "LinkedIn",
+    "value": "https://linkedin.com/in/cmyao",
+    "required": true
+  },
+  {
+    "id": "github",
+    "type": "github",
+    "label": "GitHub",
+    "value": "https://github.com/cmyao",
+    "required": true
+  }
+]
