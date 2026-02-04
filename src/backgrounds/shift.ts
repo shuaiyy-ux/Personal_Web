@@ -207,6 +207,7 @@ const xOff = 0.0015;
 const yOff = 0.0015;
 const zOff = 0.0015;
 const backgroundColor = 'hsla(0,0%,5%,1)';
+const blurAmount = 50;
 
 let container: Element | null;
 let canvas: { a: HTMLCanvasElement; b: HTMLCanvasElement };
@@ -318,7 +319,7 @@ function createCanvas() {
     b: document.createElement('canvas'),
   };
   canvas.b.className = 'shift-canvas-layer';
-  canvas.b.style.cssText = `position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:var(--z-background, -1);`;
+  canvas.b.style.cssText = `position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:var(--z-background, -1);filter:blur(${blurAmount}px);transform:translateZ(0);will-change:filter;`;
   container?.appendChild(canvas.b);
   ctx = {
     a: canvas.a.getContext('2d') as CanvasRenderingContext2D,
@@ -340,7 +341,7 @@ function resize() {
 
 function renderLayer() {
   ctx.b.save();
-  ctx.b.filter = 'blur(50px)';
+  ctx.b.filter = 'none';
   ctx.b.drawImage(canvas.a, 0, 0);
   ctx.b.restore();
 }
