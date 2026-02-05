@@ -22,7 +22,7 @@ export function renderHero(): string {
         
         <!-- Core Content -->
         <div class="hero__body">
-          <h1 id="hero-headline" class="hero__headline">Let Machine Work, So We Don't Have To</h1>
+          <h1 id="hero-headline" class="hero__headline">Let Machines Work, So We Don't Have To</h1>
           <p class="hero__subheadline">Automating the mundane. Amplifying the meaningful.</p>
         </div>
 
