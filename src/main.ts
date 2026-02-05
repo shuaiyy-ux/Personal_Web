@@ -6,7 +6,6 @@ import './styles/hero.css';
 import './styles/statement.css';
 import './styles/navigation.css';
 import './styles/writing.css';
-import './styles/projects.css';
 import './styles/cta.css';
 import './styles/footer.css';
 
@@ -15,7 +14,6 @@ import { renderHero } from './sections/hero';
 import { renderStatement } from './sections/statement';
 import { renderNavigation } from './sections/navigation';
 import { renderWriting } from './sections/writing';
-import { renderProjects } from './sections/projects';
 import { renderCTA } from './sections/cta';
 import { renderFooter } from './sections/footer';
 import initShiftBackground from './backgrounds/shift';
@@ -34,7 +32,6 @@ function render(): void {
     <main id="main-content" class="container">
       ${renderStatement()}
       ${renderWriting()}
-      ${renderProjects()}
       ${renderCTA()}
     </main>
     ${renderFooter()}

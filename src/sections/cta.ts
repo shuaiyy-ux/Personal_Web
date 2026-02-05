@@ -11,6 +11,7 @@ interface ContactLink {
 export function renderCTA(): string {
   const contacts = contactsData as ContactLink[];
   const requiredContacts = contacts.filter((c) => c.required);
+  const emailLink = requiredContacts.find((c) => c.type === 'email')?.value ?? 'mailto:';
 
   const linksHtml = requiredContacts
     .map(
@@ -29,9 +30,9 @@ export function renderCTA(): string {
   return `
     <section data-section="cta" class="cta" aria-labelledby="cta-heading">
       <h2 id="cta-heading" class="cta__heading">Ready to build something cool together?</h2>
-      <button class="cta__button" type="button" aria-expanded="false" aria-controls="cta-contacts">
+      <a class="cta__button" href="${emailLink}">
         LET'S START
-      </button>
+      </a>
       <div id="cta-contacts" class="cta__contacts">
         ${linksHtml}
       </div>
