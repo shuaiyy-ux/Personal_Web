@@ -86,29 +86,29 @@
 .hero__bracket--tl {
   top: 0;
   left: 0;
-  border-top-width: 1px;
-  border-left-width: 1px;
+  border-top-width: 3px;
+  border-left-width: 3px;
 }
 
 .hero__bracket--tr {
   top: 0;
   right: 0;
-  border-top-width: 1px;
-  border-right-width: 1px;
+  border-top-width: 3px;
+  border-right-width: 3px;
 }
 
 .hero__bracket--bl {
   bottom: 0;
   left: 0;
-  border-bottom-width: 1px;
-  border-left-width: 1px;
+  border-bottom-width: 3px;
+  border-left-width: 3px;
 }
 
 .hero__bracket--br {
   bottom: 0;
   right: 0;
-  border-bottom-width: 1px;
-  border-right-width: 1px;
+  border-bottom-width: 3px;
+  border-right-width: 3px;
 }
 
 /* ---------- Core Content ---------- */
