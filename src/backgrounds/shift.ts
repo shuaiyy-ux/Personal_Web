@@ -198,8 +198,8 @@ const circlePropCount = 8;
 const circlePropsLength = circleCount * circlePropCount;
 const baseSpeed = 0.01; // lower = slower base velocity
 const rangeSpeed = 0.1; // lower = less variance, overall slower feel
-const baseTTL = 250; // longer lifetime to avoid frequent respawn jitter
-const rangeTTL = 320;
+const baseTTL = 220; // longer lifetime to avoid frequent respawn jitter
+const rangeTTL = 300;
 const baseRadius = 100;
 const rangeRadius = 200;
 const rangeHue = 60;
