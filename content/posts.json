@@ -8,15 +8,5 @@
     "status": "published",
     "bodyHtmlFile": "content/bodies/SniperBot-Zero-To-One.html",
     "image": "/blog/sniperbot-zero-to-one/image-01.png"
-  },
-  {
-    "id": "my-first-post",
-    "title": "我的第一篇文章",
-    "summary": "一句话摘要，出现在首页和列表。",
-    "tags": ["AI", "automation"],
-    "publishedAt": "2026-02-05",
-    "status": "published",
-    "bodyHtmlFile": "content/bodies/my-first-post.html",
-    "image": "/blog/my-first-post/hero.jpg"
   }
 ]
