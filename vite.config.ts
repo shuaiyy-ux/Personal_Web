@@ -13,11 +13,8 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        "blog-my-first-post": resolve(rootDir, "blog/my-first-post/index.html"),
-        "blog-sniperbot-zero-to-one": resolve(rootDir, "blog/sniperbot-zero-to-one/index.html"),
         main: resolve(rootDir, 'index.html'),
         blog: resolve(rootDir, 'blog/index.html'),
-        'blog-automation-mindset': resolve(rootDir, 'blog/automation-mindset/index.html'),
         'blog-sniperbot-zero-to-one': resolve(rootDir, 'blog/sniperbot-zero-to-one/index.html'),
       },
     },
