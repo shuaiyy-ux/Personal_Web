@@ -196,10 +196,10 @@ class SimplexNoise {
 const circleCount = 150;
 const circlePropCount = 8;
 const circlePropsLength = circleCount * circlePropCount;
-const baseSpeed = 0.1;
-const rangeSpeed = 1;
-const baseTTL = 150;
-const rangeTTL = 200;
+const baseSpeed = 0.004; // lower = slower base velocity
+const rangeSpeed = 0.06; // lower = less variance, overall slower feel
+const baseTTL = 300; // longer lifetime to avoid frequent respawn jitter
+const rangeTTL = 360;
 const baseRadius = 100;
 const rangeRadius = 200;
 const rangeHue = 60;
