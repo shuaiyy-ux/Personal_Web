@@ -13,7 +13,7 @@ export function renderHeader(): string {
   const requiredLinks = contacts.filter((c) => c.required);
 
   const navLinks = [
-    { label: 'Blog', href: '/blog', external: false },
+    { label: 'Blog', href: '/blog/', external: false },
     ...requiredLinks.map((contact) => ({
       label: contact.label,
       href: contact.value,
@@ -38,7 +38,7 @@ export function renderHeader(): string {
   return `
     <header class="site-header" aria-label="Primary">
       <div class="site-header__inner container">
-        <div class="site-header__brand" aria-label="CM Yao">CM Yao</div>
+        <a class="site-header__brand" aria-label="CM Yao" href="/">CM Yao</a>
         <nav class="site-header__nav" aria-label="Primary navigation">
           ${linksHtml}
         </nav>

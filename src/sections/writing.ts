@@ -1,57 +1,89 @@
 import writingData from '../data/writing.json';
 
-interface WritingItem {
+export interface WritingItem {
   id: string;
   title: string;
   summary: string;
   tags: string[];
-  publishedAt: string;
+  publishedAt?: string;
   url: string;
   external: boolean;
+  status?: 'published' | 'upcoming';
 }
 
 export function renderWriting(): string {
-  const items = (writingData as WritingItem[]).slice(0, 9);
-
-  if (items.length === 0) {
-    return `
-      <section data-section="writing" class="writing" aria-labelledby="writing-heading">
-        <h2 id="writing-heading" class="writing__heading">Latest Writing</h2>
-        <p class="writing__empty">No posts yet. Check back soon!</p>
-      </section>
-    `;
-  }
-
-  const itemsHtml = items
-    .map(
-      (item) => `
-        <article class="writing-item">
-          <a
-            class="writing-item__link"
-            href="${item.url}"
-            ${item.external ? 'target="_blank" rel="noopener noreferrer"' : ''}
-          >
-            <h3 class="writing-item__title">${item.title}</h3>
-          </a>
-          <p class="writing-item__summary">${item.summary}</p>
-          <div class="writing-item__meta">
-            <span class="writing-item__tags">${item.tags.map((t) => `<span class="tag">${t}</span>`).join('')}</span>
-            <time class="writing-item__date" datetime="${item.publishedAt}">${formatDate(item.publishedAt)}</time>
-          </div>
-        </article>
-      `
-    )
-    .join('');
+  const items = sortByPublished(writingData as WritingItem[]).slice(0, 9);
+  const content = renderWritingList(items);
 
   return `
     <section data-section="writing" class="writing" aria-labelledby="writing-heading">
       <h2 id="writing-heading" class="writing__heading">Latest Writing</h2>
-      <div class="writing__list">${itemsHtml}</div>
+      ${content}
     </section>
   `;
 }
 
-function formatDate(iso: string): string {
+export function renderWritingList(items: WritingItem[]): string {
+  if (!items || items.length === 0) {
+    return `<p class="writing__empty">No posts yet. Check back soon!</p>`;
+  }
+
+  const itemsHtml = sortByPublished(items).map(renderWritingItem).join('');
+  return `<div class="writing__list">${itemsHtml}</div>`;
+}
+
+function renderWritingItem(item: WritingItem): string {
+  const status = item.status ?? 'published';
+  const isPublished = status === 'published';
+  const badge = isPublished ? '' : '<span class="writing-item__badge">Coming soon</span>';
+
+  const title = `<h3 class="writing-item__title">${item.title}</h3>`;
+  const titleBlock = isPublished
+    ? `
+        <a
+          class="writing-item__link"
+          href="${item.url}"
+          ${item.external ? 'target="_blank" rel="noopener noreferrer"' : ''}
+        >
+          ${title}
+        </a>
+      `
+    : `<div class="writing-item__link writing-item__link--inactive" aria-disabled="true">${title}</div>`;
+
+  return `
+    <article class="writing-item ${!isPublished ? 'writing-item--upcoming' : ''}">
+      <div class="writing-item__top">
+        ${titleBlock}
+        ${badge}
+      </div>
+      <p class="writing-item__summary">${item.summary}</p>
+      <div class="writing-item__meta">
+        <span class="writing-item__tags">${item.tags.map((t) => `<span class="tag">${t}</span>`).join('')}</span>
+        <time class="writing-item__date" datetime="${item.publishedAt ?? ''}">${formatDate(item.publishedAt)}</time>
+      </div>
+    </article>
+  `;
+}
+
+function formatDate(iso?: string): string {
+  if (!iso) return 'TBD';
+
   const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return 'TBD';
+
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function sortByPublished(items: WritingItem[]): WritingItem[] {
+  return [...items].sort((a, b) => {
+    const ad = Date.parse(a.publishedAt ?? '');
+    const bd = Date.parse(b.publishedAt ?? '');
+    const aValid = Number.isFinite(ad);
+    const bValid = Number.isFinite(bd);
+
+    if (aValid && bValid) return bd - ad; // newest first
+    if (aValid) return -1;
+    if (bValid) return 1;
+    return 0;
+  });
 }

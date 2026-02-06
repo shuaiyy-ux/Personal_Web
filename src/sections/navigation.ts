@@ -40,7 +40,7 @@ const navBlocks: NavBlock[] = [
     label: 'Blog',
     description: 'Where I distill ideas, break down complex systems, and share what I learn along the way.',
     actionLabel: 'Read articles',
-    href: '/blog',
+    href: '/blog/',
     external: false,
   },
   ...requiredContacts.map((contact) => {
