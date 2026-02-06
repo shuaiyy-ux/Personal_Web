@@ -5,6 +5,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA_FILE = ROOT / "src/data/writing.json"
 POSTS_FILE = ROOT / "content/posts.json"
 BLOG_DIR = ROOT / "blog"
+PUBLIC_BLOG_DIR = ROOT / "public" / "blog"
 VITE_CONFIG = ROOT / "vite.config.ts"
 
 INDEX_TEMPLATE = """<!DOCTYPE html>
@@ -88,6 +89,11 @@ def write_body_and_index(post):
   page_dir = BLOG_DIR / slug
   page_dir.mkdir(parents=True, exist_ok=True)
 
+  # ensure body is available from public for production hosting
+  public_dir = PUBLIC_BLOG_DIR / slug
+  public_dir.mkdir(parents=True, exist_ok=True)
+
+  (public_dir / "body.html").write_text(body_html, encoding="utf-8")
   (page_dir / "body.html").write_text(body_html, encoding="utf-8")
   (page_dir / "index.html").write_text(
     INDEX_TEMPLATE.format(title=post["title"], summary=post["summary"]),

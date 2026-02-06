@@ -1,0 +1,89 @@
+<body>
+  <h1>Building a Real-Time X/Twitter Sniper Bot: A Complete AI-Assisted Development Journey (Part 1)</h1>
+  
+  <div class="meta">
+    <div class="author">Shuaiyu Yao</div>
+    <div>UCI MSBA 26' | Full Stack Analyst</div>
+    <div>October 16, 2025</div>
+  </div>
+
+  <p>I want to write this series to document the whole process of how we built SniperBot from zero, and to show everyone that today, even without a programming background, you can build impressive projects with the help of AI. A lot of people online only drop snippets or say "AI is powerful," but rarely lay out a reproducible process; that's one reason I'm writing this series.</p>
+
+  <h2>The Starting Point</h2>
+  <p>The starting point was straightforward. First, Trump had just launched his coin, prices were wild, and social media-driven sentiment was sending things through the roof; at the same time, a lot of memecoins were launching rapidly on Solana—one tweet or one link could move the market. Second, GPT-4 had just been released, and after trying it we felt—honestly—it was amazing. One was a market window, the other was a tool that accelerates development. Those two together made us decide that night: let's build our own sniper bot.</p>
+
+  <h2>The Problem</h2>
+  <p>The problem we wanted to solve was clear: many project teams or influential people, when they tweet, will post a contract address directly, or they'll post a project page link that contains the address. If we can capture those tweets within two seconds, and those tweets come from high-signal accounts (e.g., top politicians in developed countries, major brands, core KOLs), then first mover advantage matters—entry cost, slippage, and execution price differ, and returns can be dramatically different. This approach—watching high-value accounts and acting the moment a tradable item appears—is called "Sniper" in the community.</p>
+
+  <h2>What We First Needed to Solve: How to Get Information Off Twitter</h2>
+  <p>For example: if Trump tweets today and the tweet contains a new contract address, or links to a project page where the address is embedded—this is the exact tweet we want to capture first.</p>
+  <p>Only once we can reliably and quickly capture such tweets can we do everything else: extract text, expand short links, identify contract addresses, verify authenticity, and hand the signal to the trading module.</p>
+  <p>We had basically no web experience at the start: we could code, but we hadn't built websites; HTML/CSS was unfamiliar; we hadn't used automation tools. It was our first full project; we didn't even have a roadmap—we just started and progressed step by step.</p>
+
+  <img src="/blog/sniperbot-zero-to-one/image-01.png" alt="Twitter API pricing and quota comparison">
+
+  <h2>First Try: X/Twitter API — Money Isn't the Problem, Lack of Money Is</h2>
+  <p>Simply put, an API is a "door" provided by a website or service for developers; through this door you can programmatically request data or send commands. For Twitter/X, the official API lets you query a tweet's details, search posts that match keywords, or subscribe to certain streams (if the account/permissions allow). The advantage is "official + structured": fixed formats, relative stability, no need to parse messy web pages.</p>
+  <p>At first we followed tutorials and used GPT to stitch together a very basic Python script: pull a timeline and print it to the console. After configuring credentials, we pulled the first record in twenty minutes—that felt great. Then we naturally wanted to keep it running, low-latency, and continuously watching a few high-signal accounts. Reality hit: rate/quota limits quickly block the "near real-time" goal, and raising limits to continuously monitor costs too much for a small experimental project.</p>
+
+  <h3>Pricing Breakdown</h3>
+  <ul>
+    <li><strong>Free:</strong> meant for testing/writing; read capacity is very low (monthly read limits on the order of hundreds to thousands—insufficient for continuous monitoring).</li>
+    <li><strong>Basic ($200/mo):</strong> monthly reads ~15k, limited app/project counts—still insufficient for the intensity we needed.</li>
+    <li><strong>Pro ($5,000/mo):</strong> for early-stage scaling, official example quotas ~1M reads/month, ~300k writes/month—supports fuller search/streaming capabilities. Ridiculously expensive.</li>
+  </ul>
+  <p>Also, many endpoints are rate-limited per 15-minute window. In other words, if you want to watch a few timelines on a per-second basis, you'll burn through the allowed calls very fast; queues and buffering don't overcome that hard limit.</p>
+
+  <p><strong>Summary:</strong> The API route isn't impossible, but to support our "near-continuous, tiny target set, detect within ~2s" use case, cost and operational feasibility were poor. So we switched to a path closer to "human browsing": let the program directly read the webpage instead of constantly "calling the API."</p>
+
+  <h2>Plan B: Build Our Own Crawler</h2>
+  <p>Before this, a note on tradeoffs: we initially wanted to use the Twitter API because it's official and looks cleaner and more stable. Crawling web pages wasn't our first choice—either you subscribe to someone else's data service, or you run into anti-bot defenses—lots of friction. But in practice, to watch a few high-signal accounts at second-level latency and keep it running long-term, the API quotas and cost boxed us in. We had to roll up our sleeves and build a crawler. We chose a tool that automates the browser (Playwright), and things began to fall into place.</p>
+
+  <img src="/blog/sniperbot-zero-to-one/image-02.png" alt="Crawler architecture and browser automation flow">
+
+  <h3>The Core Idea: Three Key Components</h3>
+
+  <h4>1) Run a "Browser Without a Window," and Only Read New Content</h4>
+  <p>We run a browser without a window on a host (like a normal browser, but not on-screen). It stays on the page we want; whenever the list shows a new post, we read only that new item—no full-page refreshes. Faster, quieter, and less likely to cause trouble.</p>
+
+  <h4>2) Leverage X Pro's Auto-Updating Columns</h4>
+  <p>X Pro has a separate interface with a list/column feature that pushes new posts automatically—no full refresh required. The column layout is more stable and less likely to change unexpectedly; you can open multiple columns to watch several accounts/lists at once, minimizing switching. For "quick detection + long-term stability," this is ideal.</p>
+  <ul>
+    <li>You see the new stuff right away, which gives time for link expansion, text cleanup, and address checks afterward;</li>
+    <li>Watchlists can be maintained in config—swap people by editing config, no code changes needed;</li>
+    <li>The regular home timeline often includes "auto-refresh + recommended content," which mixes unrelated items in; X Pro's columns stay clean, showing only the list we set, letting us focus.</li>
+  </ul>
+
+  <h4>3) Sign In Once and Reuse the Session</h4>
+  <p>We manually sign in once and save the session to a file. At program start, we load that file—basically "remember me" for the bot. That skips the login form, reduces repeated verification, and is more stable.</p>
+  <ol>
+    <li>Log into X in a normal browser and confirm the columns you want to monitor;</li>
+    <li>Export the current login state to a small file (the cookies);</li>
+    <li>On startup, load that file so the browser session is already signed in;</li>
+    <li>If it expires later, refresh it during a planned maintenance window and update the file.</li>
+  </ol>
+  <p><strong>⚠️ Do not put your cookies file in a public repo!</strong></p>
+
+  <h2>One Practical Takeaway: How I Used AI Effectively</h2>
+  <p>My approach aligns closely with Agile development—iterate, validate, and correct. The essence of Agile here isn't just writing code faster; it's breaking tasks into verifiable small units, testing each feature as it's completed, and then moving on. This avoids discovering fundamental issues only after writing hundreds of lines of code.</p>
+
+  <p>My AI workflow looked like this:</p>
+  <ol>
+    <li>Define the objective clearly—for example, "I want to capture a tweet within two seconds and extract the contract address."</li>
+    <li>Ask AI for possible approaches and the packages/tools needed.</li>
+    <li>Pick the option I understand or partially know—e.g., Playwright and HTML parsing are things I can grasp.</li>
+    <li>Don't blindly trust AI—verify the approach by checking forums, GitHub issues, or tech blogs for examples that prove feasibility.</li>
+    <li>Once the plan is set, have AI help write code in clearly separated stages: fetch HTML → unpack and structure data → analyze and locate content → extract and output results. Each stage is run independently and validated before moving to the next.</li>
+  </ol>
+
+  <p>This way you validate each module, rather than fixing everything after the fact. AI becomes an on-demand technical partner: when a component fails or logic is off, paste that snippet to AI and ask for analysis, rewrite, or optimization. That keeps the overall direction correct while allowing fast progress.</p>
+
+  <p>In a way, AI gives a solo developer the ability to apply Agile practices to complex projects—no full team required, but you can still iterate frequently, get quick feedback, and continuously improve.</p>
+
+  <h2>Next Up</h2>
+  <ul>
+    <li>How we locate and extract text</li>
+    <li>How to expand short links, read landing pages, and capture keywords</li>
+    <li>How to check addresses (basic rules + validation)</li>
+  </ul>
+</body>
