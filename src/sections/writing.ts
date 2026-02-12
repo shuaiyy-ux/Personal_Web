@@ -28,14 +28,23 @@ export function renderWritingList(items: WritingItem[]): string {
     return `<p class="writing__empty">No posts yet. Check back soon!</p>`;
   }
 
-  const itemsHtml = sortByPublished(items).map(renderWritingItem).join('');
+  const sorted = sortByPublished(items);
+  const latestPublishedId = sorted.find((item) => (item.status ?? 'published') === 'published')?.id;
+  const itemsHtml = sorted.map((item) => renderWritingItem(item, item.id === latestPublishedId)).join('');
   return `<div class="writing__list">${itemsHtml}</div>`;
 }
 
-function renderWritingItem(item: WritingItem): string {
+function renderWritingItem(item: WritingItem, isLatest: boolean): string {
   const status = item.status ?? 'published';
   const isPublished = status === 'published';
-  const badge = isPublished ? '' : '<span class="writing-item__badge">Coming soon</span>';
+  const badges: string[] = [];
+
+  if (!isPublished) {
+    badges.push('<span class="writing-item__badge">Coming soon</span>');
+  }
+  if (isPublished && isLatest) {
+    badges.push('<span class="writing-item__badge writing-item__badge--latest">Latest</span>');
+  }
 
   const title = `<h3 class="writing-item__title">${item.title}</h3>`;
   const titleBlock = isPublished
@@ -54,7 +63,7 @@ function renderWritingItem(item: WritingItem): string {
     <article class="writing-item ${!isPublished ? 'writing-item--upcoming' : ''}">
       <div class="writing-item__top">
         ${titleBlock}
-        ${badge}
+        ${badges.join('')}
       </div>
       <p class="writing-item__summary">${item.summary}</p>
       <div class="writing-item__meta">

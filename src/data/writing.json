@@ -26,17 +26,18 @@
     "status": "upcoming"
   },
   {
-    "id": "build-once-ship-often",
-    "title": "Build Once, Ship Often",
-    "summary": "A weekly cadence for shipping small, safe iterations without burning out.",
+    "id": "nvidia-research",
+    "title": "NVIDIA AI Infrastructure Research Report",
+    "summary": "Rack-scale GB200 NVL72, cluster archetypes, deployment paths, costs, and supply chain.",
     "tags": [
-      "shipping",
-      "process"
+      "AI",
+      "infrastructure",
+      "research"
     ],
-    "publishedAt": "2026-02-12",
-    "url": "/blog/build-once-ship-often",
+    "publishedAt": "2026-02-11",
+    "url": "/blog/nvidia-research/",
     "external": false,
-    "status": "upcoming"
+    "status": "published"
   },
   {
     "id": "sniperbot-zero-to-one",

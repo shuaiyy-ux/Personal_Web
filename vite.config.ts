@@ -13,6 +13,7 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
+        "blog-nvidia-research": resolve(rootDir, "blog/nvidia-research/index.html"),
         "blog-sniperbot-zero-to-one": resolve(rootDir, "blog/sniperbot-zero-to-one/index.html"),
         main: resolve(rootDir, 'index.html'),
         blog: resolve(rootDir, 'blog/index.html'),

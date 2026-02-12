@@ -1,0 +1,165 @@
+<body>
+  <h1>NVIDIA AI Infrastructure Comprehensive Research Report</h1>
+
+  <div class="meta">
+    <div class="author">CM Yao</div>
+    <div>In-depth AI infrastructure research</div>
+    <div>February 2026</div>
+  </div>
+
+  <p>This report dissects NVIDIA's data center-scale computing strategy across cluster archetypes, deployment playbooks, cost structure, and supply chain dynamics. NVIDIA is shifting from shipping chips to delivering full "AI factory" racks like the GB200 NVL72, reshaping how modern data centers are built and financed.</p>
+
+  <h2>Executive Summary</h2>
+  <p>NVIDIA now offers full-stack infrastructure spanning GPUs, boards, complete systems, and networking. The GB200 NVL72 rack epitomizes the move from single-server thinking to rack-scale design, enabling unified memory and extreme density. Understanding these architectures and their operating models is essential for evaluating AI infra investments.</p>
+
+  <h2>Chapter 1: NVIDIA Cluster Architecture Classification</h2>
+
+  <h3>1.1 HGX — Foundation for Hyperscaler Customization</h3>
+  <h4>Definition & Positioning</h4>
+  <p>HGX provides a core baseboard with 8 GPUs (H100/H200 class) plus NVLink switches. OEMs pair it with their own CPU, memory, storage, power, and chassis choices.</p>
+  <h4>Operating Model</h4>
+  <p>OEM/ODM vendors (Dell, Inspur, Supermicro) buy the HGX baseboard, then integrate CPU (Intel/AMD), power, and cooling to meet customer data center standards (often OCP).</p>
+  <h4>Key Advantages</h4>
+  <ul>
+    <li>Highly flexible: hyperscalers customize racks and power for their facilities.</li>
+    <li>Multi-platform: supports Intel or AMD CPU pairings.</li>
+    <li>Custom optimization: tailored to workload and facility constraints.</li>
+    <li>Cost control: customers manage non-core component spend.</li>
+  </ul>
+  <p><strong>Typical customers:</strong> Meta, Microsoft Azure, Google Cloud, and other hyperscalers with deep in-house engineering.</p>
+
+  <h3>1.2 DGX — Turnkey Standard Answer</h3>
+  <h4>Definition & Positioning</h4>
+  <p>DGX is NVIDIA's flagship fully integrated server line. Hardware, cooling, cabling, and software are all NVIDIA-designed and manufactured via selected partners.</p>
+  <h4>DGX SuperPOD</h4>
+  <p>Clusters of DGX servers connected via NVIDIA networking (InfiniBand) form a reference supercomputing architecture optimized for out-of-the-box performance.</p>
+  <h4>Use Cases</h4>
+  <ul>
+    <li>Top-tier research institutions needing maximum performance quickly.</li>
+    <li>National labs emphasizing stability and supportability.</li>
+    <li>AI startups prioritizing time-to-first-results.</li>
+    <li>Enterprise AI centers without deep infra teams.</li>
+  </ul>
+  <p><strong>Cost note:</strong> Buyers pay for tight integration, saved engineering time, and official tuning.</p>
+
+  <h3>1.3 MGX — Modular Architecture for Edge & Diversified Needs</h3>
+  <h4>Definition & Positioning</h4>
+  <p>MGX is a modular reference design that lets server builders swap CPUs (x86/Arm) and accelerators (GPU/DPU) within a single chassis design.</p>
+  <h4>Use Cases</h4>
+  <ul>
+    <li>Enterprise inference where full NVLink fabrics are unnecessary.</li>
+    <li>Edge computing deployments.</li>
+    <li>OVX systems for graphics, simulation, and digital twins.</li>
+    <li>Hybrid boxes mixing multiple accelerator types.</li>
+  </ul>
+  <p><strong>Strategic angle:</strong> Extends NVIDIA beyond hyperscale into enterprise and edge footprints.</p>
+
+  <h3>1.4 GB200 NVL72 — Rack-Scale "One Rack = One GPU"</h3>
+  <h4>Definition & Positioning</h4>
+  <p>Flagship Blackwell-era rack-scale system with 72 Blackwell GPUs and 36 Grace CPUs operating as one logical unit.</p>
+  <h4>Architectural Innovation</h4>
+  <ul>
+    <li>Scale: 72 GPUs + 36 CPUs per rack.</li>
+    <li>Interconnect: NVLink spine via copper backplane cabling.</li>
+    <li>Unified memory: full-rack shared memory space.</li>
+    <li>Power density: up to 120kW per rack.</li>
+  </ul>
+  <p><strong>Strategic significance:</strong> Rack-scale design sidesteps Moore's Law slowdown and completes NVIDIA's transition from card vendor to rack vendor. Facilities must adapt to high power density and mandatory liquid cooling.</p>
+
+  <h2>Chapter 2: Global Hyperscaler Deployment Strategies</h2>
+
+  <h3>2.1 Path A: Deep Customization (Custom Builders)</h3>
+  <p><strong>Representatives:</strong> Meta, Microsoft Azure, Google Cloud.</p>
+  <h4>Procurement & Network Choices</h4>
+  <p>Primarily buy HGX boards and place them in custom chassis and rack designs. Networks often favor proprietary Ethernet variants (e.g., Azure Maia, Meta RoCEv2, Google Jupiter) for compatibility with existing estates.</p>
+  <h4>Data Center Adaptation</h4>
+  <ul>
+    <li>OCP Open Rack V3 form factors.</li>
+    <li>Custom liquid or air cooling tuned to site constraints.</li>
+    <li>Custom power modules matching facility standards.</li>
+  </ul>
+  <p><strong>Tradeoffs:</strong> Maximum control and long-term cost optimization, but requires large engineering investment and longer bring-up cycles.</p>
+
+  <h3>2.2 Path B: OEM / Cloud-Native (Reference Adopters)</h3>
+  <p><strong>Representatives:</strong> Oracle OCI, CoreWeave, Lambda Labs.</p>
+  <h4>Procurement & Advantages</h4>
+  <p>Buy DGX SuperPODs or full GB200 NVL72 racks directly, adopting NVIDIA liquid-cooled standards without legacy constraints. Advantages include fastest time-to-deploy, officially tuned performance, and "latest GPU cloud" differentiation.</p>
+  <p><strong>Dependency:</strong> High reliance on NVIDIA's roadmap yields low risk and speed, but limited bargaining power.</p>
+
+  <h2>Chapter 3: Cost Breakdown & Infrastructure Ratios</h2>
+
+  <h3>3.1 Hardware Value Distribution (GB200 NVL72, ~$3–4M per rack)</h3>
+  <h4>NVIDIA Share (roughly 55%–65%)</h4>
+  <ul>
+    <li><strong>Compute nodes (GPU + CPU):</strong> ~39%–45%, now fully NVIDIA-owned with Grace + Blackwell.</li>
+    <li><strong>Networking (switches + DPU/NIC):</strong> ~13%–15%, driven by NVSwitch, ConnectX, InfiniBand/Spectrum.</li>
+  </ul>
+  <h4>Non-NVIDIA Share (roughly 35%–45%)</h4>
+  <ul>
+    <li><strong>Power systems:</strong> ~15%–20% for busbars, shelves, UPS.</li>
+    <li><strong>Cooling:</strong> ~4%–6% for cold plates, manifolds, CDUs.</li>
+    <li><strong>Structural + cables:</strong> ~3%–5% for racks and non-NVLink cabling.</li>
+    <li><strong>Storage:</strong> ~1%–2% as GPU/host memory dominates training throughput.</li>
+  </ul>
+
+  <h3>3.2 Physical Infrastructure Challenges</h3>
+  <h4>Power Density Shift</h4>
+  <table>
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th>Traditional Rack</th>
+        <th>GB200 NVL72</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Power per rack</td>
+        <td>10-15kW</td>
+        <td>120kW</td>
+      </tr>
+      <tr>
+        <td>Cooling method</td>
+        <td>Air</td>
+        <td>Liquid</td>
+      </tr>
+      <tr>
+        <td>Power density</td>
+        <td>Low</td>
+        <td>Extremely high</td>
+      </tr>
+      <tr>
+        <td>Floor space</td>
+        <td>Large</td>
+        <td>Smaller footprint, higher load</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>Rack-scale density requires redesigned power distribution, mandatory liquid cooling, and higher floor load capacity. Copper NVLink cabling (LinkX) occupies most of the rear rack volume and must meet NVIDIA certification.</p>
+  <p>Liquid cooling introduces new operations requirements: water loops, higher structural loads, and specialized incident handling.</p>
+
+  <h3>3.3 Network Scale Ratios</h3>
+  <p>In large clusters, switch-to-compute ratios often sit between 1:2 and 1:4. A 10,000 GPU cluster can require 2,500–5,000 switches. GB200 racks rely heavily on NVIDIA LinkX copper for backplane connectivity, dominating rear-rack volume.</p>
+
+  <h2>Chapter 4: Networking Operating Model & Supply Chain</h2>
+
+  <h3>4.1 Fabless 2.0 Model</h3>
+  <p>Post-Mellanox acquisition, NVIDIA controls core networking IP (Quantum IB, Spectrum Ethernet, ConnectX NICs, BlueField DPUs) while outsourcing manufacturing to TSMC and EMS partners. Software (DOCA SDK, Cumulus Linux, NCCL) deepens ecosystem lock-in.</p>
+
+  <h3>4.2 Three-Tier Supply Chain</h3>
+  <ul>
+    <li><strong>Tier 1: Foundry</strong> — TSMC manufactures GPUs and networking ASICs on advanced nodes.</li>
+    <li><strong>Tier 2: System Assembly (EMS/ODM)</strong> — Foxconn builds switches, LinkX cables, and GB200 racks; Quanta/Wistron handle server boards; Celestica manufactures switches.</li>
+    <li><strong>Tier 3: Optics & Cabling</strong> — Innolight, Eoptolink (400G/800G optics); Coherent and Lumentum (lasers); Fabrinet (assembly); SENKO and TFC (connectors). Optics and DAC/ACC cables are high-cost, higher-failure components.</li>
+  </ul>
+
+  <h3>4.3 Diversified Business Models</h3>
+  <ul>
+    <li><strong>Own brand:</strong> NVIDIA Networking switches and LinkX cables with full NVIDIA support.</li>
+    <li><strong>"NVIDIA Inside":</strong> NVIDIA supplies switch silicon to vendors like Cisco (e.g., Nexus N9100 on Spectrum-X).</li>
+    <li><strong>Reference designs (JDM):</strong> Dell, HPE, Lenovo build NVIDIA-compatible gear using published reference architectures.</li>
+    <li><strong>LinkX branding:</strong> Unified cable standards (DAC, AOC, optical modules) certified for low packet loss on IB fabrics.</li>
+  </ul>
+
+  <p><em>This report uses publicly available sources and is for educational reference only.</em></p>
+</body>
