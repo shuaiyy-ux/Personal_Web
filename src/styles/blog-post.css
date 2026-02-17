@@ -55,6 +55,21 @@
   line-height: var(--line-height-relaxed);
 }
 
+.blog-post__body .mermaid {
+  display: block;
+  padding: var(--space-4);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
+  overflow: auto;
+}
+
+.blog-post__body .mermaid svg {
+  display: block;
+  margin: 0 auto;
+}
+
 .blog-post__body h2,
 .blog-post__body h3 {
   margin: var(--space-2) 0;

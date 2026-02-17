@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spec-Kit: Iteration, Planning, and TDD Notes</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({startOnLoad:true});</script>
+</head>
+<body>
+  <h1>Spec-Kit: Iteration, Planning, and TDD Notes</h1>
+
+  <div class="meta">
+    <div class="author">CM Yao</div>
+    <div>SpecKit workflow guidance</div>
+    <div>January 15, 2026</div>
+  </div>
+
+  <h2>Summary</h2>
+  <p>How to iterate SpecKit work with plans, tasks, and tests-first loops while keeping every change traceable.</p>
+  <ul>
+    <li>Rerun <code>/speckit.plan</code> only when strategy or requirements change; otherwise adjust <strong>tasks.md</strong>.</li>
+    <li>Practice TDD: write tests, see them fail, then add the smallest implementation to go green.</li>
+    <li>Keep contracts and code aligned by updating <strong>spec.md</strong>, <strong>plan.md</strong>, and <strong>tasks.md</strong> together.</li>
+    <li>Capture real test outputs (local or CI) as evidence for each iteration.</li>
+  </ul>
+
+  <h2>SpecKit Commands</h2>
+  <ul>
+    <li><strong>/speckit.constitution</strong> — Define governing principles and development guidelines.</li>
+    <li><strong>/speckit.specify</strong> — Describe what to build (requirements and user stories).</li>
+    <li><strong>/speckit.plan</strong> — Create technical plans with your chosen stack.</li>
+    <li><strong>/speckit.tasks</strong> — Generate actionable implementation tasks.</li>
+    <li><strong>/speckit.implement</strong> — Execute tasks according to the plan.</li>
+  </ul>
+
+  <h3>Project Lifecycle</h3>
+  <div class="mermaid">
+flowchart TD
+  A[Project Kickoff] --> B[Define Constitution]
+  B --> C[Write Specification]
+  C --> D[Plan Implementation]
+  D --> E[Generate Tasks]
+  E --> F[Execute with Tests]
+  F --> G[Release]
+  G --> H[Review and Next Iteration]
+  H --> C
+  </div>
+
+  <h3>Document Flow</h3>
+  <div class="mermaid">
+flowchart TD
+  spec[spec.md\nContracts & Acceptance Criteria] --> plan[plan.md\nStrategy, Milestones, Gates]
+  plan --> tasks[tasks.md\nOrdered Execution Steps]
+  tasks --> code[Repo Code\nTests & Implementation]
+  code --> tests[Test Execution\nLocal or CI]
+  tests --> tasks
+  </div>
+
+  <h2>Core Concepts</h2>
+
+  <h3>When to Rerun <code>/speckit.plan</code></h3>
+  <ul>
+    <li><strong>Requirement changes or original plan is infeasible:</strong> rerun <code>/speckit.plan</code> to rewrite <strong>plan.md</strong> with a new strategy.</li>
+    <li><strong>Only implementation details shift:</strong> skip <code>/speckit.plan</code>; adjust <strong>tasks.md</strong> or code directly.</li>
+    <li><strong>Already implementing:</strong> plans are set; refine tasks, not the plan generator.</li>
+  </ul>
+  <p><strong>One-liner:</strong> <code>/speckit.plan</code> answers "how to do this," not "how to write this line of code."</p>
+
+  <h3>Test-Driven Development (TDD)</h3>
+  <p>TDD requires real failing tests before writing core logic. Do not code from intuition; code to satisfy failing tests.</p>
+  <ol>
+    <li>Write the test for the expected behavior.</li>
+    <li>Run it and confirm it fails (proves the test is meaningful).</li>
+    <li>Write the minimum implementation to make it pass.</li>
+    <li>Refactor safely under test coverage.</li>
+  </ol>
+  <p><strong>Why emphasize "tests are failing":</strong> ensures coverage of target behavior, avoids self-validation where implementation comes first, and uses tests to constrain boundaries and correctness.</p>
+
+  <h3>AI + SpecKit + TDD</h3>
+  <p>LLMs compress the red-green loop unless you force evidence. Use these safeguards:</p>
+  <ul>
+    <li><strong>Split tasks:</strong> keep "write tests" separate from "implement".</li>
+    <li><strong>Demand evidence:</strong> capture failing and passing outputs.</li>
+    <li><strong>Let local or CI test execution drive:</strong> use real results as next-round input.</li>
+  </ul>
+
+  <h2>Local Iteration Workflow</h2>
+
+  <div class="mermaid">
+flowchart TD
+  A[Change Request in spec.md] --> B[Update tasks.md Incrementally]
+  B --> C[Write Tests Only]
+  C --> D[Run Tests Locally]
+  D --> E{Fail as Expected?}
+  E -- No --> C
+  E -- Yes --> F[Minimal Implementation]
+  F --> G[Run Tests Again]
+  G --> H{All Pass?}
+  H -- No --> F
+  H -- Yes --> I[Optional Refactor]
+  I --> J[Record Change and Merge]
+  </div>
+
+  <h3>Step 1: Update <strong>spec.md</strong> with a Change Request</h3>
+  <p>Add a "Change Request" or "Update" section containing:</p>
+  <ul>
+    <li><strong>Background:</strong> why this change exists.</li>
+    <li><strong>Expected behavior:</strong> location and defaults.</li>
+    <li><strong>Interaction:</strong> click/keyboard behavior, navigation, API calls.</li>
+    <li><strong>Acceptance:</strong> observable, testable criteria.</li>
+  </ul>
+
+  <h4>Example Change Request</h4>
+  <ul>
+    <li><strong>Change:</strong> Home Page adds a "Get Started" button.</li>
+    <li><strong>Position:</strong> Below the main title, centered.</li>
+    <li><strong>Behavior:</strong> Click navigates to <code>/signup</code>.</li>
+    <li><strong>Accessibility:</strong> Button must be keyboard-focusable and triggerable with Enter.</li>
+    <li><strong>Acceptance:</strong> Button visible on Home page; URL becomes <code>/signup</code> on click; layout does not overflow on mobile.</li>
+  </ul>
+
+  <h3>Step 2: Generate Tasks</h3>
+  <ol>
+    <li>Update <strong>spec.md</strong> with the change.</li>
+    <li>Run <code>/speckit.tasks</code> to generate incremental tasks.</li>
+    <li>Prefer tests-first ordering inside <strong>tasks.md</strong>.</li>
+  </ol>
+
+  <h3>Step 3: Tests-First Execution</h3>
+  <ul>
+    <li>Task 1: Add tests for the new behavior.</li>
+    <li>Task 2: Run tests and capture failing output.</li>
+    <li>Task 3: Implement the minimal change to pass.</li>
+    <li>Task 4: Run tests again; refactor if green.</li>
+  </ul>
+  <p>State new test files and commands explicitly. Document expected failure points before implementation. After failing output, modify only implementation unless tests are wrong.</p>
+
+  <h2>Large-Feature Iteration</h2>
+
+  <div class="mermaid">
+flowchart TD
+  A[Large Feature Defined] --> B[Split into Milestones]
+  B --> C[Milestone 1]
+  C --> D[Milestone 2]
+  D --> E[Milestone 3]
+  E --> F[Feature Complete]
+  </div>
+
+  <p>Each iteration should deliver a verifiable vertical slice:</p>
+  <ul>
+    <li>Contract change recorded in <strong>spec.md</strong>.</li>
+    <li>Strategy and gates in <strong>plan.md</strong>.</li>
+    <li>Ordered tasks in <strong>tasks.md</strong> with tests-first.</li>
+    <li>Code plus tests committed to the repo.</li>
+    <li>Real test output (local or CI) feeds the next round.</li>
+  </ul>
+  <p><strong>Core principle:</strong> iterate on files and test outputs, not on chat impressions.</p>
+
+  <h3>Per-Milestone TDD Loop</h3>
+  <div class="mermaid">
+flowchart TD
+  A[Milestone Spec Update] --> B[Tasks for Milestone]
+  B --> C[Write Tests Only]
+  C --> D[Run Tests Locally or CI]
+  D --> E{Fail as Expected?}
+  E -- No --> C
+  E -- Yes --> F[Implement Minimum Scope]
+  F --> G[Run Tests Again]
+  G --> H{Pass Gates?}
+  H -- No --> F
+  H -- Yes --> I[Record Evidence]
+  </div>
+
+  <h3>Milestone Slicing Example (Signup Feature)</h3>
+  <ol>
+    <li>Page opens with form; front-end validation works; submit is stubbed.</li>
+    <li>Wire the API contract; simulate success; navigate on success.</li>
+    <li>Handle failure states and error UI.</li>
+    <li>Add e2e coverage and CI gates.</li>
+    <li>Refactor and pay down debt.</li>
+  </ol>
+
+  <h2>Traceability</h2>
+  <ul>
+    <li><strong>spec.md:</strong> revision log of contracts (add Change Log or Revision section).</li>
+    <li><strong>tasks.md:</strong> milestones with acceptance points.</li>
+    <li><strong>Git:</strong> each milestone mapped to PRs or commits named for the milestone.</li>
+  </ul>
+  <p>At any point you can answer: current milestone, affected contracts, test coverage status, failure outputs, and fix paths.</p>
+
+  <h2>Prompt Templates</h2>
+
+  <h3>Template 1: Generate or Update Plan</h3>
+  <p>"Based on the latest spec, output a plan for feature X including phases, risks, test strategy, and gates. Do not write implementation code."</p>
+
+  <h3>Template 2: Generate Tasks</h3>
+  <p>"Based on the plan, split work into milestones. Each milestone must include tests-first task ordering and specify new test file paths and run commands."</p>
+
+  <h3>Template 3: Tests Only</h3>
+  <p>"Complete only Milestone N's test tasks. Only modify the tests directory, not src. Output test files, commands, and expected failure points."</p>
+
+  <h3>Template 4: Minimal Implementation</h3>
+  <p>"Here is my local test failure output. Only modify implementation to pass these tests. Do not modify tests unless they are demonstrably wrong."</p>
+
+</body>
+</html>

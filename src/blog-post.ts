@@ -31,12 +31,37 @@ async function render(): Promise<void> {
   `;
 
   initShiftBackground('.content--canvas');
+  await initMermaid();
 }
 
 function getSlugFromPath(): string {
   const segments = window.location.pathname.split('/').filter(Boolean);
   const slug = segments[1] ?? '';
   return slug;
+}
+
+async function initMermaid(): Promise<void> {
+  const blocks = document.querySelectorAll<HTMLElement>('.mermaid');
+  if (!blocks.length) return;
+
+  const mermaid = await import('mermaid');
+  mermaid.default.initialize({
+    startOnLoad: false,
+    securityLevel: 'loose',
+    theme: 'dark',
+    themeVariables: {
+      background: 'transparent',
+      primaryColor: '#111827',
+      primaryTextColor: '#e5e7eb',
+      secondaryColor: '#0f172a',
+      tertiaryColor: '#111827',
+      lineColor: '#6bd1ff',
+      mainBkg: '#0f172a',
+      clusterBkg: '#0f172a',
+      clusterBorder: '#1f2937',
+    },
+  });
+  mermaid.default.init(undefined, blocks);
 }
 
 function findPost(slug: string): WritingItem | undefined {

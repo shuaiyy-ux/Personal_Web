@@ -1,5 +1,14 @@
 [
   {
+    "id": "spec-kit",
+    "title": "Spec-Kit: Iteration, Planning, and TDD Notes",
+    "summary": "How to rerun plans, write tests first, and keep SpecKit iterations traceable.",
+    "tags": ["process", "tdd", "spec-kit"],
+    "publishedAt": "2026-02-17",
+    "status": "published",
+    "bodyHtmlFile": "content/bodies/Spec-Kit.html"
+  },
+  {
     "id": "sniperbot-zero-to-one",
     "title": "SniperBot: Zero to One (Part 1)",
     "summary": "How we built a real-time Twitter sniper bot with AI, end to end, for non-coders.",

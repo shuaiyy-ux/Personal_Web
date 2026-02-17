@@ -26,6 +26,20 @@
     "status": "upcoming"
   },
   {
+    "id": "spec-kit",
+    "title": "Spec-Kit: Iteration, Planning, and TDD Notes",
+    "summary": "How to rerun plans, write tests first, and keep SpecKit iterations traceable.",
+    "tags": [
+      "process",
+      "tdd",
+      "spec-kit"
+    ],
+    "publishedAt": "2026-02-17",
+    "url": "/blog/spec-kit/",
+    "external": false,
+    "status": "published"
+  },
+  {
     "id": "nvidia-research",
     "title": "NVIDIA AI Infrastructure Research Report",
     "summary": "Rack-scale GB200 NVL72, cluster archetypes, deployment paths, costs, and supply chain.",
