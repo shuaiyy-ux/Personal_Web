@@ -16,6 +16,7 @@ import { renderNavigation } from './sections/navigation';
 import { renderWriting } from './sections/writing';
 import { renderCTA } from './sections/cta';
 import { renderFooter } from './sections/footer';
+import { renderToolsBanner } from './sections/tools-banner';
 import initShiftBackground from './backgrounds/shift';
 
 const app = document.getElementById('app');
@@ -28,6 +29,7 @@ function render(): void {
     <a href="#main-content" class="visually-hidden">Skip to main content</a>
     ${renderHeader()}
     ${renderHero()}
+    ${renderToolsBanner()}
     ${renderNavigation()}
     <main id="main-content" class="container">
       ${renderStatement()}

@@ -126,6 +126,40 @@
   transition: color var(--duration-normal) var(--ease-smooth);
 }
 
+/* ---------- Tools Banner (above nav grid) ---------- */
+.tools-banner {
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: 0 var(--space-4);
+  padding-top: var(--space-8);
+}
+
+.nav-block--featured {
+  border-color: rgba(230, 57, 70, 0.25);
+}
+
+.nav-block--featured::before {
+  background: linear-gradient(135deg, rgba(230, 57, 70, 0.06), transparent 60%);
+}
+
+.nav-block--featured:hover {
+  border-color: rgba(230, 57, 70, 0.5);
+}
+
+.nav-block--featured__badge {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--color-accent);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid rgba(230, 57, 70, 0.3);
+  border-radius: var(--radius-sm);
+  line-height: 1;
+  vertical-align: middle;
+  margin-left: var(--space-3);
+}
+
 /* ---------- Mobile: Stack Vertically ---------- */
 @media (max-width: 768px) {
   .navigation {

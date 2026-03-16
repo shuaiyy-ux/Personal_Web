@@ -215,10 +215,14 @@ let ctx: { a: CanvasRenderingContext2D; b: CanvasRenderingContext2D };
 let circleProps: Float32Array;
 let simplex: SimplexNoise;
 let baseHue: number;
+let initialized = false;
+let animationFrameId: number | null = null;
 
 export function initShiftBackground(selector = '.content--canvas') {
   container = document.querySelector(selector);
   if (!container) return;
+  if (initialized) return;
+  initialized = true;
   setup();
 }
 

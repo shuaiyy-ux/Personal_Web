@@ -19,5 +19,13 @@
     "summary": "Opinionated macOS/Linux dev environment managed with chezmoi.",
     "tags": ["Shell", "DevOps"],
     "githubUrl": "https://github.com/cmyao/dotfiles"
+  },
+  {
+    "id": "finance-analyzer",
+    "title": "Finance Analyzer",
+    "summary": "AI-powered document analyzer with company sentiment scoring and RAG-based deep insights. Runs entirely in the browser.",
+    "tags": ["AI", "Finance", "RAG"],
+    "githubUrl": "https://github.com/cmyao/finance-analyzer",
+    "liveUrl": "/tools/finance-analyzer/"
   }
 ]
