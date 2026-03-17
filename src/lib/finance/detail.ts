@@ -1,6 +1,7 @@
 import { chunkText } from './chunking';
 import type { LlmClient } from './openai-client';
 import { rankChunksBySimilarity } from './retrieval';
+import { labelFromScore } from './types';
 import type { DetailedCompanyAnalysis } from './types';
 
 const MAX_DETAIL_CHUNKS = 18;
@@ -60,7 +61,7 @@ export async function analyzeCompanyDetail(options: {
     return {
       company: options.company,
       verdict: draft.verdict,
-      sentimentLabel: draft.sentimentLabel,
+      sentimentLabel: labelFromScore(draft.sentimentScore),
       sentimentScore: draft.sentimentScore,
       confidence: draft.confidence,
       opportunities: draft.opportunities,

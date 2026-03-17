@@ -3,6 +3,7 @@ import { computeKeywords } from './keywords';
 import { buildEvidenceSnippets, countCompanyMentions } from './mentions';
 import type { LlmClient } from './openai-client';
 import { rankChunksBySimilarity } from './retrieval';
+import { labelFromScore } from './types';
 import type { CompanyAnalysis, DocumentAnalysis, VisualizationPayload } from './types';
 
 const MAX_DOCUMENT_CHARS = 60_000;
@@ -40,7 +41,7 @@ function fallbackCompanyFromDraft(
 
   return {
     name: draft.name,
-    sentimentLabel: draft.sentimentLabel as CompanyAnalysis['sentimentLabel'],
+    sentimentLabel: labelFromScore(clampScore(draft.sentimentScore)),
     sentimentScore: clampScore(draft.sentimentScore),
     reasoning: draft.reasoning,
     keywords,
@@ -95,6 +96,7 @@ export async function analyzeDocument(options: {
         try {
           const scored = await options.llm.scoreCompanySentiment({
             company: draft.name,
+            summary: llmDraft.summary,
             contexts: retrieved,
           });
 
@@ -104,10 +106,11 @@ export async function analyzeDocument(options: {
           const keywords =
             scored.keywords.length > 0 ? scored.keywords : computeKeywords(evidenceSnippets.join(' '), 6, companyStopWords);
 
+          const score = clampScore(scored.sentimentScore);
           return {
             name: draft.name,
-            sentimentLabel: scored.sentimentLabel,
-            sentimentScore: clampScore(scored.sentimentScore),
+            sentimentLabel: labelFromScore(score),
+            sentimentScore: score,
             reasoning: scored.reasoning,
             keywords,
             evidenceSnippets,

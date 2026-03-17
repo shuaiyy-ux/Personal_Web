@@ -1,6 +1,12 @@
 export type SourceType = 'financial_report' | 'news' | 'discussion';
 export type SentimentLabel = 'positive' | 'negative' | 'neutral';
 
+export function labelFromScore(score: number): SentimentLabel {
+  if (score >= 0.15) return 'positive';
+  if (score <= -0.15) return 'negative';
+  return 'neutral';
+}
+
 export interface Chunk {
   id: string;
   content: string;

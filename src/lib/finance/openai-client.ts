@@ -110,7 +110,7 @@ function validateCompanySentimentDraft(data: unknown): CompanySentimentDraft {
 export interface LlmClient {
   analyzeDocument(input: { filename: string; text: string }): Promise<DocumentLlmDraft>;
   embedTexts(texts: string[]): Promise<number[][]>;
-  scoreCompanySentiment(input: { company: string; contexts: RetrievedChunk[] }): Promise<CompanySentimentDraft>;
+  scoreCompanySentiment(input: { company: string; summary: string; contexts: RetrievedChunk[] }): Promise<CompanySentimentDraft>;
   analyzeCompany(input: { company: string; summary: string; contexts: RetrievedChunk[] }): Promise<CompanyDetailDraft>;
 }
 
@@ -141,27 +141,23 @@ export function createLlmClient(apiKey: string, model = 'gpt-4.1-mini', embeddin
       return createEmbeddings(apiKey, embeddingModel, texts);
     },
 
-    async scoreCompanySentiment({ company, contexts }) {
-      const raw = await chatCompletion(
-        apiKey,
-        model,
-        [
-          {
-            role: 'system',
-            content: 'You are a finance sentiment analyst. Return JSON only. Score the sentiment for the specified company based strictly on the provided evidence chunks. Do not infer beyond what the evidence states.',
-          },
-          {
-            role: 'user',
-            content: [
-              `Company: ${company}`,
-              'Evidence chunks:',
-              ...contexts.map((c, i) => `Chunk ${i + 1} (relevance ${c.score.toFixed(3)}): ${c.excerpt}`),
-              'Return JSON with fields: sentimentLabel (positive/negative/neutral), sentimentScore (-1 to 1), reasoning (1-2 sentences), keywords (up to 6 relevant terms).',
-            ].join('\n\n'),
-          },
-        ],
-        { temperature: 0, seed: 42 },
-      );
+    async scoreCompanySentiment({ company, summary, contexts }) {
+      const raw = await chatCompletion(apiKey, model, [
+        {
+          role: 'system',
+          content: 'You are a finance research analyst. Return JSON only. Analyze the retrieved evidence for the given company. First write a short verdict summarizing the outlook, then assign a sentiment score. Use the full range: strong positive signals (growth, beats, investment) deserve +0.5 to +1.0, strong negative signals (decline, risk, downgrades) deserve -0.5 to -1.0. Only score near 0 if evidence is truly balanced.',
+        },
+        {
+          role: 'user',
+          content: [
+            `Company: ${company}`,
+            `Document summary: ${summary}`,
+            'Retrieved evidence:',
+            ...contexts.map((c, i) => `Context ${i + 1} (score ${c.score.toFixed(3)}): ${c.excerpt}`),
+            'Return JSON with fields: sentimentLabel (positive/negative/neutral), sentimentScore (-1 to 1), reasoning (2-3 sentences analyzing the evidence for this specific company), keywords (up to 6 relevant terms from the evidence).',
+          ].join('\n\n'),
+        },
+      ]);
       return parseJsonObject(raw, validateCompanySentimentDraft);
     },
 

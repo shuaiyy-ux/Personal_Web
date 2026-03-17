@@ -435,6 +435,12 @@ async function handleDeepAnalysis(company: string): Promise<void> {
       text: analysis.analysisContext.text,
       llm,
     });
+    // Override deep analysis score with the initial RAG-grounded score for consistency
+    const initialCompany = analysis.companies.find((c) => c.name === company);
+    if (initialCompany) {
+      detail.sentimentScore = initialCompany.sentimentScore;
+      detail.sentimentLabel = initialCompany.sentimentLabel;
+    }
     statusMessage = `Deep analysis complete for ${company}.`;
   } catch (err) {
     errorMessage = err instanceof Error ? err.message : 'Deep analysis failed.';
