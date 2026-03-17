@@ -76,6 +76,13 @@ export interface DocumentLlmDraft {
   }>;
 }
 
+export interface CompanySentimentDraft {
+  sentimentLabel: SentimentLabel;
+  sentimentScore: number;
+  reasoning: string;
+  keywords: string[];
+}
+
 export interface CompanyDetailDraft {
   verdict: string;
   sentimentLabel: SentimentLabel;

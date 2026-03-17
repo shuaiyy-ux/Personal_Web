@@ -1,9 +1,14 @@
 import { normalizeLlmJson } from './normalize';
-import type { CompanyDetailDraft, DocumentLlmDraft, RetrievedChunk } from './types';
+import type { CompanyDetailDraft, CompanySentimentDraft, DocumentLlmDraft, RetrievedChunk } from './types';
 
 const OPENAI_API_BASE = 'https://api.openai.com/v1';
 
-async function chatCompletion(apiKey: string, model: string, messages: Array<{ role: string; content: string }>): Promise<string> {
+async function chatCompletion(
+  apiKey: string,
+  model: string,
+  messages: Array<{ role: string; content: string }>,
+  opts: { temperature?: number; seed?: number } = {},
+): Promise<string> {
   const res = await fetch(`${OPENAI_API_BASE}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -12,7 +17,8 @@ async function chatCompletion(apiKey: string, model: string, messages: Array<{ r
     },
     body: JSON.stringify({
       model,
-      temperature: 0.1,
+      temperature: opts.temperature ?? 0.1,
+      ...(opts.seed !== undefined && { seed: opts.seed }),
       response_format: { type: 'json_object' },
       messages,
     }),
@@ -91,9 +97,20 @@ function validateCompanyDraft(data: unknown): CompanyDetailDraft {
   };
 }
 
+function validateCompanySentimentDraft(data: unknown): CompanySentimentDraft {
+  const obj = data as Record<string, unknown>;
+  return {
+    sentimentLabel: (obj.sentimentLabel as CompanySentimentDraft['sentimentLabel']) ?? 'neutral',
+    sentimentScore: typeof obj.sentimentScore === 'number' ? obj.sentimentScore : 0,
+    reasoning: String(obj.reasoning ?? ''),
+    keywords: Array.isArray(obj.keywords) ? obj.keywords.filter((k: unknown) => typeof k === 'string') : [],
+  };
+}
+
 export interface LlmClient {
   analyzeDocument(input: { filename: string; text: string }): Promise<DocumentLlmDraft>;
   embedTexts(texts: string[]): Promise<number[][]>;
+  scoreCompanySentiment(input: { company: string; contexts: RetrievedChunk[] }): Promise<CompanySentimentDraft>;
   analyzeCompany(input: { company: string; summary: string; contexts: RetrievedChunk[] }): Promise<CompanyDetailDraft>;
 }
 
@@ -122,6 +139,30 @@ export function createLlmClient(apiKey: string, model = 'gpt-4.1-mini', embeddin
 
     async embedTexts(texts) {
       return createEmbeddings(apiKey, embeddingModel, texts);
+    },
+
+    async scoreCompanySentiment({ company, contexts }) {
+      const raw = await chatCompletion(
+        apiKey,
+        model,
+        [
+          {
+            role: 'system',
+            content: 'You are a finance sentiment analyst. Return JSON only. Score the sentiment for the specified company based strictly on the provided evidence chunks. Do not infer beyond what the evidence states.',
+          },
+          {
+            role: 'user',
+            content: [
+              `Company: ${company}`,
+              'Evidence chunks:',
+              ...contexts.map((c, i) => `Chunk ${i + 1} (relevance ${c.score.toFixed(3)}): ${c.excerpt}`),
+              'Return JSON with fields: sentimentLabel (positive/negative/neutral), sentimentScore (-1 to 1), reasoning (1-2 sentences), keywords (up to 6 relevant terms).',
+            ].join('\n\n'),
+          },
+        ],
+        { temperature: 0, seed: 42 },
+      );
+      return parseJsonObject(raw, validateCompanySentimentDraft);
     },
 
     async analyzeCompany({ company, summary, contexts }) {
