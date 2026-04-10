@@ -1,0 +1,278 @@
+<body>
+  <h1>AI Agent Architecture Deep Dive: Building a Tool-Calling Assistant with Claude CLI</h1>
+
+  <div class="meta">
+    <div class="author">CM Yao</div>
+    <div>Agent internals, streaming, tool loops & migration paths</div>
+    <div>April 2026</div>
+  </div>
+
+  <p>This post walks through how we built a streaming, multi-turn, tool-calling AI agent on top of Claude Code CLI and Python. We'll peel back every layer — from process spawning and streaming events, through the tool-call loop, to context management — and finish with a comparison of CLI vs SDK approaches.</p>
+
+  <!-- ───────────── 1. What Is the Agent? ───────────── -->
+
+  <h2>1. What Is the Agent?</h2>
+
+  <p>The agent is not a standalone AI product — it's a <strong>middleman program</strong> that sits between the user's browser and Claude. Its job is simple: receive a question, feed it to Claude, execute any tools Claude requests, return results, and repeat — up to 6 iterations to prevent runaway loops.</p>
+
+  <div class="mermaid">
+flowchart LR
+    U["User (Browser)"] -->|question| S["server.py<br/>FastAPI + SSE"]
+    S --> A["agent.py<br/>orchestrator"]
+    A -->|stdin| C["Claude CLI<br/>subprocess"]
+    C -->|stdout| A
+    A <-->|execute| T["tools.py<br/>custom tools"]
+    A -->|stream tokens| S
+    S -->|SSE events| U
+  </div>
+
+  <!-- ───────────── 2. Launching Claude ───────────── -->
+
+  <h2>2. How the Agent Starts Claude</h2>
+
+  <p>A single <code>subprocess.Popen</code> call boots Claude CLI as a child process with three I/O pipes:</p>
+
+  <div class="mermaid">
+flowchart LR
+    Agent["agent.py"] -->|"stdin (question)"| CLI["Claude CLI"]
+    CLI -->|"stdout (JSON stream)"| Agent
+    CLI -->|"stderr (errors)"| Agent
+  </div>
+
+  <table>
+    <thead><tr><th>Flag</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>-p</code></td><td>Pipe mode — no interactive UI; reads stdin, writes stdout</td></tr>
+      <tr><td><code>--output-format stream-json</code></td><td>Line-delimited JSON events for structured parsing</td></tr>
+      <tr><td><code>--include-partial-messages</code></td><td>Emit every token immediately (typewriter effect)</td></tr>
+      <tr><td><code>--no-session-persistence</code></td><td>Stateless — each call is a fresh conversation</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>Auth:</strong> Claude CLI uses local OAuth (browser login stored in <code>~/.claude/</code>). No API key is needed — but anyone who clones the repo must log in with their own account.</p>
+
+  <p><strong>Tool access:</strong> In pipe mode, Claude's built-in tools (Read, Edit, Bash) are disabled. The only tools available are the ones we define in <code>tools.py</code>, invoked via XML tags.</p>
+
+  <!-- ───────────── 3. Streaming ───────────── -->
+
+  <h2>3. Streaming Fundamentals</h2>
+
+  <p>Without streaming, the user stares at a blank screen for seconds until the full response lands. With streaming, tokens arrive in real time — the familiar "typewriter effect."</p>
+
+  <table>
+    <thead><tr><th>Transport</th><th>Direction</th><th>Analogy</th><th>Use Case</th></tr></thead>
+    <tbody>
+      <tr><td>HTTP request/response</td><td>One-shot</td><td>Texting</td><td>Regular API calls</td></tr>
+      <tr><td><strong>SSE</strong></td><td>Server → Client</td><td>Live broadcast</td><td>AI token streaming, notifications</td></tr>
+      <tr><td>WebSocket</td><td>Bidirectional</td><td>Phone call</td><td>Chat rooms, collaborative editing</td></tr>
+    </tbody>
+  </table>
+
+  <p>We use <strong>SSE (Server-Sent Events)</strong> because we only need one-way push from server to browser. The frontend connects with a native <code>EventSource</code> object.</p>
+
+  <!-- ───────────── 4. Event Anatomy ───────────── -->
+
+  <h2>4. Claude's Streaming Event System</h2>
+
+  <p>A single Claude response can contain multiple <strong>content blocks</strong> — text, tool calls, or thinking traces. The event lifecycle follows a strict nesting:</p>
+
+  <div class="mermaid">
+flowchart TB
+    MS["message_start"] --> CBS1["content_block_start<br/>(block 0: text)"]
+    CBS1 --> CBD1["content_block_delta × N<br/>(text tokens)"]
+    CBD1 --> CBE1["content_block_stop"]
+    CBE1 --> CBS2["content_block_start<br/>(block 1: tool_use)"]
+    CBS2 --> CBD2["content_block_delta × N<br/>(JSON fragments)"]
+    CBD2 --> CBE2["content_block_stop"]
+    CBE2 --> MD["message_delta<br/>(stop_reason, usage)"]
+    MD --> ME["message_stop"]
+  </div>
+
+  <p>Our code only cares about two things from this stream:</p>
+  <ul>
+    <li><strong><code>content_block_delta</code></strong> with <code>text_delta</code> — the actual text tokens to display</li>
+    <li><strong><code>result</code></strong> — the final summary with cost info</li>
+  </ul>
+
+  <p>The delta subtypes determine what kind of content is arriving:</p>
+
+  <table>
+    <thead><tr><th>delta.type</th><th>Meaning</th><th>When</th></tr></thead>
+    <tbody>
+      <tr><td><code>text_delta</code></td><td>Text fragment</td><td>Claude is speaking</td></tr>
+      <tr><td><code>input_json_delta</code></td><td>Tool parameter JSON chunk</td><td>Claude is calling a tool (SDK mode)</td></tr>
+      <tr><td><code>thinking_delta</code></td><td>Reasoning trace</td><td>Extended thinking enabled</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ───────────── 5. Parsing Pipeline ───────────── -->
+
+  <h2>5. The Two-Layer Parsing Pipeline</h2>
+
+  <p>Raw CLI output is verbose. We simplify it into three event types before passing upstream:</p>
+
+  <div class="mermaid">
+flowchart LR
+    subgraph "_call_claude_stream()"
+      RAW["Raw JSON lines<br/>from stdout"] --> PARSE["Layer 1: Parse &amp; simplify"]
+      PARSE --> TOKEN["yield {type: token}"]
+      PARSE --> DONE["yield {type: done}"]
+      PARSE --> ERR["yield {type: error}"]
+    end
+    subgraph "run_agent_stream()"
+      TOKEN --> CONCAT["Layer 2: Concatenate text"]
+      DONE --> COST["Accumulate cost"]
+      CONCAT --> DECIDE{"Contains<br/>&lt;tool_call&gt;?"}
+    end
+  </div>
+
+  <table>
+    <thead><tr><th>Simplified Event</th><th>Meaning</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td><code>token</code></td><td>A chunk of text</td><td>Extracted from nested <code>stream_event → content_block_delta → text_delta</code></td></tr>
+      <tr><td><code>done</code></td><td>Response complete</td><td>From the <code>result</code> event</td></tr>
+      <tr><td><code>error</code></td><td>Something broke</td><td>CLI process error</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ───────────── 6. Tool Call Loop ───────────── -->
+
+  <h2>6. The Tool-Call Loop</h2>
+
+  <p>After Claude finishes a response, the full text falls into one of three buckets:</p>
+  <ul>
+    <li><strong><code>&lt;answer&gt;</code> tag</strong> — extract and return the final answer</li>
+    <li><strong><code>&lt;tool_call&gt;</code> tag</strong> — parse tool name + args, execute, feed result back to Claude</li>
+    <li><strong>Plain text</strong> — treat as the final answer</li>
+  </ul>
+
+  <div class="mermaid">
+flowchart TB
+    START(["User question"]) --> CALL["Send to Claude"]
+    CALL --> STREAM["Stream response → full_text"]
+    STREAM --> CHECK{"Inspect full_text"}
+    CHECK -->|"&lt;answer&gt; found"| RETURN(["Return answer to user"])
+    CHECK -->|"&lt;tool_call&gt; found"| EXEC["Regex extract → json.loads<br/>→ run_tool()"]
+    CHECK -->|"plain text"| RETURN
+    EXEC --> APPEND["Append assistant msg<br/>+ tool result to messages"]
+    APPEND --> GUARD{"iteration < 6?"}
+    GUARD -->|yes| CALL
+    GUARD -->|no| RETURN
+  </div>
+
+  <p><strong>Token truncation isn't an issue:</strong> during streaming, we only concatenate text. Parsing happens after the stream ends, so <code>&lt;tool_call&gt;</code> is always complete.</p>
+
+  <!-- ───────────── 7. Context Management ───────────── -->
+
+  <h2>7. Context Management</h2>
+
+  <p>Because we use <code>--no-session-persistence</code>, Claude has no memory between calls. The program maintains a <code>messages</code> list and rebuilds the full conversation each time:</p>
+
+  <div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant A as Agent
+    participant C as Claude
+
+    U->>A: "How many cars went to Dallas?"
+    A->>C: system prompt + user question
+    C-->>A: &lt;tool_call&gt;query_data(...)&lt;/tool_call&gt;
+    A->>A: Execute tool, append to messages
+    A->>C: system prompt + full history + tool result
+    C-->>A: &lt;answer&gt;3 cars, shipping $450&lt;/answer&gt;
+    A->>U: Final answer
+  </div>
+
+  <p><strong>Trade-off:</strong> every iteration resends the entire conversation history as plain text. Token usage grows linearly — round 1 costs ~2K tokens, round 2 ~4K, round 3 ~6K. This is a structural limitation of the CLI subprocess approach.</p>
+
+  <!-- ───────────── 8. Tool Discovery ───────────── -->
+
+  <h2>8. How Claude Discovers Tools</h2>
+
+  <p>There's no magic. Each tool has a <code>SPEC</code> dict in <code>tools.py</code>. A helper function converts all specs into human-readable text and injects it into the system prompt. Claude reads the spec, understands what's available, and responds with XML tags when it wants to invoke a tool.</p>
+
+  <div class="mermaid">
+flowchart LR
+    SPEC["tools.py SPEC dicts"] --> BUILD["_build_tool_descriptions()"]
+    BUILD --> PROMPT["System prompt<br/>{tool_descriptions}"]
+    PROMPT --> CLAUDE["Claude reads &amp; understands"]
+    CLAUDE --> XML["Responds with<br/>&lt;tool_call&gt;...&lt;/tool_call&gt;"]
+  </div>
+
+  <!-- ───────────── 9. Complete Data Flow ───────────── -->
+
+  <h2>9. End-to-End Data Flow</h2>
+
+  <p>The full transformation chain from Claude's output back to Claude's input:</p>
+
+  <div class="mermaid">
+flowchart TB
+    A["Claude CLI stdout<br/>(JSON string lines)"] -->|"readline()"| B["json.loads → Python dict<br/>extract text_delta fragments"]
+    B -->|"concatenate"| C["full_text (string)<br/>&lt;tool_call&gt;{...}&lt;/tool_call&gt;"]
+    C -->|"regex + json.loads"| D["tool_call (dict)<br/>{name, args}"]
+    D -->|"run_tool()"| E["tool_result (dict)<br/>{result, error}"]
+    E -->|"json.dumps"| F["result_str → messages list"]
+    F -->|"_build_input()"| G["Plain text blob<br/>→ Claude CLI stdin"]
+  </div>
+
+  <p><strong>In short:</strong> JSON string → Python dict (unpack text) → string → dict (parse tool call) → execute → dict → string → concatenate into plain text → feed to Claude.</p>
+
+  <!-- ───────────── 10. CLI vs SDK ───────────── -->
+
+  <h2>10. CLI vs SDK: Comparison & Migration</h2>
+
+  <table>
+    <thead><tr><th></th><th>Current (CLI + Text)</th><th>SDK Native Tools</th></tr></thead>
+    <tbody>
+      <tr><td>Tool discovery</td><td>Text description in system prompt</td><td>Structured JSON Schema via <code>tools</code> parameter</td></tr>
+      <tr><td>Tool invocation</td><td>XML tags in output</td><td><code>tool_use</code> content block</td></tr>
+      <tr><td>Parameter format</td><td>Claude self-generates JSON string</td><td>API guarantees schema-valid JSON</td></tr>
+      <tr><td>Reliability</td><td>Claude might malform the JSON</td><td>Format guaranteed by API</td></tr>
+      <tr><td>Parsing</td><td>Regex extraction</td><td>SDK gives Python objects directly</td></tr>
+      <tr><td>Token cost</td><td>Tool specs consume prompt tokens</td><td>Dedicated field, more efficient</td></tr>
+      <tr><td>Auth</td><td>OAuth (browser login)</td><td>API key (<code>sk-ant-xxx</code>)</td></tr>
+      <tr><td>Billing</td><td>Subscription (Pro/Max)</td><td>Pay-per-token</td></tr>
+    </tbody>
+  </table>
+
+  <div class="mermaid">
+flowchart LR
+    subgraph "Current Architecture"
+      direction LR
+      U1["User"] --> F1["FastAPI (SSE)"]
+      F1 --> A1["agent.py"]
+      A1 --> SUB["subprocess"]
+      SUB --> CLI1["Claude CLI (-p)"]
+      A1 <--> T1["tools.py"]
+    end
+  </div>
+
+  <div class="mermaid">
+flowchart LR
+    subgraph "SDK Migration Target"
+      direction LR
+      U2["User"] --> F2["FastAPI (SSE)"]
+      F2 --> A2["agent.py"]
+      A2 --> SDK["Anthropic SDK"]
+      SDK --> API["Anthropic API"]
+      A2 <--> T2["tools.py"]
+    end
+  </div>
+
+  <h3>Migration is Minimal</h3>
+  <ul>
+    <li>Replace <code>_call_claude_stream()</code> — swap subprocess for SDK client</li>
+    <li>Replace <code>_build_input()</code> — plain text concatenation → JSON message array</li>
+    <li>Convert tool SPEC dicts to <code>input_schema</code> format</li>
+    <li>Everything else (tool execution, SSE push, frontend) stays the same</li>
+  </ul>
+
+  <h3>Expected Gains</h3>
+  <ul>
+    <li><strong>20–30% token savings</strong> — no repeated history resend</li>
+    <li><strong>Guaranteed tool-call format</strong> — no more regex parsing failures</li>
+    <li><strong>Simpler deployment</strong> — no CLI installation dependency</li>
+  </ul>
+
+  <p><strong>Looking further ahead:</strong> the Claude Agent SDK wraps the entire tool loop automatically — no manual <code>while</code> loop needed. But the SDK is still maturing; migrating to the standard SDK first is the safer intermediate step.</p>
+</body>

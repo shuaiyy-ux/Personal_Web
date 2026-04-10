@@ -1,5 +1,19 @@
 [
   {
+    "id": "agent-architecture",
+    "title": "AI Agent Architecture Deep Dive",
+    "summary": "How to build a tool-calling AI agent with Claude CLI: streaming, tool loops, context management, and SDK migration paths.",
+    "tags": [
+      "AI",
+      "agents",
+      "architecture"
+    ],
+    "publishedAt": "2026-04-10",
+    "url": "/blog/agent-architecture/",
+    "external": false,
+    "status": "published"
+  },
+  {
     "id": "ai-native-playbooks",
     "title": "AI-Native Playbooks",
     "summary": "Reusable recipes for automating the boring parts of product work.",
