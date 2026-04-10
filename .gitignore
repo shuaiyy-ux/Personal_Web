@@ -23,6 +23,9 @@ test-results/
 playwright-report/
 playwright/.cache/
 
+# Claude Code
+CLAUDE.md
+
 # Misc
 *.tmp
 *.swp
