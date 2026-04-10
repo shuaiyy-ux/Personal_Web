@@ -20,7 +20,7 @@
   <p>Only once we can reliably and quickly capture such tweets can we do everything else: extract text, expand short links, identify contract addresses, verify authenticity, and hand the signal to the trading module.</p>
   <p>We had basically no web experience at the start: we could code, but we hadn't built websites; HTML/CSS was unfamiliar; we hadn't used automation tools. It was our first full project; we didn't even have a roadmap—we just started and progressed step by step.</p>
 
-  <img src="/blog/sniperbot-zero-to-one/image-01.png" alt="Twitter API pricing and quota comparison">
+  <img src="/blog/sniperbot-zero-to-one/image-01.png" alt="Twitter API pricing and quota comparison" loading="lazy" decoding="async">
 
   <h2>First Try: X/Twitter API — Money Isn't the Problem, Lack of Money Is</h2>
   <p>Simply put, an API is a "door" provided by a website or service for developers; through this door you can programmatically request data or send commands. For Twitter/X, the official API lets you query a tweet's details, search posts that match keywords, or subscribe to certain streams (if the account/permissions allow). The advantage is "official + structured": fixed formats, relative stability, no need to parse messy web pages.</p>
@@ -39,7 +39,7 @@
   <h2>Plan B: Build Our Own Crawler</h2>
   <p>Before this, a note on tradeoffs: we initially wanted to use the Twitter API because it's official and looks cleaner and more stable. Crawling web pages wasn't our first choice—either you subscribe to someone else's data service, or you run into anti-bot defenses—lots of friction. But in practice, to watch a few high-signal accounts at second-level latency and keep it running long-term, the API quotas and cost boxed us in. We had to roll up our sleeves and build a crawler. We chose a tool that automates the browser (Playwright), and things began to fall into place.</p>
 
-  <img src="/blog/sniperbot-zero-to-one/image-02.png" alt="Crawler architecture and browser automation flow">
+  <img src="/blog/sniperbot-zero-to-one/image-02.png" alt="Crawler architecture and browser automation flow" loading="lazy" decoding="async">
 
   <h3>The Core Idea: Three Key Components</h3>
 

@@ -15,6 +15,14 @@ INDEX_TEMPLATE = """<!DOCTYPE html>
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
     <title>{title} — CM Yao</title>
     <meta name=\"description\" content=\"{summary}\" />
+    <link rel=\"canonical\" href=\"https://www.cmyao.com/blog/{slug}/\" />
+    <meta property=\"og:type\" content=\"article\" />
+    <meta property=\"og:url\" content=\"https://www.cmyao.com/blog/{slug}/\" />
+    <meta property=\"og:title\" content=\"{title} — CM Yao\" />
+    <meta property=\"og:description\" content=\"{summary}\" />
+    <meta name=\"twitter:card\" content=\"summary\" />
+    <meta name=\"twitter:title\" content=\"{title} — CM Yao\" />
+    <meta name=\"twitter:description\" content=\"{summary}\" />
     <link rel=\"stylesheet\" href=\"/src/styles/global.css\" />
   </head>
   <body>
@@ -96,7 +104,7 @@ def write_body_and_index(post):
   (public_dir / "body.html").write_text(body_html, encoding="utf-8")
   (page_dir / "body.html").write_text(body_html, encoding="utf-8")
   (page_dir / "index.html").write_text(
-    INDEX_TEMPLATE.format(title=post["title"], summary=post["summary"]),
+    INDEX_TEMPLATE.format(title=post["title"], summary=post["summary"], slug=slug),
     encoding="utf-8",
   )
   print(f"[page] /blog/{slug}/ generated")

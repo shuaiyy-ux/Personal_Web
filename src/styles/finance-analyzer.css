@@ -515,7 +515,7 @@
 
   .finance-bar__label {
     min-width: 3.5rem;
-    font-size: 0.65rem;
+    font-size: var(--font-size-xs);
   }
 }
 
