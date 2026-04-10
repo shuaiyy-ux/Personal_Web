@@ -1,13 +1,6 @@
 import metaData from '../data/meta.json';
 import contactsData from '../data/contacts.json';
-
-interface ContactLink {
-  id: string;
-  type: string;
-  label: string;
-  value: string;
-  required: boolean;
-}
+import { ContactLink } from '../types';
 
 interface SiteMeta {
   lastUpdated: string;

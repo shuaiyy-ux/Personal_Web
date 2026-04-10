@@ -42,8 +42,7 @@ def convert(md_path: str, out_path: str) -> None:
         html = html.replace(f"<p>{placeholder}</p>", block_html)
         html = html.replace(placeholder, block_html)
 
-    # Step 4: wrap in <body> tag to match blog convention
-    body_html = f"<body>\n{html}\n</body>\n"
+    body_html = f"{html}\n"
 
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     Path(out_path).write_text(body_html, encoding="utf-8")

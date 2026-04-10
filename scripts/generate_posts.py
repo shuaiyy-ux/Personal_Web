@@ -40,7 +40,7 @@ def ensure_rollup_input(slug: str):
 
   marker = "rollupOptions: {\n      input: {"
   if marker not in text:
-    raise SystemExit("vite.config.ts 结构不符合预期，请手动更新 rollupOptions.input 并重新运行脚本。")
+    raise SystemExit("vite.config.ts structure unexpected — manually update rollupOptions.input and rerun.")
 
   insert = f'{marker}\n        "blog-{slug}": resolve(rootDir, "blog/{slug}/index.html"),'
   text = text.replace(marker, insert, 1)
@@ -110,7 +110,7 @@ def main():
     required = ["id", "title", "summary", "bodyHtmlFile"]
     for k in required:
       if not post.get(k):
-        raise SystemExit(f"字段缺失: {k} in {post}")
+        raise SystemExit(f"Missing required field: {k} in {post}")
 
     ok = write_body_and_index(post)
     if not ok:
@@ -119,7 +119,7 @@ def main():
     ensure_rollup_input(post["id"])
 
   save_json(DATA_FILE, writing)
-  print("✅ 完成：writing.json 已更新，页面已生成，vite.config.ts 已登记入口。")
+  print("Done: writing.json updated, pages generated, vite.config.ts entries registered.")
 
 if __name__ == "__main__":
   main()

@@ -79,28 +79,6 @@
   animation-delay: calc(var(--item-index, 0) * 50ms);
 }
 
-/* ---------- Interactive Feedback ---------- */
-
-/* Subtle pulse for clickable elements */
-@keyframes subtle-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 0 transparent;
-  }
-  50% {
-    box-shadow: 0 0 0 4px var(--color-accent-glow);
-  }
-}
-
-/* Arrow nudge for navigation hints */
-@keyframes arrow-nudge {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  50% {
-    transform: translateX(var(--arrow-nudge));
-  }
-}
-
 /* ---------- Brand Symbol Animation ---------- */
 
 @keyframes symbol-rotate {

@@ -1,12 +1,5 @@
 import contactsData from '../data/contacts.json';
-
-interface ContactLink {
-  id: string;
-  type: string;
-  label: string;
-  value: string;
-  required: boolean;
-}
+import { ContactLink } from '../types';
 
 export function renderHeader(): string {
   const contacts = contactsData as ContactLink[];
