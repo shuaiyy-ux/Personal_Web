@@ -41,29 +41,24 @@ function renderWritingItem(item: WritingItem, isLatest: boolean): string {
     badges.push('<span class="writing-item__badge writing-item__badge--latest">Latest</span>');
   }
 
-  const title = `<h3 class="writing-item__title">${item.title}</h3>`;
-  const titleBlock = `
-        <a
-          class="writing-item__link"
-          href="${item.url}"
-          ${item.external ? 'target="_blank" rel="noopener noreferrer"' : ''}
-        >
-          ${title}
-        </a>
-      `;
-
   return `
-    <article class="writing-item">
-      <div class="writing-item__top">
-        ${titleBlock}
-        ${badges.join('')}
-      </div>
-      <p class="writing-item__summary">${item.summary}</p>
-      <div class="writing-item__meta">
-        <span class="writing-item__tags">${item.tags.map((t) => `<span class="tag">${t}</span>`).join('')}</span>
-        <time class="writing-item__date" datetime="${item.publishedAt ?? ''}">${formatDate(item.publishedAt)}</time>
-      </div>
-    </article>
+    <a
+      class="writing-item"
+      href="${item.url}"
+      ${item.external ? 'target="_blank" rel="noopener noreferrer"' : ''}
+    >
+      <article>
+        <div class="writing-item__top">
+          <h3 class="writing-item__title">${item.title}</h3>
+          ${badges.join('')}
+        </div>
+        <p class="writing-item__summary">${item.summary}</p>
+        <div class="writing-item__meta">
+          <span class="writing-item__tags">${item.tags.map((t) => `<span class="tag">${t}</span>`).join('')}</span>
+          <time class="writing-item__date" datetime="${item.publishedAt ?? ''}">${formatDate(item.publishedAt)}</time>
+        </div>
+      </article>
+    </a>
   `;
 }
 
