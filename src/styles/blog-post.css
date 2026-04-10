@@ -70,17 +70,149 @@
   margin: 0 auto;
 }
 
-.blog-post__body h2,
-.blog-post__body h3 {
-  margin: var(--space-2) 0;
+/* -- Headings ----------------------------------------------------------- */
+.blog-post__body h1 {
+  font-size: var(--font-size-2xl);
+  letter-spacing: var(--letter-spacing-tight);
+  margin: var(--space-6) 0 var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.blog-post__body ul {
-  padding-left: 1.25rem;
+.blog-post__body h2 {
+  font-size: var(--font-size-xl);
+  margin: var(--space-6) 0 var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.blog-post__body h3 {
+  font-size: var(--font-size-lg);
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.blog-post__body h4 {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  margin: var(--space-3) 0 var(--space-1);
+  color: var(--color-fg-muted);
+}
+
+/* -- Lists -------------------------------------------------------------- */
+.blog-post__body ul,
+.blog-post__body ol {
+  padding-left: 1.5rem;
   margin: 0;
   display: grid;
   gap: var(--space-2);
   color: var(--color-fg-muted);
+}
+
+.blog-post__body ol {
+  list-style: decimal;
+}
+
+.blog-post__body li {
+  line-height: var(--line-height-relaxed);
+}
+
+/* -- Horizontal Rules --------------------------------------------------- */
+.blog-post__body hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin: var(--space-6) 0;
+}
+
+/* -- Inline Code -------------------------------------------------------- */
+.blog-post__body code {
+  font-family: var(--font-family-mono);
+  font-size: 0.875em;
+  padding: 0.15em 0.4em;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 0.25rem;
+  color: var(--color-fg);
+}
+
+/* -- Code Blocks -------------------------------------------------------- */
+.blog-post__body pre {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  overflow-x: auto;
+  line-height: 1.6;
+  font-size: var(--font-size-sm);
+}
+
+.blog-post__body pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+  color: var(--color-fg-muted);
+}
+
+/* -- Tables ------------------------------------------------------------- */
+.blog-post__body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.blog-post__body thead {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.blog-post__body th {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-fg);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  white-space: nowrap;
+}
+
+.blog-post__body td {
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-fg-muted);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: top;
+}
+
+.blog-post__body tr:last-child td {
+  border-bottom: none;
+}
+
+.blog-post__body td code,
+.blog-post__body th code {
+  font-size: 0.85em;
+}
+
+/* -- Blockquotes -------------------------------------------------------- */
+.blog-post__body blockquote {
+  border-left: 3px solid rgba(255, 255, 255, 0.2);
+  padding: var(--space-2) var(--space-4);
+  margin: 0;
+  color: var(--color-fg-muted);
+  font-style: italic;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+/* -- Strong / Emphasis -------------------------------------------------- */
+.blog-post__body strong {
+  color: var(--color-fg);
+  font-weight: 600;
+}
+
+/* -- Paragraphs --------------------------------------------------------- */
+.blog-post__body p {
+  color: var(--color-fg-muted);
+  line-height: var(--line-height-relaxed);
 }
 
 .blog-post--not-found {
