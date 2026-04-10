@@ -18,6 +18,7 @@ export default defineConfig({
         'blog-spec-kit': resolve(rootDir, 'blog/spec-kit/index.html'),
         'blog-nvidia-research': resolve(rootDir, 'blog/nvidia-research/index.html'),
         'blog-sniperbot-zero-to-one': resolve(rootDir, 'blog/sniperbot-zero-to-one/index.html'),
+        'blog-agent-architecture': resolve(rootDir, 'blog/agent-architecture/index.html'),
         'finance-analyzer': resolve(rootDir, 'tools/finance-analyzer/index.html'),
       },
     },
