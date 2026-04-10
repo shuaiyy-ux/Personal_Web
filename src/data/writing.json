@@ -14,32 +14,6 @@
     "status": "published"
   },
   {
-    "id": "ai-native-playbooks",
-    "title": "AI-Native Playbooks",
-    "summary": "Reusable recipes for automating the boring parts of product work.",
-    "tags": [
-      "AI",
-      "automation"
-    ],
-    "publishedAt": "2026-03-05",
-    "url": "/blog/ai-native-playbooks",
-    "external": false,
-    "status": "upcoming"
-  },
-  {
-    "id": "operator-handbook",
-    "title": "Operator Handbook for Agents",
-    "summary": "Guardrails, handoffs, and debugging patterns when agents run production tasks.",
-    "tags": [
-      "agents",
-      "operations"
-    ],
-    "publishedAt": "2026-02-22",
-    "url": "/blog/operator-handbook",
-    "external": false,
-    "status": "upcoming"
-  },
-  {
     "id": "spec-kit",
     "title": "Spec-Kit: Iteration, Planning, and TDD Notes",
     "summary": "How to rerun plans, write tests first, and keep SpecKit iterations traceable.",

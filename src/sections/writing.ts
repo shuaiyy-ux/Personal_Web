@@ -8,7 +8,7 @@ export interface WritingItem {
   publishedAt?: string;
   url: string;
   external: boolean;
-  status?: 'published' | 'upcoming';
+  status?: 'published';
 }
 
 export function renderWriting(): string {
@@ -29,26 +29,20 @@ export function renderWritingList(items: WritingItem[]): string {
   }
 
   const sorted = sortByPublished(items);
-  const latestPublishedId = sorted.find((item) => (item.status ?? 'published') === 'published')?.id;
+  const latestPublishedId = sorted[0]?.id;
   const itemsHtml = sorted.map((item) => renderWritingItem(item, item.id === latestPublishedId)).join('');
   return `<div class="writing__list">${itemsHtml}</div>`;
 }
 
 function renderWritingItem(item: WritingItem, isLatest: boolean): string {
-  const status = item.status ?? 'published';
-  const isPublished = status === 'published';
   const badges: string[] = [];
 
-  if (!isPublished) {
-    badges.push('<span class="writing-item__badge">Coming soon</span>');
-  }
-  if (isPublished && isLatest) {
+  if (isLatest) {
     badges.push('<span class="writing-item__badge writing-item__badge--latest">Latest</span>');
   }
 
   const title = `<h3 class="writing-item__title">${item.title}</h3>`;
-  const titleBlock = isPublished
-    ? `
+  const titleBlock = `
         <a
           class="writing-item__link"
           href="${item.url}"
@@ -56,11 +50,10 @@ function renderWritingItem(item: WritingItem, isLatest: boolean): string {
         >
           ${title}
         </a>
-      `
-    : `<div class="writing-item__link writing-item__link--inactive" aria-disabled="true">${title}</div>`;
+      `;
 
   return `
-    <article class="writing-item ${!isPublished ? 'writing-item--upcoming' : ''}">
+    <article class="writing-item">
       <div class="writing-item__top">
         ${titleBlock}
         ${badges.join('')}

@@ -28,7 +28,7 @@ function render(): void {
         <div class="blog-list__header">
           <div>
             <p class="blog-list__eyebrow">All writing</p>
-            <h2 id="blog-list-heading" class="blog-list__title">Recent and upcoming</h2>
+            <h2 id="blog-list-heading" class="blog-list__title">Recent posts</h2>
           </div>
         </div>
         ${renderWritingList(items)}
@@ -55,9 +55,6 @@ function sortByPublished(items: WritingItem[]): WritingItem[] {
 }
 
 function renderBlogHero(items: WritingItem[]): string {
-  const publishedCount = items.filter((item) => (item.status ?? 'published') === 'published').length;
-  const upcomingCount = items.length - publishedCount;
-
   return `
     <section class="blog-hero" aria-labelledby="blog-hero-heading">
       <p class="blog-hero__eyebrow">Blog</p>
@@ -66,8 +63,7 @@ function renderBlogHero(items: WritingItem[]): string {
         Essays and notes on automation, applied AI, and building systems that stay calm at scale.
       </p>
       <div class="blog-hero__meta">
-        <span class="pill">${publishedCount} published</span>
-        ${upcomingCount > 0 ? `<span class="pill pill--muted">${upcomingCount} coming soon</span>` : ''}
+        <span class="pill">${items.length} published</span>
         <a class="pill pill--link" href="/#writing">Back to homepage</a>
       </div>
     </section>
