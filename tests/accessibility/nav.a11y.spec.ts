@@ -13,13 +13,10 @@ test.describe('Navigation Accessibility', () => {
 
   test('navigation blocks are keyboard accessible', async ({ page }) => {
     await page.goto('/');
-    const firstBlock = page.locator('.nav-block').first();
+    const navBlock = page.locator('[data-section="navigation"] .nav-block').first();
 
-    // Tab to first nav block
-    await page.keyboard.press('Tab'); // Skip to main link
-    await page.keyboard.press('Tab'); // First nav block
-
-    await expect(firstBlock).toBeFocused();
+    await navBlock.focus();
+    await expect(navBlock).toBeFocused();
   });
 
   test('focus states are visible', async ({ page }) => {

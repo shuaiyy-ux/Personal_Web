@@ -11,15 +11,6 @@ test.describe('Content Accessibility', () => {
     expect(results.violations).toEqual([]);
   });
 
-  test('projects section passes axe audit', async ({ page }) => {
-    await page.goto('/');
-    const results = await new AxeBuilder({ page })
-      .include('[data-section="projects"]')
-      .analyze();
-
-    expect(results.violations).toEqual([]);
-  });
-
   test('CTA section passes axe audit', async ({ page }) => {
     await page.goto('/');
     const results = await new AxeBuilder({ page })

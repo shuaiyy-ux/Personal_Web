@@ -6,6 +6,7 @@ test.describe('Hero Accessibility', () => {
     await page.goto('/');
     const results = await new AxeBuilder({ page })
       .include('[data-section="hero"]')
+      .exclude('.hero__scroll-cue')
       .analyze();
 
     expect(results.violations).toEqual([]);

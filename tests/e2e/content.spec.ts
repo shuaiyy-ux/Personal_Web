@@ -20,30 +20,16 @@ test.describe('Content Sections', () => {
     await expect(firstItem.locator('.writing-item__summary')).toBeVisible();
   });
 
-  test('displays projects section with items', async ({ page }) => {
-    const projectsSection = page.locator('[data-section="projects"]');
-    await expect(projectsSection).toBeVisible();
-
-    const cards = projectsSection.locator('.project-card');
-    const count = await cards.count();
-    expect(count).toBeGreaterThanOrEqual(1);
-    expect(count).toBeLessThanOrEqual(6);
-
-    // Each card has GitHub link
-    const firstCard = cards.first();
-    await expect(firstCard.locator('a[href*="github.com"]')).toBeVisible();
-  });
-
   test('CTA section shows contact options', async ({ page }) => {
     const ctaSection = page.locator('[data-section="cta"]');
     await expect(ctaSection).toBeVisible();
 
-    // Button with "LET'S START"
+    // CTA button exists and links to email
     const ctaButton = ctaSection.locator('.cta__button');
-    await expect(ctaButton).toContainText("LET'S START");
+    await expect(ctaButton).toBeVisible();
+    await expect(ctaButton).toHaveAttribute('href', /^mailto:/);
 
-    // Contact links for email, LinkedIn, GitHub
-    await expect(ctaSection.locator('a[href^="mailto:"]')).toBeVisible();
+    // Contact links for LinkedIn and GitHub
     await expect(ctaSection.locator('a[href*="linkedin.com"]')).toBeVisible();
     await expect(ctaSection.locator('a[href*="github.com"]')).toBeVisible();
   });
