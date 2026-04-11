@@ -1,6 +1,7 @@
 import metaData from '../data/meta.json';
 import contactsData from '../data/contacts.json';
 import { ContactLink } from '../types';
+import { t, formatDateLocale } from '../i18n';
 
 interface SiteMeta {
   lastUpdated: string;
@@ -32,18 +33,14 @@ export function renderFooter(): string {
     <footer data-section="footer" class="footer">
       <div class="footer__brand">CM Yao</div>
       <nav class="footer__nav" aria-label="Footer navigation">
-        <a class="footer__link" href="/blog">Blog</a>
+        <a class="footer__link" href="/blog">${t('nav.blog')}</a>
         ${linksHtml}
       </nav>
       <div class="footer__meta">
         <span>© ${year}</span>
-        <span class="footer__updated">Last updated: ${formatDate(meta.lastUpdated)}</span>
+        <span class="footer__updated">${t('footer.updated')} ${formatDateLocale(meta.lastUpdated)}</span>
       </div>
     </footer>
   `;
 }
 
-function formatDate(iso: string): string {
-  const date = new Date(iso);
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}

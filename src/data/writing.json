@@ -2,12 +2,10 @@
   {
     "id": "agent-architecture",
     "title": "AI Agent Architecture Deep Dive",
+    "title_zh": "AI Agent 架构深度解析",
     "summary": "How to build a tool-calling AI agent with Claude CLI: streaming, tool loops, context management, and SDK migration paths.",
-    "tags": [
-      "AI",
-      "agents",
-      "architecture"
-    ],
+    "summary_zh": "如何使用 Claude CLI 构建工具调用型 AI Agent：流式传输、工具循环、上下文管理与 SDK 迁移路径。",
+    "tags": ["AI", "agents", "architecture"],
     "publishedAt": "2026-04-10",
     "url": "/blog/agent-architecture/",
     "external": false,
@@ -16,12 +14,10 @@
   {
     "id": "spec-kit",
     "title": "Spec-Kit: Iteration, Planning, and TDD Notes",
+    "title_zh": "Spec-Kit：迭代、规划与 TDD 笔记",
     "summary": "How to rerun plans, write tests first, and keep SpecKit iterations traceable.",
-    "tags": [
-      "process",
-      "tdd",
-      "spec-kit"
-    ],
+    "summary_zh": "如何重跑计划、先写测试、保持 SpecKit 迭代可追溯。",
+    "tags": ["process", "tdd", "spec-kit"],
     "publishedAt": "2026-02-17",
     "url": "/blog/spec-kit/",
     "external": false,
@@ -30,12 +26,10 @@
   {
     "id": "nvidia-research",
     "title": "NVIDIA AI Infrastructure Research Report",
+    "title_zh": "NVIDIA AI 基础设施研究报告",
     "summary": "Rack-scale GB200 NVL72, cluster archetypes, deployment paths, costs, and supply chain.",
-    "tags": [
-      "AI",
-      "infrastructure",
-      "research"
-    ],
+    "summary_zh": "机架级 GB200 NVL72、集群原型、部署路径、成本与供应链分析。",
+    "tags": ["AI", "infrastructure", "research"],
     "publishedAt": "2026-02-11",
     "url": "/blog/nvidia-research/",
     "external": false,
@@ -44,12 +38,10 @@
   {
     "id": "sniperbot-zero-to-one",
     "title": "SniperBot: Zero to One (Part 1)",
+    "title_zh": "SniperBot：从零到一（第一部分）",
     "summary": "How we built a real-time Twitter sniper bot with AI, end to end, for non-coders.",
-    "tags": [
-      "AI",
-      "automation",
-      "trading"
-    ],
+    "summary_zh": "我们如何用 AI 从零搭建一个实时 Twitter 狙击机器人 — 面向非程序员的完整记录。",
+    "tags": ["AI", "automation", "trading"],
     "publishedAt": "2026-02-05",
     "url": "/blog/sniperbot-zero-to-one/",
     "external": false,

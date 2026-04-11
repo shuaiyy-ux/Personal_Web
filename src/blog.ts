@@ -7,10 +7,11 @@ import './styles/blog.css';
 import './styles/footer.css';
 
 import writingData from './data/writing.json';
-import { renderHeader } from './sections/header';
+import { renderHeader, initLangSwitcher } from './sections/header';
 import { renderFooter } from './sections/footer';
 import { renderWritingList, WritingItem } from './sections/writing';
 import initShiftBackground from './backgrounds/shift';
+import { t } from './i18n';
 
 const app = document.getElementById('app');
 
@@ -20,15 +21,15 @@ function render(): void {
 
   app.innerHTML = `
     <div class="background-canvas content--canvas" aria-hidden="true"></div>
-    <a href="#main-content" class="visually-hidden">Skip to main content</a>
+    <a href="#main-content" class="visually-hidden">${t('post.skip')}</a>
     ${renderHeader()}
     <main id="main-content" class="container blog-page">
       ${renderBlogHero(items)}
       <section class="writing blog-list" aria-labelledby="blog-list-heading">
         <div class="blog-list__header">
           <div>
-            <p class="blog-list__eyebrow">All writing</p>
-            <h2 id="blog-list-heading" class="blog-list__title">Recent posts</h2>
+            <p class="blog-list__eyebrow">${t('blog.eyebrow')}</p>
+            <h2 id="blog-list-heading" class="blog-list__title">${t('blog.heading')}</h2>
           </div>
         </div>
         ${renderWritingList(items)}
@@ -38,6 +39,7 @@ function render(): void {
   `;
 
   initShiftBackground('.content--canvas');
+  initLangSwitcher();
 }
 
 function sortByPublished(items: WritingItem[]): WritingItem[] {
@@ -57,14 +59,12 @@ function sortByPublished(items: WritingItem[]): WritingItem[] {
 function renderBlogHero(items: WritingItem[]): string {
   return `
     <section class="blog-hero" aria-labelledby="blog-hero-heading">
-      <p class="blog-hero__eyebrow">Blog</p>
-      <h1 id="blog-hero-heading" class="blog-hero__title">Less busywork. More leverage.</h1>
-      <p class="blog-hero__lede">
-        Essays and notes on automation, applied AI, and building systems that stay calm at scale.
-      </p>
+      <p class="blog-hero__eyebrow">${t('post.eyebrow')}</p>
+      <h1 id="blog-hero-heading" class="blog-hero__title">${t('blog.hero.title')}</h1>
+      <p class="blog-hero__lede">${t('blog.hero.lede')}</p>
       <div class="blog-hero__meta">
-        <span class="pill">${items.length} published</span>
-        <a class="pill pill--link" href="/#writing">Back to homepage</a>
+        <span class="pill">${items.length} ${t('blog.published')}</span>
+        <a class="pill pill--link" href="/#writing">${t('blog.backHome')}</a>
       </div>
     </section>
   `;

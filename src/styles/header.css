@@ -60,6 +60,15 @@
   text-shadow: 0 0 22px rgba(255, 64, 80, 0.45);
 }
 
+.site-header__lang {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.06);
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
 @keyframes header-brand-shift {
   0% {
     background-position: 0% 50%;

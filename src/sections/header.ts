@@ -1,12 +1,13 @@
 import contactsData from '../data/contacts.json';
 import { ContactLink } from '../types';
+import { t, getLocale, setLocale } from '../i18n';
 
 export function renderHeader(): string {
   const contacts = contactsData as ContactLink[];
   const requiredLinks = contacts.filter((c) => c.required);
 
   const navLinks = [
-    { label: 'Blog', href: '/blog/', external: false },
+    { label: t('nav.blog'), href: '/blog/', external: false },
     ...requiredLinks.map((contact) => ({
       label: contact.label,
       href: contact.value,
@@ -28,16 +29,28 @@ export function renderHeader(): string {
     )
     .join('');
 
+  const nextLocale = getLocale() === 'en' ? 'zh' : 'en';
+
   return `
     <header class="site-header" aria-label="Primary">
       <div class="site-header__inner container">
         <a class="site-header__brand" aria-label="CM Yao" href="/">CM Yao</a>
         <nav class="site-header__nav" aria-label="Primary navigation">
           ${linksHtml}
+          <button class="site-header__link site-header__lang" data-locale="${nextLocale}">${t('lang.switch')}</button>
         </nav>
       </div>
     </header>
   `;
+}
+
+export function initLangSwitcher(): void {
+  const btn = document.querySelector<HTMLButtonElement>('.site-header__lang');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const next = btn.dataset.locale as 'en' | 'zh';
+    setLocale(next);
+  });
 }
 
 export default renderHeader;

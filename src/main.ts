@@ -9,7 +9,8 @@ import './styles/writing.css';
 import './styles/cta.css';
 import './styles/footer.css';
 
-import { renderHeader } from './sections/header';
+import { renderHeader, initLangSwitcher } from './sections/header';
+import { t } from './i18n';
 import { renderHero } from './sections/hero';
 import { renderStatement } from './sections/statement';
 import { renderNavigation } from './sections/navigation';
@@ -26,7 +27,7 @@ function render(): void {
 
   app.innerHTML = `
     <div class="background-canvas content--canvas" aria-hidden="true"></div>
-    <a href="#main-content" class="visually-hidden">Skip to main content</a>
+    <a href="#main-content" class="visually-hidden">${t('post.skip')}</a>
     ${renderHeader()}
     ${renderHero()}
     ${renderToolsBanner()}
@@ -40,6 +41,7 @@ function render(): void {
   `;
 
   initShiftBackground('.content--canvas');
+  initLangSwitcher();
 }
 
 render();

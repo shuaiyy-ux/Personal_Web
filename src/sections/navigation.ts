@@ -1,5 +1,6 @@
 import contactsData from '../data/contacts.json';
 import { ContactLink } from '../types';
+import { t } from '../i18n';
 
 interface NavBlock {
   label: string;
@@ -10,49 +11,52 @@ interface NavBlock {
 }
 
 // Per-contact copy so navigation stays curated while links stay single-sourced.
-const contactCopy: Record<string, { description: string; actionLabel: string }> = {
-  linkedin: {
-    description: "Let's connect — always open to new opportunities and conversations.",
-    actionLabel: 'Connect',
-  },
-  github: {
-    description: 'Code speaks louder. Check out my projects and experiments.',
-    actionLabel: 'View code',
-  },
-  email: {
-    description: 'Prefer inbox? Drop me a line.',
-    actionLabel: 'Send email',
-  },
-};
-
-const contacts = contactsData as ContactLink[];
-const requiredContacts = contacts.filter((c) => c.required);
-
-const navBlocks: NavBlock[] = [
-  {
-    label: 'Blog',
-    description: 'Where I distill ideas, break down complex systems, and share what I learn along the way.',
-    actionLabel: 'Read articles',
-    href: '/blog/',
-    external: false,
-  },
-  ...requiredContacts.map((contact) => {
-    const copy = contactCopy[contact.type] ?? {
-      description: 'Learn more or reach out here.',
-      actionLabel: 'Open link',
-    };
-
-    return {
-      label: contact.label,
-      description: copy.description,
-      actionLabel: copy.actionLabel,
-      href: contact.value,
-      external: contact.type !== 'email',
-    };
-  }),
-];
+function contactCopy(): Record<string, { description: string; actionLabel: string }> {
+  return {
+    linkedin: {
+      description: t('nav.linkedin.description'),
+      actionLabel: t('nav.linkedin.action'),
+    },
+    github: {
+      description: t('nav.github.description'),
+      actionLabel: t('nav.github.action'),
+    },
+    email: {
+      description: t('nav.email.description'),
+      actionLabel: t('nav.email.action'),
+    },
+  };
+}
 
 export function renderNavigation(): string {
+  const contacts = contactsData as ContactLink[];
+  const requiredContacts = contacts.filter((c) => c.required);
+  const copy = contactCopy();
+
+  const navBlocks: NavBlock[] = [
+    {
+      label: t('nav.blog'),
+      description: t('nav.blog.description'),
+      actionLabel: t('nav.blog.action'),
+      href: '/blog/',
+      external: false,
+    },
+    ...requiredContacts.map((contact) => {
+      const c = copy[contact.type] ?? {
+        description: t('nav.fallback.description'),
+        actionLabel: t('nav.fallback.action'),
+      };
+
+      return {
+        label: contact.label,
+        description: c.description,
+        actionLabel: c.actionLabel,
+        href: contact.value,
+        external: contact.type !== 'email',
+      };
+    }),
+  ];
+
   const blocksHtml = navBlocks
     .map(
       (block) => `

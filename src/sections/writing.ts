@@ -1,14 +1,25 @@
 import writingData from '../data/writing.json';
+import { t, getLocale, formatDateLocale } from '../i18n';
 
 export interface WritingItem {
   id: string;
   title: string;
+  title_zh?: string;
   summary: string;
+  summary_zh?: string;
   tags: string[];
   publishedAt?: string;
   url: string;
   external: boolean;
   status?: 'published';
+}
+
+function localTitle(item: WritingItem): string {
+  return getLocale() === 'zh' ? (item.title_zh ?? item.title) : item.title;
+}
+
+function localSummary(item: WritingItem): string {
+  return getLocale() === 'zh' ? (item.summary_zh ?? item.summary) : item.summary;
 }
 
 export function renderWriting(): string {
@@ -17,7 +28,7 @@ export function renderWriting(): string {
 
   return `
     <section data-section="writing" class="writing" aria-labelledby="writing-heading">
-      <h2 id="writing-heading" class="writing__heading">Latest Writing</h2>
+      <h2 id="writing-heading" class="writing__heading">${t('writing.heading')}</h2>
       ${content}
     </section>
   `;
@@ -25,7 +36,7 @@ export function renderWriting(): string {
 
 export function renderWritingList(items: WritingItem[]): string {
   if (!items || items.length === 0) {
-    return `<p class="writing__empty">No posts yet. Check back soon!</p>`;
+    return `<p class="writing__empty">${t('writing.empty')}</p>`;
   }
 
   const sorted = sortByPublished(items);
@@ -38,7 +49,7 @@ function renderWritingItem(item: WritingItem, isLatest: boolean): string {
   const badges: string[] = [];
 
   if (isLatest) {
-    badges.push('<span class="writing-item__badge writing-item__badge--latest">Latest</span>');
+    badges.push(`<span class="writing-item__badge writing-item__badge--latest">${t('writing.latest')}</span>`);
   }
 
   return `
@@ -49,26 +60,17 @@ function renderWritingItem(item: WritingItem, isLatest: boolean): string {
     >
       <article>
         <div class="writing-item__top">
-          <h3 class="writing-item__title">${item.title}</h3>
+          <h3 class="writing-item__title">${localTitle(item)}</h3>
           ${badges.join('')}
         </div>
-        <p class="writing-item__summary">${item.summary}</p>
+        <p class="writing-item__summary">${localSummary(item)}</p>
         <div class="writing-item__meta">
-          <span class="writing-item__tags">${item.tags.map((t) => `<span class="tag">${t}</span>`).join('')}</span>
-          <time class="writing-item__date" datetime="${item.publishedAt ?? ''}">${formatDate(item.publishedAt)}</time>
+          <span class="writing-item__tags">${item.tags.map((tag) => `<span class="tag">${tag}</span>`).join('')}</span>
+          <time class="writing-item__date" datetime="${item.publishedAt ?? ''}">${formatDateLocale(item.publishedAt)}</time>
         </div>
       </article>
     </a>
   `;
-}
-
-function formatDate(iso?: string): string {
-  if (!iso) return 'TBD';
-
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return 'TBD';
-
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 function sortByPublished(items: WritingItem[]): WritingItem[] {
@@ -78,7 +80,7 @@ function sortByPublished(items: WritingItem[]): WritingItem[] {
     const aValid = Number.isFinite(ad);
     const bValid = Number.isFinite(bd);
 
-    if (aValid && bValid) return bd - ad; // newest first
+    if (aValid && bValid) return bd - ad;
     if (aValid) return -1;
     if (bValid) return 1;
     return 0;

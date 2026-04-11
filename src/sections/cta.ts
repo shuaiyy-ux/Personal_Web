@@ -1,5 +1,6 @@
 import contactsData from '../data/contacts.json';
 import { ContactLink } from '../types';
+import { t } from '../i18n';
 
 export function renderCTA(): string {
   const contacts = contactsData as ContactLink[];
@@ -22,9 +23,9 @@ export function renderCTA(): string {
 
   return `
     <section data-section="cta" class="cta" aria-labelledby="cta-heading">
-      <h2 id="cta-heading" class="cta__heading">Ready to build something cool together?</h2>
+      <h2 id="cta-heading" class="cta__heading">${t('cta.heading')}</h2>
       <a class="cta__button" href="${emailLink}">
-        LET'S START
+        ${t('cta.button')}
       </a>
       <div id="cta-contacts" class="cta__contacts">
         ${linksHtml}
