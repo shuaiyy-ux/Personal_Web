@@ -1,0 +1,673 @@
+<body>
+<h1 id="ai-agent-architecture-deep-dive-building-a-tool-calling-assistant-with-claude-cli">AI Agent 架构深度解析：使用 Claude CLI 构建工具调用助手</h1>
+<p>本文记录了我们如何使用 Claude Code CLI 和 Python 构建一个流式、多轮对话、支持工具调用的 AI agent。我们将逐层剖析——从进程生成和事件流传输，到工具调用循环，再到上下文管理——最后给出从 CLI 迁移到 SDK 的具体路径。</p>
+<hr />
+<h2 id="1-what-is-the-agent">1. 什么是 Agent？</h2>
+<p>在这个架构中，agent 不是一个独立的 AI 产品。它是一个<strong>中间程序</strong>，在用户浏览器和 Claude 之间架起桥梁。它的职责很简单：</p>
+<ol>
+<li>从用户浏览器接收问题</li>
+<li>通过 CLI subprocess 将问题发送给 Claude</li>
+<li>如果 Claude 请求数据（例如"我需要查询数据库"），代替它执行该工具</li>
+<li>将工具结果返回给 Claude</li>
+<li>Claude 继续推理并生成最终答案</li>
+<li>将答案实时流式传输回前端</li>
+</ol>
+<p>整个循环最多运行 <strong>6 次迭代</strong>（<code>MAX_ITERATIONS = 6</code>），以防止失控执行。</p>
+<div class="mermaid">
+flowchart LR
+    U["User (Browser)"] -->|HTTP request| S["server.py\nFastAPI + SSE"]
+    S -->|invoke| A["agent.py\norchestrator"]
+    A -->|stdin| C["Claude CLI\nsubprocess"]
+    C -->|stdout JSON stream| A
+    A <-->|execute / result| T["tools.py\ncustom tools"]
+    A -->|SSE token events| S
+    S -->|EventSource| U
+</div>
+<h3 id="why-a-middleman">为什么需要中间层？</h3>
+<p>Claude 本身无法执行代码、查询数据库或调用外部 API。Agent 以<strong>工具</strong>的形式提供这些能力，将 Claude 从一个文本生成器转变为一个能够收集信息、推理分析并给出有据答案的自主问题解决者。</p>
+<hr />
+<h2 id="2-how-the-agent-launches-claude">2. Agent 如何启动 Claude</h2>
+<h3 id="the-core-command">核心命令</h3>
+<p>Agent 使用 Python 的 <code>subprocess.Popen</code> 将 Claude CLI 作为子进程生成：</p>
+<pre class="highlight"><code class="language-python">proc = subprocess.Popen(
+    [&quot;claude&quot;, &quot;-p&quot;, &quot;--model&quot;, &quot;opus&quot;, &quot;--output-format&quot;, &quot;stream-json&quot;,
+     &quot;--verbose&quot;, &quot;--include-partial-messages&quot;, &quot;--no-session-persistence&quot;],
+    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    text=True, bufsize=1,
+)
+</code></pre>
+
+<h3 id="flag-reference">标志参数参考</h3>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-p</code></td>
+<td><strong>管道模式</strong>——禁用交互式界面；从 stdin 读取，写入 stdout</td>
+</tr>
+<tr>
+<td><code>--model opus</code></td>
+<td>选择 Opus 模型以获得最高能力</td>
+</tr>
+<tr>
+<td><code>--output-format stream-json</code></td>
+<td>输出按行分隔的 JSON 事件，便于结构化解析</td>
+</tr>
+<tr>
+<td><code>--verbose</code></td>
+<td>包含额外元数据（例如 token 用量）</td>
+</tr>
+<tr>
+<td><code>--include-partial-messages</code></td>
+<td>在每个 token 生成时即时输出（实现打字机效果）</td>
+</tr>
+<tr>
+<td><code>--no-session-persistence</code></td>
+<td>无状态模式；不将对话历史保存到磁盘</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-three-io-pipes">三个 I/O 管道</h3>
+<p><code>subprocess.Popen</code> 在 agent 和 Claude CLI 之间建立了三个通信通道：</p>
+<div class="mermaid">
+flowchart LR
+    subgraph "agent.py (parent process)"
+        WRITE["Write question"]
+        READ["Read JSON stream"]
+        ERRREAD["Read errors"]
+    end
+    subgraph "Claude CLI (child process)"
+        STDIN["stdin"]
+        STDOUT["stdout"]
+        STDERR["stderr"]
+    end
+    WRITE -->|"pipe"| STDIN
+    STDOUT -->|"pipe"| READ
+    STDERR -->|"pipe"| ERRREAD
+</div>
+<ul>
+<li><strong><code>text=True</code></strong>——使用文本模式（UTF-8 字符串，而非原始字节）</li>
+<li><strong><code>bufsize=1</code></strong>——行缓冲 I/O（每次读写一行）</li>
+</ul>
+<h3 id="authentication">身份认证</h3>
+<p>命令中不包含任何 API 密钥或令牌。Claude CLI 使用<strong>本地 OAuth</strong>——首次运行时会打开浏览器窗口进行 Anthropic 账户登录。凭证存储在 <code>~/.claude/</code> 中，永远不会提交到代码仓库。</p>
+<p>任何克隆此仓库的人都必须安装 Claude CLI 并使用自己的账户进行认证。</p>
+<h3 id="tool-access-in-pipe-mode">管道模式下的工具访问</h3>
+<p>在管道模式（<code>-p</code>）下，Claude 的内置工具（Read、Edit、Bash 等）被<strong>禁用</strong>。Claude 只能使用我们在 <code>tools.py</code> 中定义的自定义工具，它通过文本输出中的 <code>&lt;tool_call&gt;</code> XML 标签来调用这些工具。</p>
+<hr />
+<h2 id="3-streaming-fundamentals">3. 流式传输基础</h2>
+<h3 id="the-problem-with-non-streaming-responses">非流式响应的问题</h3>
+<p>没有流式传输时，用户提交问题后只能盯着空白屏幕等待数秒，直到完整响应一次性到达。这会造成糟糕的用户体验，尤其是对于长篇回答。</p>
+<h3 id="how-streaming-works">流式传输的工作原理</h3>
+<p>使用流式传输后，token 在生成时即被输出——即我们熟悉的"打字机效果"：</p>
+<pre class="highlight"><code>Non-streaming:  Request --&gt; wait 5s --&gt; &quot;The Dallas dealer received 3 cars, shipping $450&quot;
+Streaming:      Request --&gt; 0.3s --&gt; &quot;The&quot; --&gt; &quot;Dallas&quot; --&gt; &quot;dealer&quot; --&gt; ... --&gt; done
+</code></pre>
+
+<h3 id="real-time-communication-protocols">实时通信协议</h3>
+<table>
+<thead>
+<tr>
+<th>协议</th>
+<th>方向</th>
+<th>类比</th>
+<th>应用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HTTP request/response</td>
+<td>单次</td>
+<td>短信</td>
+<td>标准 API 调用</td>
+</tr>
+<tr>
+<td><strong>SSE (Server-Sent Events)</strong></td>
+<td>服务器到客户端（单向）</td>
+<td>直播</td>
+<td>AI token 流式传输、推送通知</td>
+</tr>
+<tr>
+<td>WebSocket</td>
+<td>双向</td>
+<td>电话通话</td>
+<td>聊天室、协同编辑、游戏</td>
+</tr>
+</tbody>
+</table>
+<p>本项目使用 <strong>SSE</strong>，因为我们只需要将 token 从服务器推送到浏览器。前端使用浏览器原生的 <code>EventSource</code> API 进行连接：</p>
+<pre class="highlight"><code class="language-javascript">const es = new EventSource(&quot;/api/agent-stream?message=...&quot;);
+es.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    // Append each token to the UI as it arrives
+};
+</code></pre>
+
+<p>普通 HTTP 在一次响应后关闭连接。SSE 保持连接开启，让服务器持续推送事件，直到响应完成。</p>
+<hr />
+<h2 id="4-claude-clis-stream-json-output-format">4. Claude CLI 的 stream-json 输出格式</h2>
+<h3 id="without-stream-json">不使用 stream-json 时</h3>
+<p>Claude CLI 向终端输出人类可读的纯文本：</p>
+<pre class="highlight"><code>The Dallas dealer received 3 cars, shipping $450.
+</code></pre>
+
+<h3 id="with-stream-json">使用 stream-json 时</h3>
+<p>相同内容变成按行分隔的 JSON 事件：</p>
+<pre class="highlight"><code class="language-json">{&quot;type&quot;:&quot;stream_event&quot;,&quot;event&quot;:{&quot;type&quot;:&quot;content_block_delta&quot;,&quot;delta&quot;:{&quot;type&quot;:&quot;text_delta&quot;,&quot;text&quot;:&quot;The Dallas&quot;}}}
+{&quot;type&quot;:&quot;stream_event&quot;,&quot;event&quot;:{&quot;type&quot;:&quot;content_block_delta&quot;,&quot;delta&quot;:{&quot;type&quot;:&quot;text_delta&quot;,&quot;text&quot;:&quot; dealer received&quot;}}}
+{&quot;type&quot;:&quot;stream_event&quot;,&quot;event&quot;:{&quot;type&quot;:&quot;content_block_delta&quot;,&quot;delta&quot;:{&quot;type&quot;:&quot;text_delta&quot;,&quot;text&quot;:&quot; 3 cars, shipping $450.&quot;}}}
+{&quot;type&quot;:&quot;result&quot;,&quot;result&quot;:&quot;The Dallas dealer received 3 cars, shipping $450.&quot;,&quot;total_cost_usd&quot;:0.03}
+</code></pre>
+
+<p>JSON 封装由 CLI 执行，<strong>而非</strong> Claude 模型。无论输出格式如何，模型生成的 token 数量是相同的。</p>
+<h3 id="why-stream-json-matters">为什么 stream-json 很重要</h3>
+<p>如果没有结构化事件，你需要逐字符读取 stdout，而无法知道：
+- 响应何时完成（没有 <code>result</code> 事件）
+- 调用花费了多少（没有 <code>total_cost_usd</code>）
+- 一个逻辑事件在哪里结束，另一个在哪里开始</p>
+<p>stream-json 提供了<strong>结构化的事件边界和元数据</strong>——这是构建可靠的 SSE 管道到前端的基础。</p>
+<hr />
+<h2 id="5-the-streaming-event-system">5. 流式事件系统</h2>
+<h3 id="message-structure">消息结构</h3>
+<p>一个 Claude 响应（消息）可以包含<strong>多个内容块</strong>，类似于一封包含段落和附件的电子邮件：</p>
+<pre class="highlight"><code>Message
++-- Content Block 0: text    &quot;Let me query the data...&quot;
++-- Content Block 1: tool_use query_data(code=&quot;df.head()&quot;)
++-- Content Block 2: text    &quot;Based on the results...&quot;
+</code></pre>
+
+<h3 id="event-lifecycle">事件生命周期</h3>
+<p>流按照严格的时间顺序输出六种事件类型：</p>
+<div class="mermaid">
+flowchart TB
+    MS["1. message_start\n(message begins, input token count)"] --> CBS["2. content_block_start\n(block N begins -- text? tool_use? thinking?)"]
+    CBS --> CBD["3. content_block_delta (x N)\n(incremental content fragments)"]
+    CBD --> CBE["4. content_block_stop\n(block N complete)"]
+    CBE --> |"repeat for\neach block"| CBS
+    CBE --> MD["5. message_delta\n(stop_reason, output token count)"]
+    MD --> ME["6. message_stop\n(message complete)"]
+</div>
+<h3 id="delta-subtypes">Delta 子类型</h3>
+<p><code>content_block_delta</code> 事件携带一个 <code>delta</code> 对象，其 <code>type</code> 字段决定内容类型：</p>
+<table>
+<thead>
+<tr>
+<th>delta.type</th>
+<th>内容</th>
+<th>出现时机</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>text_delta</code></td>
+<td>一段文本片段</td>
+<td>Claude 正在生成文本响应</td>
+</tr>
+<tr>
+<td><code>input_json_delta</code></td>
+<td>一段工具参数 JSON 片段</td>
+<td>Claude 正在调用工具（SDK 原生模式）</td>
+</tr>
+<tr>
+<td><code>thinking_delta</code></td>
+<td>一段推理过程片段</td>
+<td>扩展思考已启用</td>
+</tr>
+</tbody>
+</table>
+<h3 id="nested-structure">嵌套结构</h3>
+<p>这些是嵌套关系，而非互斥选项。我们的代码逐层解包：</p>
+<div class="mermaid">
+flowchart TB
+    A["stream_event (CLI wrapper)"] --> B["content_block_delta (event type)"]
+    B --> C["delta object"]
+    C --> D["type: text_delta"]
+    D --> E["text: 'Hello'"]
+</div>
+<h3 id="stop-reasons">停止原因</h3>
+<p><code>message_delta</code> 事件包含一个 <code>stop_reason</code>，告诉我们 Claude 为什么停止：</p>
+<table>
+<thead>
+<tr>
+<th>stop_reason</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>end_turn</code></td>
+<td>Claude 自然地完成了响应</td>
+</tr>
+<tr>
+<td><code>tool_use</code></td>
+<td>Claude 想要调用工具并等待结果</td>
+</tr>
+<tr>
+<td><code>max_tokens</code></td>
+<td>响应在 token 限制处被截断</td>
+</tr>
+<tr>
+<td><code>stop_sequence</code></td>
+<td>遇到了自定义的停止序列</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-the-two-layer-parsing-pipeline">6. 两层解析管道</h2>
+<p>原始 CLI 输出复杂且冗长。我们在向上层传递之前将其简化为三种事件类型。</p>
+<h3 id="layer-1-_call_claude_stream-the-translation-layer">第一层：<code>_call_claude_stream()</code>——翻译层</h3>
+<p>这个生成器函数从 stdout 读取 JSON 行并产出简化事件：</p>
+<pre class="highlight"><code class="language-python">while True:
+    line = proc.stdout.readline()       # Blocking read, one line at a time
+    if not line:
+        break                           # Empty string = process ended
+
+    event = json.loads(line)            # Parse JSON string to Python dict
+    etype = event.get(&quot;type&quot;, &quot;&quot;)
+
+    if etype == &quot;stream_event&quot;:
+        inner = event.get(&quot;event&quot;, {})
+        if inner.get(&quot;type&quot;) == &quot;content_block_delta&quot;:
+            delta = inner.get(&quot;delta&quot;, {})
+            if delta.get(&quot;type&quot;) == &quot;text_delta&quot;:
+                text = delta.get(&quot;text&quot;, &quot;&quot;)
+                if text:
+                    full_text += text
+                    yield {&quot;type&quot;: &quot;token&quot;, &quot;text&quot;: text}
+
+    elif etype == &quot;result&quot;:
+        cost = event.get(&quot;total_cost_usd&quot;, 0.0)
+        yield {&quot;type&quot;: &quot;done&quot;, &quot;text&quot;: full_text, &quot;cost&quot;: cost}
+</code></pre>
+
+<h3 id="layer-2-run_agent_stream-the-orchestration-loop">第二层：<code>run_agent_stream()</code>——编排循环</h3>
+<p>消费简化事件并驱动工具调用循环：</p>
+<pre class="highlight"><code class="language-python">for event in _call_claude_stream(messages, system_prompt):
+    if event[&quot;type&quot;] == &quot;token&quot;:
+        text += event[&quot;text&quot;]              # Concatenate + forward to SSE
+    elif event[&quot;type&quot;] == &quot;done&quot;:
+        total_cost += event.get(&quot;cost&quot;, 0.0)
+    elif event[&quot;type&quot;] == &quot;error&quot;:
+        stream_error = event[&quot;error&quot;]
+</code></pre>
+
+<h3 id="simplified-event-summary">简化事件总结</h3>
+<div class="mermaid">
+flowchart LR
+    subgraph "Layer 1: _call_claude_stream()"
+        RAW["Raw JSON lines\nfrom CLI stdout"] --> PARSE["Parse and\nsimplify"]
+    end
+    PARSE --> TOKEN["{type: 'token',\ntext: '...'}"]
+    PARSE --> DONE["{type: 'done',\ncost: 0.03}"]
+    PARSE --> ERR["{type: 'error',\nerror: '...'}"]
+    subgraph "Layer 2: run_agent_stream()"
+        TOKEN --> CONCAT["Concatenate tokens\ninto full_text"]
+        DONE --> COST["Record cost"]
+        CONCAT --> DECIDE{"Inspect full_text\nfor XML tags"}
+    end
+</div>
+<table>
+<thead>
+<tr>
+<th>简化事件</th>
+<th>来源</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>token</code></td>
+<td><code>stream_event &gt; content_block_delta &gt; text_delta</code></td>
+<td>将文本片段转发到前端</td>
+</tr>
+<tr>
+<td><code>done</code></td>
+<td><code>result</code> 事件</td>
+<td>发出完成信号，记录费用</td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td>CLI 进程失败</td>
+<td>将错误暴露给调用方</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-the-tool-call-loop">7. 工具调用循环</h2>
+<p>在 Claude 完成响应流式传输后，累积的 <code>full_text</code> 会属于以下三种情况之一：</p>
+<h3 id="case-1-answer-tag-present">情况 1：存在 <code>&lt;answer&gt;</code> 标签</h3>
+<p>Claude 有足够的信息直接回答：</p>
+<pre class="highlight"><code>&lt;answer&gt;3 cars were allocated to the Dallas dealer, shipping cost $450&lt;/answer&gt;
+</code></pre>
+
+<p>Agent 使用正则表达式提取内容并返回给用户。<strong>循环结束。</strong></p>
+<h3 id="case-2-tool_call-tag-present">情况 2：存在 <code>&lt;tool_call&gt;</code> 标签</h3>
+<p>Claude 需要外部数据：</p>
+<pre class="highlight"><code>&lt;tool_call&gt;{&quot;name&quot;: &quot;query_data&quot;, &quot;args&quot;: {&quot;code&quot;: &quot;df.head()&quot;}}&lt;/tool_call&gt;
+</code></pre>
+
+<p>Agent 解析 JSON，执行工具，并将结果回传：</p>
+<pre class="highlight"><code class="language-python">tool_call = _parse_tool_call(text)             # Regex extract + json.loads
+tool_name = tool_call.get(&quot;name&quot;, &quot;unknown&quot;)   # &quot;query_data&quot;
+tool_args = tool_call.get(&quot;args&quot;, {})          # {&quot;code&quot;: &quot;df.head()&quot;}
+
+tool_result = run_tool(tool_name, tool_args)   # Execute in tools.py
+
+messages.append({&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: text})
+messages.append({&quot;role&quot;: &quot;tool_result&quot;, &quot;content&quot;: result_str})
+# Continue loop -- call Claude again with updated messages
+</code></pre>
+
+<h3 id="case-3-plain-text-no-tags">情况 3：纯文本（无标签）</h3>
+<p>Claude 以非结构化文本作为响应。将其作为最终答案返回。</p>
+<h3 id="complete-loop-flowchart">完整循环流程图</h3>
+<div class="mermaid">
+flowchart TB
+    START(["User submits question"]) --> INIT["Initialize messages list\nAppend system prompt + user message"]
+    INIT --> CALL["Send messages to Claude CLI\nvia stdin pipe"]
+    CALL --> STREAM["Stream response tokens\nConcatenate into full_text"]
+    STREAM --> CHECK{"Inspect full_text"}
+
+    CHECK -->|"contains &lt;answer&gt;"| EXTRACT_ANS["Extract answer via regex"]
+    EXTRACT_ANS --> RETURN(["Return to user via SSE"])
+
+    CHECK -->|"contains &lt;tool_call&gt;"| EXTRACT_TOOL["Extract tool name + args\nvia regex + json.loads"]
+    EXTRACT_TOOL --> EXEC["Execute tool in tools.py"]
+    EXEC --> APPEND["Append to messages:\n1. assistant message (full_text)\n2. tool_result (JSON)"]
+    APPEND --> GUARD{"iteration < 6?"}
+    GUARD -->|"yes"| CALL
+    GUARD -->|"no, max reached"| RETURN
+
+    CHECK -->|"plain text"| RETURN
+</div>
+<h3 id="token-truncation-is-not-an-issue">Token 截断不是问题</h3>
+<p>在流式传输过程中，<code>&lt;tool_call&gt;</code> 会以片段形式分布在多个 token 中到达：</p>
+<pre class="highlight"><code>token 1: &quot;&lt;tool&quot;
+token 2: &quot;_call&gt;&quot;
+token 3: &quot;{\&quot;name\&quot;:&quot;
+token 4: &quot;\&quot;query_data\&quot;&quot;
+...
+token N: &quot;&lt;/tool_call&gt;&quot;
+</code></pre>
+
+<p>这是无害的。Agent 在流式传输期间只是拼接文本。解析发生在<strong>流结束之后</strong>，此时 <code>full_text</code> 保证是完整的。</p>
+<h3 id="multi-turn-example">多轮对话示例</h3>
+<div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant A as Agent
+    participant C as Claude
+    participant T as Tools
+
+    U->>A: "How many cars went to Dallas?"
+    A->>C: system prompt + user question
+
+    Note over C: Round 1
+    C-->>A: stream: "I need to query the data..."
+    C-->>A: &lt;tool_call&gt;query_data(code="...")&lt;/tool_call&gt;
+    A->>T: run_tool("query_data", {code: "..."})
+    T-->>A: {"result": [{"vin":"V001","dealer":"Dallas"}, ...]}
+    A->>A: Append assistant msg + tool result to messages
+
+    Note over C: Round 2
+    A->>C: system prompt + full history
+    C-->>A: stream: "Let me also check the constraints..."
+    C-->>A: &lt;tool_call&gt;list_constraints(...)&lt;/tool_call&gt;
+    A->>T: run_tool("list_constraints", {...})
+    T-->>A: {"constraints": [...]}
+    A->>A: Append to messages
+
+    Note over C: Round 3
+    A->>C: system prompt + full history
+    C-->>A: &lt;answer&gt;Dallas received 3 cars...&lt;/answer&gt;
+    A->>U: Final answer delivered via SSE
+</div>
+<hr />
+<h2 id="8-context-management">8. 上下文管理</h2>
+<h3 id="the-stateless-challenge">无状态的挑战</h3>
+<p>因为我们使用了 <code>--no-session-persistence</code>，Claude 在 subprocess 调用之间<strong>没有记忆</strong>。每次调用都是一张白纸——Claude 不知道前几轮发生了什么。</p>
+<h3 id="how-the-agent-maintains-state">Agent 如何维护状态</h3>
+<p>Agent 在内存中维护一个 <code>messages</code> 列表，用于累积完整的对话记录：</p>
+<pre class="highlight"><code class="language-python"># Initialization
+messages = []
+if history:                                         # Frontend chat history
+    for h in history:
+        messages.append({&quot;role&quot;: h[&quot;role&quot;], &quot;content&quot;: h[&quot;content&quot;]})
+messages.append({&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: message})  # Current question
+
+# After each tool round, append:
+messages.append({&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: text})
+messages.append({&quot;role&quot;: &quot;tool_result&quot;, &quot;content&quot;: result_str})
+</code></pre>
+
+<h3 id="building-the-input-text">构建输入文本</h3>
+<p><code>_build_input()</code> 函数将整个 messages 列表序列化为一个纯文本字符串：</p>
+<pre class="highlight"><code class="language-python">def _build_input(messages, system_prompt):
+    parts = [system_prompt, &quot;&quot;]
+    for msg in messages:
+        role = msg[&quot;role&quot;]
+        content = msg[&quot;content&quot;]
+        if role == &quot;user&quot;:
+            parts.append(f&quot;Human: {content}&quot;)
+        elif role == &quot;assistant&quot;:
+            parts.append(f&quot;Assistant: {content}&quot;)
+        elif role == &quot;tool_result&quot;:
+            parts.append(f&quot;Human: Tool result:\n{content}&quot;)
+    parts.append(&quot;Assistant:&quot;)
+    return &quot;\n\n&quot;.join(parts)
+</code></pre>
+
+<h3 id="the-token-cost-trade-off">Token 成本权衡</h3>
+<p>每次迭代都会重新发送完整的对话历史作为纯文本。Token 用量线性增长：</p>
+<div class="mermaid">
+flowchart LR
+    R1["Round 1\n~2,000 tokens\n(system prompt + question)"] --> R2["Round 2\n~4,000 tokens\n(+ round 1 history)"]
+    R2 --> R3["Round 3\n~6,000 tokens\n(+ round 2 history)"]
+    R3 --> R4["Round N\n~2,000 x N tokens"]
+</div>
+<p>这是 CLI subprocess 方案的结构性限制。SDK 替代方案（在第 10 节讨论）通过仅发送增量消息来避免这种重复。</p>
+<hr />
+<h2 id="9-how-claude-discovers-tools">9. Claude 如何发现工具</h2>
+<h3 id="there-is-no-magic">没有魔法</h3>
+<p>Claude 没有任何内置机制在运行时"发现"工具。它只是阅读我们注入到系统提示中的文本描述。</p>
+<h3 id="tool-specification">工具规范</h3>
+<p>每个工具在 <code>tools.py</code> 中定义为一个 Python 字典：</p>
+<pre class="highlight"><code class="language-python">QUERY_DATA_SPEC = {
+    &quot;name&quot;: &quot;query_data&quot;,
+    &quot;description&quot;: &quot;Execute a pandas expression against the loaded dataset...&quot;,
+    &quot;parameters&quot;: {
+        &quot;code&quot;: {
+            &quot;type&quot;: &quot;string&quot;,
+            &quot;description&quot;: &quot;Python/pandas code to execute.&quot;,
+            &quot;required&quot;: True,
+        }
+    },
+}
+</code></pre>
+
+<h3 id="from-spec-to-prompt">从规范到提示</h3>
+<p>一个辅助函数将所有规范转换为人类可读的文本：</p>
+<pre class="highlight"><code>### query_data
+Execute a pandas expression against the loaded dataset...
+Parameters:
+    - code: string (required) -- Python/pandas code to execute.
+
+### run_allocation
+Run the optimizer with given parameters.
+Parameters:
+    - n_vehicles: integer (optional) -- Number of vehicles to allocate
+    - beta: float (optional) -- Revenue weight, default 0.7
+</code></pre>
+
+<p>这段文本被插入系统提示的 <code>{tool_descriptions}</code> 占位符中。Claude 阅读后理解有哪些可用工具，并在需要调用时以 XML 标签作出响应。</p>
+<div class="mermaid">
+flowchart LR
+    SPEC["tools.py\nSPEC dictionaries"] --> BUILD["_build_tool_descriptions()"]
+    BUILD --> INJECT["System prompt\n{tool_descriptions} placeholder"]
+    INJECT --> CLAUDE["Claude reads\nunderstands capabilities"]
+    CLAUDE --> CALL["Responds with\n&lt;tool_call&gt;...&lt;/tool_call&gt;"]
+    CALL --> PARSE["Agent parses\nand executes"]
+</div>
+<hr />
+<h2 id="10-end-to-end-data-flow">10. 端到端数据流</h2>
+<p>从 Claude 输出到 Claude 输入的完整转换链：</p>
+<div class="mermaid">
+flowchart TB
+    A["Claude CLI stdout\nLine-delimited JSON strings"] -->|"readline()"| B["json.loads(line)\nPython dictionary"]
+    B -->|"extract text_delta\nfragments"| C["Concatenate into full_text\n(plain string)"]
+    C -->|"regex match\n+ json.loads"| D["tool_call dict\n{name, args}"]
+    D -->|"run_tool()"| E["tool_result dict\n{result, error}"]
+    E -->|"json.dumps()"| F["result string\nappended to messages list"]
+    F -->|"_build_input()"| G["Complete plain text\nfed to Claude CLI stdin"]
+    G -->|"next iteration"| A
+</div>
+<p><strong>完整链路：</strong>从 stdout 获取 JSON 字符串 --> Python 字典（解包文本片段）--> 纯字符串（完整响应）--> Python 字典（解析工具调用）--> 执行工具 --> Python 字典（工具结果）--> JSON 字符串 --> 追加到 messages --> 拼接为纯文本 --> 通过 stdin 回传给 Claude。</p>
+<hr />
+<h2 id="11-cli-vs-sdk-architecture-comparison">11. CLI vs SDK：架构对比</h2>
+<h3 id="current-architecture-cli-text-parsing">当前架构（CLI + 文本解析）</h3>
+<div class="mermaid">
+flowchart LR
+    U["User\n(Browser)"] --> F["FastAPI\n(SSE endpoint)"]
+    F --> A["agent.py\n(orchestrator)"]
+    A --> SUB["subprocess.Popen"]
+    SUB --> CLI["Claude CLI\n(-p pipe mode)"]
+    A <--> T["tools.py\n(custom tools)"]
+    CLI -.->|"OAuth via\n~/.claude/"| AUTH["Local credentials"]
+</div>
+<p><strong>优势：</strong>
+- 无需管理 API 密钥；使用现有 CLI 登录
+- 实现简单；易于理解和调试
+- 对自定义工具定义有完全控制</p>
+<p><strong>劣势：</strong>
+- 每轮都重新发送完整对话历史（浪费 token）
+- 通过正则表达式解析 XML 标签中的工具调用（脆弱）
+- 需要在主机上安装 Claude CLI</p>
+<h3 id="sdk-migration-target">SDK 迁移目标</h3>
+<div class="mermaid">
+flowchart LR
+    U2["User\n(Browser)"] --> F2["FastAPI\n(SSE endpoint)"]
+    F2 --> A2["agent.py\n(orchestrator)"]
+    A2 --> SDK["Anthropic SDK\n(Python client)"]
+    SDK --> API["Anthropic API\n(cloud endpoint)"]
+    A2 <--> T2["tools.py\n(custom tools)"]
+    SDK -.->|"API key\nsk-ant-xxx"| KEY["Environment\nvariable"]
+</div>
+<h3 id="side-by-side-comparison">逐项对比</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>CLI + 文本解析</th>
+<th>SDK 原生工具</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>工具发现</strong></td>
+<td>系统提示中的文本描述</td>
+<td>通过 <code>tools</code> 参数传递结构化 JSON Schema</td>
+</tr>
+<tr>
+<td><strong>工具调用</strong></td>
+<td>文本输出中的 <code>&lt;tool_call&gt;</code> XML 标签</td>
+<td><code>tool_use</code> 内容块（结构化）</td>
+</tr>
+<tr>
+<td><strong>参数格式</strong></td>
+<td>Claude 自行生成 JSON 字符串</td>
+<td>API 保证符合 schema 的 JSON</td>
+</tr>
+<tr>
+<td><strong>可靠性</strong></td>
+<td>正则解析；Claude 可能生成格式错误的 JSON</td>
+<td>格式由 API 契约保证</td>
+</tr>
+<tr>
+<td><strong>解析方式</strong></td>
+<td>手动正则提取 + json.loads</td>
+<td>SDK 直接返回 Python 对象</td>
+</tr>
+<tr>
+<td><strong>Token 效率</strong></td>
+<td>工具规范消耗 prompt token；每轮重发完整历史</td>
+<td>专用 tools 字段；增量消息</td>
+</tr>
+<tr>
+<td><strong>身份认证</strong></td>
+<td>OAuth 浏览器登录</td>
+<td>API 密钥（<code>sk-ant-xxx</code>）</td>
+</tr>
+<tr>
+<td><strong>计费方式</strong></td>
+<td>订阅方案（Pro/Max）</td>
+<td>按 token 用量付费</td>
+</tr>
+<tr>
+<td><strong>部署方式</strong></td>
+<td>需要在主机上安装 CLI</td>
+<td>仅需 pip install</td>
+</tr>
+</tbody>
+</table>
+<h3 id="migration-scope">迁移范围</h3>
+<p>从 CLI 到 SDK 的迁移是有针对性的——大部分代码无需改动：</p>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>所需变更</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>_call_claude_stream()</code></td>
+<td>用 <code>client.messages.stream()</code> 替换 subprocess</td>
+</tr>
+<tr>
+<td><code>_build_input()</code></td>
+<td>用 JSON 消息数组替换纯文本拼接</td>
+</tr>
+<tr>
+<td>工具 SPEC 字典</td>
+<td>转换为 <code>input_schema</code>（标准 JSON Schema）格式</td>
+</tr>
+<tr>
+<td>工具执行逻辑</td>
+<td>无需变更</td>
+</tr>
+<tr>
+<td>SSE 推送到前端</td>
+<td>无需变更</td>
+</tr>
+<tr>
+<td>前端代码</td>
+<td>无需变更</td>
+</tr>
+</tbody>
+</table>
+<h3 id="expected-gains">预期收益</h3>
+<ul>
+<li><strong>Token 成本降低 20--30%</strong>——不再重复发送历史；工具规范在专用字段中</li>
+<li><strong>工具调用格式有保证</strong>——不再出现正则解析失败或 JSON 格式错误</li>
+<li><strong>更简单的部署</strong>——不依赖 CLI 安装；只需 <code>pip install anthropic</code></li>
+<li><strong>增量消息</strong>——每轮只发送新消息，而非完整历史</li>
+</ul>
+<h3 id="future-agent-sdk">未来：Agent SDK</h3>
+<p>更长远来看，Claude Agent SDK 可以自动封装整个工具循环：</p>
+<div class="mermaid">
+flowchart LR
+    U3["User"] --> F3["FastAPI\n(SSE)"]
+    F3 --> ASDK["Agent SDK\nautomatic tool loop"]
+    ASDK --> API3["Anthropic API"]
+    ASDK <--> T3["tools.py"]
+</div>
+<p>Agent SDK 消除了手动的 <code>while</code> 循环、迭代保护和工具调用解析。但它仍在成熟中。先迁移到标准 SDK 是更安全、更可预测的中间步骤。</p>
+<hr />
+<h2 id="summary">总结</h2>
+<p>这个架构展示了构建 AI agent 的一种实用模式：使用 LLM 作为推理核心，通过自定义工具扩展其能力，并通过流式中间层编排交互。基于 CLI 的方案简单有效，适合原型开发，同时也存在清晰的 SDK 迁移路径，满足生产环境对可靠性和成本效率的要求。</p>
+</body>

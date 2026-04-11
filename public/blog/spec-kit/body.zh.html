@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spec-Kit：迭代、规划与 TDD 笔记</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({startOnLoad:true});</script>
+</head>
+<body>
+  <h1>Spec-Kit：迭代、规划与 TDD 笔记</h1>
+
+  <div class="meta">
+    <div class="author">CM Yao</div>
+    <div>SpecKit 工作流指南</div>
+    <div>2026年1月15日</div>
+  </div>
+
+  <h2>摘要</h2>
+  <p>如何通过计划、任务和测试先行的循环来迭代 SpecKit 工作，同时保持每次变更可追溯。</p>
+  <ul>
+    <li>仅在策略或需求发生变化时重新运行 <code>/speckit.plan</code>；否则直接调整 <strong>tasks.md</strong>。</li>
+    <li>实践 TDD：先编写测试，确认测试失败，然后用最小实现使测试通过。</li>
+    <li>通过同步更新 <strong>spec.md</strong>、<strong>plan.md</strong> 和 <strong>tasks.md</strong> 来保持契约与代码的一致性。</li>
+    <li>将真实的测试输出（本地或 CI）作为每次迭代的证据记录下来。</li>
+  </ul>
+
+  <h2>SpecKit 命令</h2>
+  <ul>
+    <li><strong>/speckit.constitution</strong> — 定义治理原则和开发准则。</li>
+    <li><strong>/speckit.specify</strong> — 描述要构建的内容（需求和用户故事）。</li>
+    <li><strong>/speckit.plan</strong> — 使用选定的技术栈创建技术方案。</li>
+    <li><strong>/speckit.tasks</strong> — 生成可执行的实施任务。</li>
+    <li><strong>/speckit.implement</strong> — 按照方案执行任务。</li>
+  </ul>
+
+  <h3>项目生命周期</h3>
+  <div class="mermaid">
+flowchart TD
+  A[项目启动] --> B[定义准则]
+  B --> C[编写规格说明]
+  C --> D[规划实施方案]
+  D --> E[生成任务]
+  E --> F[带测试执行]
+  F --> G[发布]
+  G --> H[回顾与下一次迭代]
+  H --> C
+  </div>
+
+  <h3>文档流转</h3>
+  <div class="mermaid">
+flowchart TD
+  spec[spec.md\n契约与验收标准] --> plan[plan.md\n策略、里程碑、关卡]
+  plan --> tasks[tasks.md\n有序执行步骤]
+  tasks --> code[代码仓库\n测试与实现]
+  code --> tests[测试执行\n本地或 CI]
+  tests --> tasks
+  </div>
+
+  <h2>核心概念</h2>
+
+  <h3>何时重新运行 <code>/speckit.plan</code></h3>
+  <ul>
+    <li><strong>需求变更或原方案不可行：</strong>重新运行 <code>/speckit.plan</code> 以新策略重写 <strong>plan.md</strong>。</li>
+    <li><strong>仅实现细节调整：</strong>跳过 <code>/speckit.plan</code>；直接调整 <strong>tasks.md</strong> 或代码。</li>
+    <li><strong>已在实施中：</strong>方案已确定；优化任务，而非重新运行计划生成器。</li>
+  </ul>
+  <p><strong>一句话总结：</strong><code>/speckit.plan</code> 回答的是"如何做这件事"，而非"如何写这行代码"。</p>
+
+  <h3>测试驱动开发（TDD）</h3>
+  <p>TDD 要求在编写核心逻辑之前先有真正失败的测试。不要凭直觉编码；要为满足失败的测试而编码。</p>
+  <ol>
+    <li>为预期行为编写测试。</li>
+    <li>运行测试并确认失败（证明测试是有意义的）。</li>
+    <li>编写最小实现使测试通过。</li>
+    <li>在测试覆盖下安全重构。</li>
+  </ol>
+  <p><strong>为什么强调"测试正在失败"：</strong>确保覆盖目标行为，避免先写实现再自我验证的情况，并利用测试来约束边界和正确性。</p>
+
+  <h3>AI + SpecKit + TDD</h3>
+  <p>除非你强制要求证据，否则大语言模型会压缩红-绿循环。使用以下保障措施：</p>
+  <ul>
+    <li><strong>拆分任务：</strong>将"编写测试"与"实现"分开。</li>
+    <li><strong>要求证据：</strong>捕获失败和通过的输出。</li>
+    <li><strong>以本地或 CI 测试执行为驱动：</strong>将真实结果作为下一轮输入。</li>
+  </ul>
+
+  <h2>本地迭代工作流</h2>
+
+  <div class="mermaid">
+flowchart TD
+  A[spec.md 中的变更请求] --> B[增量更新 tasks.md]
+  B --> C[仅编写测试]
+  C --> D[本地运行测试]
+  D --> E{按预期失败？}
+  E -- 否 --> C
+  E -- 是 --> F[最小实现]
+  F --> G[再次运行测试]
+  G --> H{全部通过？}
+  H -- 否 --> F
+  H -- 是 --> I[可选重构]
+  I --> J[记录变更并合并]
+  </div>
+
+  <h3>步骤 1：在 <strong>spec.md</strong> 中添加变更请求</h3>
+  <p>添加一个"变更请求"或"更新"部分，包含：</p>
+  <ul>
+    <li><strong>背景：</strong>为什么需要这个变更。</li>
+    <li><strong>预期行为：</strong>位置和默认值。</li>
+    <li><strong>交互：</strong>点击/键盘行为、导航、API 调用。</li>
+    <li><strong>验收标准：</strong>可观测、可测试的标准。</li>
+  </ul>
+
+  <h4>变更请求示例</h4>
+  <ul>
+    <li><strong>变更：</strong>首页添加"立即开始"按钮。</li>
+    <li><strong>位置：</strong>主标题下方，居中对齐。</li>
+    <li><strong>行为：</strong>点击后导航到 <code>/signup</code>。</li>
+    <li><strong>无障碍：</strong>按钮必须可通过键盘聚焦，并可通过 Enter 键触发。</li>
+    <li><strong>验收标准：</strong>按钮在首页可见；点击后 URL 变为 <code>/signup</code>；在移动端布局不溢出。</li>
+  </ul>
+
+  <h3>步骤 2：生成任务</h3>
+  <ol>
+    <li>在 <strong>spec.md</strong> 中更新变更内容。</li>
+    <li>运行 <code>/speckit.tasks</code> 生成增量任务。</li>
+    <li>在 <strong>tasks.md</strong> 中优先采用测试先行的排序。</li>
+  </ol>
+
+  <h3>步骤 3：测试先行执行</h3>
+  <ul>
+    <li>任务 1：为新行为添加测试。</li>
+    <li>任务 2：运行测试并捕获失败输出。</li>
+    <li>任务 3：实现最小变更使测试通过。</li>
+    <li>任务 4：再次运行测试；如果通过则重构。</li>
+  </ul>
+  <p>明确指定新的测试文件和命令。在实现之前记录预期的失败点。在获得失败输出后，仅修改实现代码，除非测试本身有误。</p>
+
+  <h2>大型功能迭代</h2>
+
+  <div class="mermaid">
+flowchart TD
+  A[定义大型功能] --> B[拆分为里程碑]
+  B --> C[里程碑 1]
+  C --> D[里程碑 2]
+  D --> E[里程碑 3]
+  E --> F[功能完成]
+  </div>
+
+  <p>每次迭代应交付一个可验证的垂直切片：</p>
+  <ul>
+    <li>契约变更记录在 <strong>spec.md</strong> 中。</li>
+    <li>策略和关卡记录在 <strong>plan.md</strong> 中。</li>
+    <li>有序任务记录在 <strong>tasks.md</strong> 中，采用测试先行。</li>
+    <li>代码和测试提交到代码仓库。</li>
+    <li>真实的测试输出（本地或 CI）作为下一轮的输入。</li>
+  </ul>
+  <p><strong>核心原则：</strong>基于文件和测试输出进行迭代，而非基于聊天中的印象。</p>
+
+  <h3>每个里程碑的 TDD 循环</h3>
+  <div class="mermaid">
+flowchart TD
+  A[里程碑规格更新] --> B[里程碑任务]
+  B --> C[仅编写测试]
+  C --> D[本地或 CI 运行测试]
+  D --> E{按预期失败？}
+  E -- 否 --> C
+  E -- 是 --> F[实现最小范围]
+  F --> G[再次运行测试]
+  G --> H{通过关卡？}
+  H -- 否 --> F
+  H -- 是 --> I[记录证据]
+  </div>
+
+  <h3>里程碑拆分示例（注册功能）</h3>
+  <ol>
+    <li>页面打开显示表单；前端验证生效；提交为桩实现。</li>
+    <li>对接 API 契约；模拟成功响应；成功后导航。</li>
+    <li>处理失败状态和错误界面。</li>
+    <li>添加端到端测试覆盖和 CI 关卡。</li>
+    <li>重构并偿还技术债务。</li>
+  </ol>
+
+  <h2>可追溯性</h2>
+  <ul>
+    <li><strong>spec.md：</strong>契约修订日志（添加变更日志或修订部分）。</li>
+    <li><strong>tasks.md：</strong>带有验收点的里程碑。</li>
+    <li><strong>Git：</strong>每个里程碑映射到以该里程碑命名的 PR 或提交。</li>
+  </ul>
+  <p>在任何时候你都可以回答：当前里程碑、受影响的契约、测试覆盖状态、失败输出和修复路径。</p>
+
+  <h2>提示词模板</h2>
+
+  <h3>模板 1：生成或更新方案</h3>
+  <p>"根据最新的规格说明，为功能 X 输出一个方案，包括阶段、风险、测试策略和关卡。不要编写实现代码。"</p>
+
+  <h3>模板 2：生成任务</h3>
+  <p>"根据方案，将工作拆分为里程碑。每个里程碑必须包含测试先行的任务排序，并指定新的测试文件路径和运行命令。"</p>
+
+  <h3>模板 3：仅测试</h3>
+  <p>"仅完成里程碑 N 的测试任务。只修改 tests 目录，不修改 src。输出测试文件、命令和预期失败点。"</p>
+
+  <h3>模板 4：最小实现</h3>
+  <p>"这是我本地的测试失败输出。仅修改实现代码以通过这些测试。不要修改测试，除非测试明显有误。"</p>
+
+</body>
+</html>

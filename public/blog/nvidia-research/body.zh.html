@@ -1,0 +1,165 @@
+<body>
+  <h1>NVIDIA AI 基础设施综合研究报告</h1>
+
+  <div class="meta">
+    <div class="author">CM Yao</div>
+    <div>深度 AI 基础设施研究</div>
+    <div>2026年2月</div>
+  </div>
+
+  <p>本报告从集群架构类型、部署方案、成本结构和供应链动态等维度，全面剖析 NVIDIA 的数据中心级计算战略。NVIDIA 正在从芯片供应商转型为交付完整"AI 工厂"机架（如 GB200 NVL72）的厂商，重塑了现代数据中心的建设和融资方式。</p>
+
+  <h2>执行摘要</h2>
+  <p>NVIDIA 现在提供涵盖 GPU、板卡、完整系统和网络的全栈基础设施。GB200 NVL72 机架体现了从单服务器思维向机架级设计的转变，实现了统一内存和极致密度。理解这些架构及其运营模式，对于评估 AI 基础设施投资至关重要。</p>
+
+  <h2>第一章：NVIDIA 集群架构分类</h2>
+
+  <h3>1.1 HGX — 超大规模定制化的基础</h3>
+  <h4>定义与定位</h4>
+  <p>HGX 提供包含 8 个 GPU（H100/H200 级别）和 NVLink 交换机的核心基板。OEM 厂商在此基础上搭配自有的 CPU、内存、存储、电源和机箱方案。</p>
+  <h4>运营模式</h4>
+  <p>OEM/ODM 厂商（Dell、Inspur、Supermicro）采购 HGX 基板，然后集成 CPU（Intel/AMD）、电源和散热系统，以满足客户数据中心标准（通常为 OCP）。</p>
+  <h4>关键优势</h4>
+  <ul>
+    <li>高度灵活：超大规模客户可根据其设施定制机架和电源方案。</li>
+    <li>多平台支持：兼容 Intel 或 AMD CPU 搭配。</li>
+    <li>自定义优化：可针对工作负载和设施限制进行定制。</li>
+    <li>成本控制：客户自行管理非核心组件支出。</li>
+  </ul>
+  <p><strong>典型客户：</strong> Meta、Microsoft Azure、Google Cloud 以及其他拥有深厚内部工程能力的超大规模企业。</p>
+
+  <h3>1.2 DGX — 交钥匙式标准方案</h3>
+  <h4>定义与定位</h4>
+  <p>DGX 是 NVIDIA 旗舰级全集成服务器产品线。硬件、散热、布线和软件均由 NVIDIA 设计，并通过指定合作伙伴制造。</p>
+  <h4>DGX SuperPOD</h4>
+  <p>多台 DGX 服务器通过 NVIDIA 网络（InfiniBand）互联，构成参考超算架构，针对开箱即用的性能进行了优化。</p>
+  <h4>应用场景</h4>
+  <ul>
+    <li>需要快速获得最高性能的顶级研究机构。</li>
+    <li>重视稳定性和可维护性的国家实验室。</li>
+    <li>以缩短首次出结果时间为优先的 AI 初创企业。</li>
+    <li>缺乏深度基础设施团队的企业 AI 中心。</li>
+  </ul>
+  <p><strong>成本说明：</strong> 买家为紧密集成、节省的工程时间以及官方调优买单。</p>
+
+  <h3>1.3 MGX — 面向边缘和多元化需求的模块化架构</h3>
+  <h4>定义与定位</h4>
+  <p>MGX 是一种模块化参考设计，允许服务器制造商在同一机箱设计内灵活更换 CPU（x86/Arm）和加速器（GPU/DPU）。</p>
+  <h4>应用场景</h4>
+  <ul>
+    <li>无需完整 NVLink 互联的企业推理场景。</li>
+    <li>边缘计算部署。</li>
+    <li>面向图形、仿真和数字孪生的 OVX 系统。</li>
+    <li>混合多种加速器类型的混合服务器。</li>
+  </ul>
+  <p><strong>战略意义：</strong> 将 NVIDIA 的业务范围从超大规模扩展到企业和边缘场景。</p>
+
+  <h3>1.4 GB200 NVL72 — 机架级"一个机架 = 一个 GPU"</h3>
+  <h4>定义与定位</h4>
+  <p>Blackwell 时代的旗舰机架级系统，包含 72 个 Blackwell GPU 和 36 个 Grace CPU，作为一个逻辑单元协同运行。</p>
+  <h4>架构创新</h4>
+  <ul>
+    <li>规模：每机架 72 个 GPU + 36 个 CPU。</li>
+    <li>互联：基于铜缆背板的 NVLink 脊柱网络。</li>
+    <li>统一内存：全机架共享内存空间。</li>
+    <li>功率密度：每机架最高 120kW。</li>
+  </ul>
+  <p><strong>战略意义：</strong> 机架级设计绕过了摩尔定律放缓的瓶颈，完成了 NVIDIA 从板卡供应商到机架供应商的转型。数据中心设施必须适应高功率密度和强制液冷要求。</p>
+
+  <h2>第二章：全球超大规模企业部署策略</h2>
+
+  <h3>2.1 路径A：深度定制（自建型）</h3>
+  <p><strong>代表企业：</strong> Meta、Microsoft Azure、Google Cloud。</p>
+  <h4>采购与网络选择</h4>
+  <p>主要采购 HGX 板卡，并放入自定义机箱和机架设计中。网络方面通常倾向于使用专有以太网变体（如 Azure Maia、Meta RoCEv2、Google Jupiter），以兼容现有基础设施。</p>
+  <h4>数据中心适配</h4>
+  <ul>
+    <li>OCP Open Rack V3 规格。</li>
+    <li>根据场地条件定制液冷或风冷方案。</li>
+    <li>匹配设施标准的定制电源模块。</li>
+  </ul>
+  <p><strong>利弊权衡：</strong> 拥有最大的掌控力和长期成本优化能力，但需要大量工程投入和较长的部署周期。</p>
+
+  <h3>2.2 路径B：OEM / 云原生（参考架构采用型）</h3>
+  <p><strong>代表企业：</strong> Oracle OCI、CoreWeave、Lambda Labs。</p>
+  <h4>采购与优势</h4>
+  <p>直接采购 DGX SuperPOD 或完整的 GB200 NVL72 机架，采用 NVIDIA 液冷标准，不受遗留系统限制。优势包括最快的部署速度、官方调优的性能，以及"最新 GPU 云"的差异化竞争力。</p>
+  <p><strong>依赖性：</strong> 对 NVIDIA 路线图的高度依赖带来了低风险和高速度，但议价能力有限。</p>
+
+  <h2>第三章：成本分解与基础设施比例</h2>
+
+  <h3>3.1 硬件价值分布（GB200 NVL72，每机架约 300–400 万美元）</h3>
+  <h4>NVIDIA 份额（约 55%–65%）</h4>
+  <ul>
+    <li><strong>计算节点（GPU + CPU）：</strong> 约 39%–45%，随着 Grace + Blackwell 的推出，现已完全由 NVIDIA 自有。</li>
+    <li><strong>网络（交换机 + DPU/NIC）：</strong> 约 13%–15%，由 NVSwitch、ConnectX、InfiniBand/Spectrum 驱动。</li>
+  </ul>
+  <h4>非 NVIDIA 份额（约 35%–45%）</h4>
+  <ul>
+    <li><strong>电源系统：</strong> 约 15%–20%，包括母线、电源架、UPS。</li>
+    <li><strong>散热：</strong> 约 4%–6%，包括冷板、歧管、冷却分配单元。</li>
+    <li><strong>结构件 + 线缆：</strong> 约 3%–5%，包括机架和非 NVLink 布线。</li>
+    <li><strong>存储：</strong> 约 1%–2%，因为 GPU/主机内存主导了训练吞吐量。</li>
+  </ul>
+
+  <h3>3.2 物理基础设施挑战</h3>
+  <h4>功率密度变革</h4>
+  <table>
+    <thead>
+      <tr>
+        <th>指标</th>
+        <th>传统机架</th>
+        <th>GB200 NVL72</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>每机架功率</td>
+        <td>10-15kW</td>
+        <td>120kW</td>
+      </tr>
+      <tr>
+        <td>散热方式</td>
+        <td>风冷</td>
+        <td>液冷</td>
+      </tr>
+      <tr>
+        <td>功率密度</td>
+        <td>低</td>
+        <td>极高</td>
+      </tr>
+      <tr>
+        <td>占地面积</td>
+        <td>大</td>
+        <td>占地更小，负载更高</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>机架级密度需要重新设计配电系统、强制液冷以及更高的楼板承重能力。铜缆 NVLink 布线（LinkX）占据了机架后部的大部分空间，且必须通过 NVIDIA 认证。</p>
+  <p>液冷引入了新的运维要求：水循环回路、更高的结构负载以及专门的事故处理流程。</p>
+
+  <h3>3.3 网络规模比例</h3>
+  <p>在大型集群中，交换机与计算节点的比例通常在 1:2 到 1:4 之间。一个 10,000 GPU 的集群可能需要 2,500–5,000 台交换机。GB200 机架严重依赖 NVIDIA LinkX 铜缆实现背板互联，占据了机架后部的主要空间。</p>
+
+  <h2>第四章：网络运营模式与供应链</h2>
+
+  <h3>4.1 Fabless 2.0 模式</h3>
+  <p>收购 Mellanox 之后，NVIDIA 掌控了核心网络 IP（Quantum IB、Spectrum 以太网、ConnectX NIC、BlueField DPU），同时将制造外包给 TSMC 和 EMS 合作伙伴。软件层面（DOCA SDK、Cumulus Linux、NCCL）进一步加深了生态系统锁定效应。</p>
+
+  <h3>4.2 三级供应链</h3>
+  <ul>
+    <li><strong>第一级：晶圆代工</strong> — TSMC 在先进制程节点上制造 GPU 和网络 ASIC。</li>
+    <li><strong>第二级：系统组装（EMS/ODM）</strong> — Foxconn 生产交换机、LinkX 线缆和 GB200 机架；Quanta/Wistron 负责服务器板卡；Celestica 制造交换机。</li>
+    <li><strong>第三级：光模块与线缆</strong> — Innolight、Eoptolink（400G/800G 光模块）；Coherent 和 Lumentum（激光器）；Fabrinet（组装）；SENKO 和 TFC（连接器）。光模块和 DAC/ACC 线缆是高成本、高故障率的组件。</li>
+  </ul>
+
+  <h3>4.3 多元化商业模式</h3>
+  <ul>
+    <li><strong>自有品牌：</strong> NVIDIA Networking 交换机和 LinkX 线缆，提供完整的 NVIDIA 支持。</li>
+    <li><strong>"NVIDIA Inside"：</strong> NVIDIA 向 Cisco 等厂商提供交换芯片（如基于 Spectrum-X 的 Nexus N9100）。</li>
+    <li><strong>参考设计（JDM）：</strong> Dell、HPE、Lenovo 基于已发布的参考架构构建 NVIDIA 兼容设备。</li>
+    <li><strong>LinkX 品牌：</strong> 统一的线缆标准（DAC、AOC、光模块），经认证可在 IB 网络上实现低丢包率。</li>
+  </ul>
+
+  <p><em>本报告使用公开来源资料，仅供教育参考之用。</em></p>
+</body>
