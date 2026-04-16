@@ -1,11 +1,29 @@
 [
   {
+    "id": "sync-docs-knowledge-base",
+    "title": "Designing /sync-docs: A Cross-Project Knowledge Base for Claude Code",
+    "title_zh": "设计 /sync-docs：给 Claude Code 做一个跨项目知识库",
+    "summary": "A Claude Code slash command I designed to turn 311 scattered markdowns across 30+ projects into one cross-session memory file. The design decisions: what to deduplicate, how to pick a canonical copy, why context.md is capped at 2000 lines, why staleness is 90 days.",
+    "summary_zh": "我为 Claude Code 写的一个 slash command，把 30+ 项目里 311 份散落的 markdown 归成一个跨 session 记忆文件。这篇记录设计决策：去重规则、canonical 文件怎么选、为什么 context.md 封顶 2000 行、为什么 staleness 定在 90 天。",
+    "tags": [
+      "tooling",
+      "claude-code",
+      "knowledge-base"
+    ],
+    "publishedAt": "2026-04-16",
+    "url": "/blog/sync-docs-knowledge-base/",
+    "external": false,
+    "status": "published"
+  },
+  {
     "id": "agent-architecture",
     "title": "AI Agent Architecture Deep Dive",
-    "title_zh": "AI Agent 架构深度解析",
     "summary": "How to build a tool-calling AI agent with Claude CLI: streaming, tool loops, context management, and SDK migration paths.",
-    "summary_zh": "如何使用 Claude CLI 构建工具调用型 AI Agent：流式传输、工具循环、上下文管理与 SDK 迁移路径。",
-    "tags": ["AI", "agents", "architecture"],
+    "tags": [
+      "AI",
+      "agents",
+      "architecture"
+    ],
     "publishedAt": "2026-04-10",
     "url": "/blog/agent-architecture/",
     "external": false,
@@ -14,10 +32,12 @@
   {
     "id": "spec-kit",
     "title": "Spec-Kit: Iteration, Planning, and TDD Notes",
-    "title_zh": "Spec-Kit：迭代、规划与 TDD 笔记",
     "summary": "How to rerun plans, write tests first, and keep SpecKit iterations traceable.",
-    "summary_zh": "如何重跑计划、先写测试、保持 SpecKit 迭代可追溯。",
-    "tags": ["process", "tdd", "spec-kit"],
+    "tags": [
+      "process",
+      "tdd",
+      "spec-kit"
+    ],
     "publishedAt": "2026-02-17",
     "url": "/blog/spec-kit/",
     "external": false,
@@ -26,10 +46,12 @@
   {
     "id": "nvidia-research",
     "title": "NVIDIA AI Infrastructure Research Report",
-    "title_zh": "NVIDIA AI 基础设施研究报告",
     "summary": "Rack-scale GB200 NVL72, cluster archetypes, deployment paths, costs, and supply chain.",
-    "summary_zh": "机架级 GB200 NVL72、集群原型、部署路径、成本与供应链分析。",
-    "tags": ["AI", "infrastructure", "research"],
+    "tags": [
+      "AI",
+      "infrastructure",
+      "research"
+    ],
     "publishedAt": "2026-02-11",
     "url": "/blog/nvidia-research/",
     "external": false,
@@ -38,10 +60,12 @@
   {
     "id": "sniperbot-zero-to-one",
     "title": "SniperBot: Zero to One (Part 1)",
-    "title_zh": "SniperBot：从零到一（第一部分）",
     "summary": "How we built a real-time Twitter sniper bot with AI, end to end, for non-coders.",
-    "summary_zh": "我们如何用 AI 从零搭建一个实时 Twitter 狙击机器人 — 面向非程序员的完整记录。",
-    "tags": ["AI", "automation", "trading"],
+    "tags": [
+      "AI",
+      "automation",
+      "trading"
+    ],
     "publishedAt": "2026-02-05",
     "url": "/blog/sniperbot-zero-to-one/",
     "external": false,

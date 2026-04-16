@@ -1,5 +1,14 @@
 [
   {
+    "id": "sync-docs-knowledge-base",
+    "title": "Designing /sync-docs: A Cross-Project Knowledge Base for Claude Code",
+    "summary": "A Claude Code slash command I designed to turn 311 scattered markdowns across 30+ projects into one cross-session memory file. The design decisions: what to deduplicate, how to pick a canonical copy, why context.md is capped at 2000 lines, why staleness is 90 days.",
+    "tags": ["tooling", "claude-code", "knowledge-base"],
+    "publishedAt": "2026-04-16",
+    "status": "published",
+    "bodyHtmlFile": "content/bodies/sync-docs-knowledge-base.html"
+  },
+  {
     "id": "agent-architecture",
     "title": "AI Agent Architecture Deep Dive",
     "summary": "How to build a tool-calling AI agent with Claude CLI: streaming, tool loops, context management, and SDK migration paths.",

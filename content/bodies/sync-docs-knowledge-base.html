@@ -1,0 +1,241 @@
+<h1 id="designing-sync-docs-a-cross-project-knowledge-base-for-claude-code">Designing <code>/sync-docs</code>: A Cross-Project Knowledge Base for Claude Code</h1>
+<p>Across 30+ side projects, I had accumulated 330 markdown files: a <code>CLAUDE.md</code> in every repo, half-finished specs, incident reports, design notes, pitfall logs. When I needed to recall something ("how did I solve that PostgreSQL enum migration?"), I would grep across <code>~/Downloads/</code> and usually give up.</p>
+<p>So I built a Claude Code slash command to fix it. <code>/sync-docs</code> is 260 lines of Markdown-as-prompt at <code>~/.claude/commands/sync-docs.md</code>. This post covers the design: what I chose to deduplicate, how I decide a canonical copy, why <code>context.md</code> is capped at 2000 lines, why staleness is 90 days.</p>
+<hr />
+<h2 id="1-the-problem">1. The Problem</h2>
+<p>Every project starts with a <code>CLAUDE.md</code>. Most end up with <code>ARCHITECTURE.md</code>, a few specs, a couple of incident writeups, and if I am lucky, an <code>experience/</code> folder with the bugs I want to remember.</p>
+<p>Those docs are trapped inside the project that created them. When I start a new project and hit a similar problem, I do not remember which repo has the relevant note. I re-solve the problem, then write another note that future-me will also fail to find.</p>
+<p>The requirements I wrote down:</p>
+<ul>
+<li>A single index I can scan across all projects.</li>
+<li>Duplicate detection, since the same file often gets copied between repos.</li>
+<li>A way to flag files that are stale and should be deleted.</li>
+<li>An output I can paste into a Claude session as cross-project memory.</li>
+</ul>
+<p>The last requirement shaped the rest of the design.</p>
+<div class="mermaid">
+flowchart LR
+    P1[Project A<br/>CLAUDE.md + 8 docs]
+    P2[Project B<br/>CLAUDE.md + 12 docs]
+    P3[Project C<br/>CLAUDE.md + 6 docs]
+    PN[... 30+ projects]
+    P1 --> SYNC[/sync-docs/]
+    P2 --> SYNC
+    P3 --> SYNC
+    PN --> SYNC
+    SYNC --> REG[registry.md<br/>one-line index]
+    SYNC --> CTX[context.md<br/>takeaways]
+    SYNC --> HASH[hashes.json<br/>change state]
+</div>
+<hr />
+<h2 id="2-three-output-files-one-per-reader">2. Three Output Files, One Per Reader</h2>
+<p>The skill writes three files to <code>~/Downloads/claude-knowledge/</code>.</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+<th>Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>registry.md</code></td>
+<td>One-line-per-file index, grouped by category</td>
+<td>~420 lines</td>
+</tr>
+<tr>
+<td><code>context.md</code></td>
+<td>2 to 5 line takeaway per unique file, grouped by category</td>
+<td>capped at 2000 lines</td>
+</tr>
+<tr>
+<td><code>hashes.json</code></td>
+<td>File hashes plus cached titles and takeaways for incremental runs</td>
+<td>~60 KB</td>
+</tr>
+</tbody>
+</table>
+<p>Each file is optimized for a different reader. <code>registry.md</code> is human-scannable table of contents. <code>context.md</code> is what I paste into Claude as memory. <code>hashes.json</code> is the state file that makes the next run fast.</p>
+<p>Splitting into three means each reader skips the content they do not need.</p>
+<hr />
+<h2 id="3-the-10-step-pipeline">3. The 10-Step Pipeline</h2>
+<div class="mermaid">
+flowchart TB
+    S0[Step 0: Load previous hashes.json]
+    S1[Step 1: Find all .md files]
+    S2[Step 2: Hash + collect mtime]
+    S3[Step 3: Detect changes]
+    S4[Step 4: Deduplicate by hash]
+    S5[Step 5: Categorize]
+    S6[Step 6: Build context.md]
+    S7[Step 7: Build registry.md]
+    S8[Step 8: Write new hashes.json]
+    S9[Step 9: Staleness check]
+    S10[Step 10: Report to user]
+
+    S0 --> S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9 --> S10
+</div>
+<p>The pivotal step is Step 0. Loading the previous <code>hashes.json</code> before anything else is what makes the skill incremental. Step 6 (building <code>context.md</code>) is where the LLM cost lives, since each file gets read and summarized. If that ran on every file every time, each re-scan would cost thousands of tokens.</p>
+<p>Instead, Step 3 partitions files into new, updated, moved, deleted, and unchanged. Only the first three need re-reading. Unchanged files reuse the cached <code>title</code> and <code>takeaway</code> fields stored in the previous <code>hashes.json</code>.</p>
+<p>The key design decision: cache the output of the LLM read inside <code>hashes.json</code>, not just the hash. That turns a scan of 300 files from "a few minutes" into "a few seconds when nothing changed."</p>
+<hr />
+<h2 id="4-the-exclude-list">4. The Exclude List</h2>
+<p>The <code>find</code> command looks simple, but the exclude list took several rounds of tuning.</p>
+<pre class="highlight"><code class="language-bash">find ~/Downloads -name &quot;*.md&quot; -type f \
+  -not -path &quot;*/node_modules/*&quot; \
+  -not -path &quot;*/.venv/*&quot; \
+  -not -path &quot;*/.git/*&quot; \
+  -not -path &quot;*/dist/*&quot; \
+  -not -path &quot;*/build/*&quot; \
+  -not -path &quot;*/.cache/*&quot; \
+  -not -path &quot;*/__pycache__/*&quot; \
+  -not -path &quot;*/.expo/*&quot; \
+  -not -path &quot;*/.specify/templates/*&quot; \
+  -not -path &quot;*/claude-knowledge/*&quot; \
+  -not -name &quot;LICENSE.md&quot;
+</code></pre>
+
+<p>Without <code>node_modules</code> and <code>.venv</code>, a single Electron project would drown the index in 20,000 package READMEs.</p>
+<p>The critical one was <code>claude-knowledge/*</code>. Without it, the skill scans its own output on the second run. <code>context.md</code> appears as a new file, gets re-read, gets re-added to the next <code>context.md</code>, which gets re-read next time. I caught the recursive self-indexing on run two.</p>
+<p>The <code>.specify/templates/*</code> exclude filters out boilerplate template files that appear in every <code>specify</code>-initialized project. Same content in every repo, zero signal.</p>
+<hr />
+<h2 id="5-change-detection-with-a-fifth-case">5. Change Detection With a Fifth Case</h2>
+<p>Comparing new hashes against previous hashes gives four obvious partitions:</p>
+<ul>
+<li><strong>New</strong>: path exists now, not before.</li>
+<li><strong>Updated</strong>: path in both, hash changed.</li>
+<li><strong>Deleted</strong>: path before, not now.</li>
+<li><strong>Unchanged</strong>: same path, same hash.</li>
+</ul>
+<p>Those four fail when I rename a directory. Every file looks like a delete plus new pair, and the whole batch gets re-read despite identical content.</p>
+<p>I added a fifth case:</p>
+<blockquote>
+<p><strong>Moved</strong>: path A deleted AND path B new AND same filename AND same hash.</p>
+</blockquote>
+<p>When detected, the skill reuses the cached takeaway and updates the path only. On my last run, 3 files were detected as moved, all from an <code>Auto_Vid_Gen/</code> to <code>CM-social-platforms/</code> reorganization. Without the moved case, those would have been full re-reads for no reason.</p>
+<p>The match rule is intentionally strict (filename AND hash). A file with a new name or new content does not qualify, because then it genuinely should be re-read.</p>
+<hr />
+<h2 id="6-picking-a-canonical-copy">6. Picking a Canonical Copy</h2>
+<p>The registry currently shows 18 duplicate sets: files with identical hashes appearing in multiple projects. Example:</p>
+<pre class="highlight"><code>Canonical: Pixel_video/experience/01-dispatchqueue-asyncafter-breaks-swiftui-timing.md
+Aliases:   couple_rate/docs/experience/01-dispatchqueue-asyncafter-breaks-swiftui-timing.md
+</code></pre>
+
+<p>These were not duplicated by accident. <code>couple_rate</code> is a branded version of <code>Pixel_video</code>, and the <code>experience/</code> folder was intentionally shared. But the knowledge base does not need two entries. The question: which copy is canonical?</p>
+<p>The rule, checked top to bottom:</p>
+<ol>
+<li>Prefer files in a project that has a <code>CLAUDE.md</code> at the root (signals an active project).</li>
+<li>Prefer shorter paths.</li>
+<li>Prefer files in a <code>docs/</code> subdirectory.</li>
+</ol>
+<p>The ordering is deliberate. Rule 1 filters out dead projects. If a repo has no <code>CLAUDE.md</code>, the project is probably abandoned and its copies should not become canonical. Rule 2 is a proxy for "closer to the project root," which usually means more intentional placement. Rule 3 is the tiebreaker that prefers <code>docs/foo.md</code> over <code>notes/foo.md</code>.</p>
+<p>Aliases still appear in <code>hashes.json</code> with <code>"canonical": false, "alias_of": "..."</code>, so alias paths can be resolved back to canonical when needed. Aliases do not appear in <code>context.md</code>: the takeaway is written once.</p>
+<p><strong>Same filename with different content is NOT a duplicate.</strong> My scan has 14 different <code>CLAUDE.md</code> files, one per project, all with unique content. Collapsing those as duplicates would destroy the most valuable kind of diversity in the knowledge base. The skill detects this case separately and surfaces it under "Same-Name Files":</p>
+<pre class="highlight"><code>| CLAUDE.md | Auto_Vid_Gen, CM-social-platforms, EmailDigest, Personal_Development,
+             Pixel_video, ToiletAlarm, Training, amigo_app, capstone, clawapp,
+             clawapp_frontend, prompt_injection_blocker, vigil, vioceClone |
+</code></pre>
+
+<p>The count of unique <code>CLAUDE.md</code> files is essentially "how many active projects do I have."</p>
+<hr />
+<h2 id="7-categories-and-their-order">7. Categories and Their Order</h2>
+<p>Each unique file gets exactly one category. Rules are checked top to bottom, first match wins.</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Engineering Lessons</td>
+<td>Path has <code>experience/</code>, or name matches <code>*bugs*</code>, <code>*lessons*</code>, <code>*pitfalls*</code></td>
+</tr>
+<tr>
+<td>Architecture</td>
+<td>Path has <code>architecture/</code>, or name matches <code>*ARCHITECTURE*</code>, <code>*-design*</code></td>
+</tr>
+<tr>
+<td>Product Specs</td>
+<td>Path has <code>specs/</code>, or name matches <code>*PRD*</code>, <code>*spec*</code>, <code>*usecase*</code>, <code>*journey*</code>, <code>*Product*</code></td>
+</tr>
+<tr>
+<td>Security</td>
+<td>Name matches <code>*security*</code>, <code>*audit*</code>, <code>*SECURITY*</code></td>
+</tr>
+<tr>
+<td>Dev Guides</td>
+<td>Name is <code>CLAUDE.md</code>, <code>DEV_GUIDE*</code>, <code>INITIALIZE*</code>, <code>development.md</code>, <code>SERVER.md</code></td>
+</tr>
+<tr>
+<td>Planning</td>
+<td>Path has <code>planning/</code>, or name matches <code>*ROADMAP*</code>, <code>*PROGRESS*</code>, <code>*plan*</code></td>
+</tr>
+<tr>
+<td>Project Config</td>
+<td>Name is <code>SKILL.md</code>, <code>COMMAND.md</code></td>
+</tr>
+<tr>
+<td>Other</td>
+<td>Everything else</td>
+</tr>
+</tbody>
+</table>
+<p>Engineering Lessons is first on purpose. That is the category I re-read most, since that is where the debugging stories live. Putting it first means a file like <code>spec-experience.md</code> gets caught by the <code>experience/</code> path rule before it can land in Product Specs.</p>
+<p>Ordering mattered more than I expected. On the first pass I had Dev Guides before Product Specs, and <code>spec-kit.md</code> landed in Dev Guides due to <code>CLAUDE.md</code> similarity. I fixed it by bumping Product Specs higher. General principle: more specific rules go first, where "more specific" means either a path segment (like <code>experience/</code>) or a filename with strong priors (like <code>PRD</code>).</p>
+<hr />
+<h2 id="8-the-2000-line-cap-on-contextmd">8. The 2000-Line Cap on <code>context.md</code></h2>
+<p>For each new, updated, or moved file in Step 6, the LLM reads the first 2000 characters and extracts the title plus a 2 to 5 line takeaway. Unchanged files reuse the cached fields. That is how every run after the first stays cheap.</p>
+<div class="mermaid">
+flowchart LR
+    FILES[All discovered files]
+    CHANGED[New + Updated + Moved<br/>~3 files]
+    UNCHANGED[~300 files]
+    FILES --> CHANGED
+    FILES --> UNCHANGED
+    CHANGED -->|read first 2000 bytes<br/>extract title + takeaway| OUT[context.md entries]
+    UNCHANGED -->|reuse cached fields<br/>from hashes.json| OUT
+</div>
+<p>The hard cap: <code>context.md</code> must stay under 2000 lines. If it exceeds:</p>
+<ol>
+<li>Drop "Other" entries first.</li>
+<li>Then drop "Project Config" entries.</li>
+<li>Then truncate remaining entries to title plus takeaway only, stripping metadata.</li>
+</ol>
+<p>Why 2000? The whole point of <code>context.md</code> is that it can be pasted into a fresh Claude session as cross-project memory. If it is too big to fit comfortably in a prompt, the artifact has failed its job. 2000 lines is roughly 50 to 80K tokens depending on density, which fits any modern context window while leaving room for actual conversation.</p>
+<p>The drop order is a judgment call about what to miss least. "Other" holds files the categorizer could not classify, usually low signal. "Project Config" is <code>SKILL.md</code> files, reproducible from the skill files themselves. Real lessons and architecture stay.</p>
+<hr />
+<h2 id="9-why-90-days-for-staleness">9. Why 90 Days for Staleness</h2>
+<p>Step 9 uses the mtime collected in Step 2. Any file not modified in 90+ days gets flagged.</p>
+<pre class="highlight"><code>### Stale Files (not modified in 90+ days)
+
+| File | Project | Last Modified | Days Stale |
+|------|---------|---------------|------------|
+| orchestrator-plan.md | clawapp | 2025-11-03 | 165 |
+| adsfasf.md | datamanagement | 2025-09-18 | 211 |
+</code></pre>
+
+<p>I tried 60 and 180. 60 days fired on too many docs I was still actively referencing. 180 days missed things that had obviously rotted. 90 days is roughly one quarter of side-project time: long enough to be confident a doc is dormant, short enough to catch rot before it compounds.</p>
+<p>The skill does not delete anything. It reports. Stale docs are worse than no docs, since they mislead future-me into thinking something is still true, so the signal is valuable. But the deletion decision has to be mine. Some flagged files turn out to be perfectly fine reference material I have not touched. Others get removed.</p>
+<hr />
+<h2 id="10-how-i-use-it">10. How I Use It</h2>
+<p>I run <code>/sync-docs</code> every few days, usually before starting a new project or when I notice I am about to re-solve something. What I have gotten from it:</p>
+<ul>
+<li><strong>Planned a month of blog posts</strong> by scanning <code>registry.md</code> grouped by project. The post you are reading is Week 1 of that plan.</li>
+<li><strong>Found 18 duplicate sets</strong> I did not know existed. Three were stale copies of active files that had drifted without my knowledge.</li>
+<li><strong>Counted 14 active projects</strong> from the <code>CLAUDE.md</code> same-name analysis.</li>
+<li><strong>Detected 3 moved files</strong> from a recent directory reorganization, confirming nothing was lost.</li>
+<li><strong>Pasted <code>context.md</code> into new Claude sessions as memory.</strong> This is the most frequent use, and the reason I designed the whole thing.</li>
+</ul>
+<p>The last point is the core use case. When a fresh Claude session asks "how have you solved X before?", I have one file to paste. Not 311 files. Not "grep through <code>~/Downloads</code>." One file, capped at 2000 lines, full of takeaways I have already written. That is the real output: scattered notes turned into cross-session memory for the agent.</p>
+<hr />
+<h2 id="11-prompt-as-code">11. Prompt as Code</h2>
+<p>The full skill is 260 lines of Markdown at <code>~/.claude/commands/sync-docs.md</code>. There is no Python, no compiled binary. It is a prompt, structured into 10 steps, with exact rules for each step. Claude reads it and executes it.</p>
+<p>A well-structured prompt is code. The value is not in the bash snippets embedded in the skill, which are trivial. The value is in the decisions: which paths to exclude, which categories to use, how to resolve canonical duplicates, where to cap the output, what the dropout order is when the cap is exceeded, how to distinguish "moved" from "delete plus new." Each of those was a judgment call. None are obvious in advance. Most I got wrong on the first try and tuned by running the skill on my actual file tree and inspecting the output.</p>
+<p>The skill is portable because it is a file. The design is portable because it is written down. Treating prompt-authoring as engineering, with versioned decisions and tight tests (run it, inspect the output), produces something reusable and improvable.</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>With more than a handful of projects, markdown docs rot. <code>/sync-docs</code> reports what exists, what is duplicated, what is stale, and what keeps getting re-solved. The algorithm is 10 steps. The output is three files. Most of the work was picking the right defaults.</p>
+<p>Next post: SwiftUI animation, 7 bugs from a weekend iOS project. The raw material was already in <code>Pixel_video/experience/</code>, but I only knew it was there because the skill surfaced it.</p>
