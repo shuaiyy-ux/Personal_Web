@@ -1,31 +1,52 @@
 [
   {
     "id": "speckit",
+    "code": "SK",
     "title": "SpecKit",
-    "summary": "A specification-driven development toolkit for agentic workflows.",
-    "tags": ["TypeScript", "AI", "CLI"],
-    "githubUrl": "https://github.com/cmyao/speckit"
-  },
-  {
-    "id": "auto-pr-review",
-    "title": "Auto PR Review",
-    "summary": "GitHub Action that uses LLMs to leave meaningful code review comments.",
-    "tags": ["GitHub Actions", "AI"],
-    "githubUrl": "https://github.com/cmyao/auto-pr-review"
-  },
-  {
-    "id": "dotfiles",
-    "title": "Dotfiles",
-    "summary": "Opinionated macOS/Linux dev environment managed with chezmoi.",
-    "tags": ["Shell", "DevOps"],
-    "githubUrl": "https://github.com/cmyao/dotfiles"
+    "tagline": "Iteration discipline I layered on top of the spec-kit framework",
+    "tagline_zh": "在开源 spec-kit 框架之上沉淀的迭代纪律",
+    "summary": "Notes on running spec-kit projects without losing the spec-plan-tasks-tests thread, plus the rules I use to stop LLMs from compressing the red-green loop.",
+    "summary_zh": "如何在 spec-kit 工作流中保住 spec、plan、tasks、tests 的对齐，加上我用来防止 LLM 压缩红绿循环的几条硬规则。",
+    "tags": ["Spec-Kit", "TDD", "Workflow"],
+    "githubUrl": "https://github.com/github/spec-kit",
+    "year": "2026"
   },
   {
     "id": "finance-analyzer",
+    "code": "FA",
     "title": "Finance Analyzer",
+    "tagline": "In-browser RAG for financial documents",
+    "tagline_zh": "在浏览器内运行的金融文档 RAG",
     "summary": "AI-powered document analyzer with company sentiment scoring and RAG-based deep insights. Runs entirely in the browser.",
+    "summary_zh": "AI 驱动的文档分析：公司情绪打分 + RAG 深度问答，全程在浏览器本地完成。",
     "tags": ["AI", "Finance", "RAG"],
     "githubUrl": "https://github.com/cmyao/finance-analyzer",
-    "liveUrl": "/tools/finance-analyzer/"
+    "liveUrl": "/tools/finance-analyzer/",
+    "year": "2025",
+    "featured": true
+  },
+  {
+    "id": "email-digest",
+    "code": "ED",
+    "title": "EmailDigest",
+    "tagline": "Cron-driven Gmail triage built on Claude Code subprocess",
+    "tagline_zh": "基于 Claude Code subprocess 的定时邮件整理工具",
+    "summary": "An automation that pulls labeled Gmail threads on a cron, drafts replies via Claude, and surfaces a digest in a Next.js dashboard. Two-channel deploy (local + EC2) with isolated tokens.",
+    "summary_zh": "定时拉取打标签的 Gmail，调用 Claude 起草回复，再在 Next.js 仪表盘中展示摘要。本地和 EC2 双通道部署，token 互相隔离。",
+    "tags": ["Next.js", "Claude Code", "Automation"],
+    "githubUrl": "https://github.com/shuaiyy-ux/EmailDigest",
+    "year": "2026"
+  },
+  {
+    "id": "vigil",
+    "code": "VG",
+    "title": "Vigil",
+    "tagline": "Orchestrator that watches every Claude Code session",
+    "tagline_zh": "盯着所有 Claude Code 会话的总指挥",
+    "summary": "A localhost web server that tails JSONL logs across all my Claude Code sessions, runs scheduled patrols, dispatches self-inspections to idle panes, and writes activity digests so I can context-switch without losing state.",
+    "summary_zh": "在 localhost 跑的 web server，监控所有 Claude Code 会话的 JSONL 日志，做定时巡检、给闲置 pane 派自检任务，把进展写成简报，让我切换项目时不丢上下文。",
+    "tags": ["Python", "Orchestration", "AI"],
+    "githubUrl": "https://github.com/cmyao/vigil",
+    "year": "2026"
   }
 ]

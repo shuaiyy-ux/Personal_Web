@@ -6,17 +6,17 @@ A minimal, typography-led personal website communicating automation focus, deplo
 
 ```bash
 # Install dependencies
-pnpm install   # or npm install
+npm install
 
 # Run locally
-pnpm dev
+npm run dev
 
 # Build for production
-pnpm build
+npm run build
 
 # Run tests
-pnpm test:e2e
-pnpm test:a11y
+npm run test:e2e
+npm run test:a11y
 ```
 
 See [specs/001-personal-site/quickstart.md](specs/001-personal-site/quickstart.md) for full setup details.

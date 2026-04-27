@@ -20,6 +20,28 @@ test.describe('Content Sections', () => {
     await expect(firstItem.locator('.writing-item__summary')).toBeVisible();
   });
 
+  test('displays projects section with all project items', async ({ page }) => {
+    const projectsSection = page.locator('[data-section="projects"]');
+    await expect(projectsSection).toBeVisible();
+
+    // Heading + count badge
+    await expect(projectsSection.locator('#projects-heading')).toBeVisible();
+    await expect(projectsSection.locator('.projects__count')).toBeVisible();
+
+    // Scroll into view so reveal animation has fired
+    await projectsSection.scrollIntoViewIfNeeded();
+
+    const items = projectsSection.locator('.project-card');
+    const count = await items.count();
+    expect(count).toBeGreaterThanOrEqual(1);
+
+    const firstItem = items.first();
+    await expect(firstItem.locator('.project-card__title')).toBeVisible();
+    await expect(firstItem.locator('.project-card__tagline')).toBeVisible();
+    await expect(firstItem.locator('.project-card__icon svg')).toBeAttached();
+    await expect(firstItem).toHaveAttribute('href', /.+/);
+  });
+
   test('CTA section shows contact options', async ({ page }) => {
     const ctaSection = page.locator('[data-section="cta"]');
     await expect(ctaSection).toBeVisible();

@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "mermaid": "^11.12.3",
+    "motion": "^12.38.0",
     "pdfjs-dist": "^5.5.207"
   }
 }

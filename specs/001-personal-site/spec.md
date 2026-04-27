@@ -109,7 +109,7 @@ Visitors skim latest writing (6–9 entries) and selected projects (3–6 entrie
 
 #### Content Sections
 - **FR-011**: Render a Latest Writing list showing 6–9 items, each with title, one-line summary, tags, and date, ordered by recency; handle fewer items without empty placeholders.
-- **FR-012**: Render a Projects/Experiments section with 3–6 items, each showing title, one-line description, stack tags, and GitHub link; thumbnails optional and must not block first meaningful paint.
+- **FR-012**: Render a Projects section as a **bento mosaic** (6×4 grid) mixing 4 large project cards (2×2) with 8 small keyword cards (1×1), inside a feathered translucent panel positioned above the contact navigation. Project cards link to live demo or GitHub. See full spec in [projects-bento.md](./projects-bento.md).
 - **FR-013**: Include a statement line mid-page using one of the provided options with the brand symbol for continuity.
 - **FR-014**: Provide a CTA section with the line "Ready to build something cool together?" and a button labeled "LET'S START" that surfaces contact options: email (required), LinkedIn (required), GitHub (required).
 

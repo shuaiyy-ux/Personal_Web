@@ -15,12 +15,6 @@ const translations: Record<Locale, Record<string, string>> = {
     // Statement
     'statement.text': 'Less busywork. More leverage.',
 
-    // Tools banner
-    'tools.name': 'Finance Analyzer',
-    'tools.badge': 'Tool',
-    'tools.description': 'AI-powered document analysis — upload a PDF or TXT, get company sentiment scores, keyword extraction, and RAG-based deep insights. Runs entirely in your browser.',
-    'tools.action': 'Launch tool',
-
     // Navigation
     'nav.blog.description': 'Where I distill ideas, break down complex systems, and share what I learn along the way.',
     'nav.blog.action': 'Read articles',
@@ -32,6 +26,23 @@ const translations: Record<Locale, Record<string, string>> = {
     'nav.email.action': 'Send email',
     'nav.fallback.description': 'Learn more or reach out here.',
     'nav.fallback.action': 'Open link',
+
+    // Projects
+    'projects.heading': 'Projects',
+    'projects.count_label': 'ITEMS',
+    'projects.live': 'LIVE',
+
+    // Project detail page
+    'projects.detail.year': 'Year',
+    'projects.detail.stack': 'Stack',
+    'projects.detail.code': 'Code',
+    'projects.detail.repo': 'Source',
+    'projects.detail.live': 'Live',
+    'projects.detail.links': 'Links',
+    'projects.detail.prev': 'Previous',
+    'projects.detail.next': 'Next',
+    'projects.detail.backHome': 'Back to home',
+    'projects.detail.navAria': 'Adjacent projects',
 
     // Writing
     'writing.heading': 'Latest Writing',
@@ -78,12 +89,6 @@ const translations: Record<Locale, Record<string, string>> = {
     // Statement
     'statement.text': '更少重复，更多杠杆。',
 
-    // Tools banner
-    'tools.name': '财务分析器',
-    'tools.badge': '工具',
-    'tools.description': 'AI 驱动的文档分析 — 上传 PDF 或 TXT，获取公司情绪评分、关键词提取和基于 RAG 的深度洞察。完全在浏览器中运行。',
-    'tools.action': '启动工具',
-
     // Navigation
     'nav.blog.description': '在这里我提炼想法、拆解复杂系统，分享学到的一切。',
     'nav.blog.action': '阅读文章',
@@ -95,6 +100,23 @@ const translations: Record<Locale, Record<string, string>> = {
     'nav.email.action': '发送邮件',
     'nav.fallback.description': '了解更多或联系我。',
     'nav.fallback.action': '打开链接',
+
+    // Projects
+    'projects.heading': '项目',
+    'projects.count_label': '项',
+    'projects.live': '在线',
+
+    // Project detail page
+    'projects.detail.year': '年份',
+    'projects.detail.stack': '技术栈',
+    'projects.detail.code': '代号',
+    'projects.detail.repo': '源码',
+    'projects.detail.live': '体验',
+    'projects.detail.links': '链接',
+    'projects.detail.prev': '上一个',
+    'projects.detail.next': '下一个',
+    'projects.detail.backHome': '回到首页',
+    'projects.detail.navAria': '相邻项目',
 
     // Writing
     'writing.heading': '最新文章',

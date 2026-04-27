@@ -26,6 +26,11 @@ playwright/.cache/
 # Claude Code
 CLAUDE.md
 
+# Python
+__pycache__/
+.venv/
+*.pyc
+
 # Misc
 *.tmp
 *.swp

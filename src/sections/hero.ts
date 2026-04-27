@@ -19,7 +19,7 @@ export function renderHero(): string {
         </div>
         <div class="hero__body">
           <h1 id="hero-headline" class="hero__headline">${t('hero.headline')}</h1>
-          <p class="hero__subheadline">${t('hero.subheadline')}</p>
+          <p class="hero__subheadline">${t('hero.subheadline')}<span class="hero__cursor" aria-hidden="true">▌</span></p>
         </div>
         <div class="hero__scroll-cue" aria-hidden="true">
           <span class="hero__scroll-text">${t('hero.scroll')}</span>

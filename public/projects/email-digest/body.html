@@ -1,0 +1,31 @@
+<!-- ROUGH FIRST PASS. Sourced from EmailDigest/CLAUDE.md and README. Replace
+     [VERIFY: ...] markers in the next deep-dive pass. -->
+
+<p>I built EmailDigest because UCI sends me a few hundred labeled <code>UCI-Mail</code> threads a week and the only thing I needed from most of them was a one-line "is this worth opening." The piece that made it tractable was that Claude Code already runs as a subprocess on my machine, so I did not need a server, an API quota, or a queue. A cron job invokes Claude with a system prompt, the prompt reads Gmail through the standard Gmail tool surface, and the output lands in a SQLite file that a Next.js dashboard reads.</p>
+<p>The problem with the off-the-shelf options is that they all want to ingest the inbox into a third-party SaaS. For school mail that is the wrong answer. The compromise I landed on was the smallest possible architecture that still feels reliable: cron triggers Claude as a subprocess; Claude operates on a strict label scope (<code>label:UCI-Mail</code> only) so it cannot wander into personal mail; every action is bounded to draft creation only, never send, never delete. The dashboard is read-only over the SQLite file.</p>
+<div class="mermaid">
+flowchart LR
+  Cron[Cron tick] --> Subproc[Claude Code subprocess]
+  Subproc --> GmailLabel[Read label:UCI-Mail]
+  GmailLabel --> Triage[Per-thread summarize and classify]
+  Triage --> Drafts[Create draft replies]
+  Drafts --> SQLite[(SQLite data.db)]
+  SQLite --> Web[Next.js dashboard]
+  Web --> Review[I review and send manually]
+</div>
+<p><em>FIG.01: data path from cron to draft. Nothing in the loop sends mail; sending is always a manual click.</em></p>
+<p>The two-channel deploy was the part that took me the longest to get right. I run a TEST instance locally on <code>email.cmyao.com</code> and a PROD instance on an EC2 box at <code>email1.cmyao.com</code>. They share one git repository but each has its own <code>.env.local</code> with its own auth token, so a leak on one channel does not compromise the other. The repo is private to keep historical token churn off public history. The deploy is wired through GitHub Actions on push to <code>master</code>: SSH to the EC2 box, <code>git pull</code>, <code>npm ci</code>, <code>npm run build</code>, restart via <code>systemctl</code>, smoke-test. Database changes do not flow through CI on purpose because the local SQLite file holds state I do not want to overwrite from the runner.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># ~/.local/bin/emaildigest-tick (simplified)</span>
+<span class="nb">cd</span><span class="w"> </span>/Users/cm/Downloads/EmailDigest
+<span class="nb">exec</span><span class="w"> </span>claude<span class="w"> </span>--no-tty<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--system<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROMPT_DIR</span><span class="s2">/system.md&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--tool<span class="w"> </span>gmail<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--tool<span class="w"> </span>sqlite<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--max-turns<span class="w"> </span><span class="m">12</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>&lt;<span class="w"> </span>/dev/null<span class="w"> </span>&gt;&gt;<span class="w"> </span>logs/<span class="k">$(</span>date<span class="w"> </span>+%F<span class="k">)</span>.log<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
+</code></pre></div>
+
+<p><em>FIG.02: simplified cron entry point. The real wrapper handles env loading and lock-file coordination.</em></p>
+<p>The hard rule the system enforces is the one I cannot trust myself to remember at 2 a.m.: AI Generate runs in a read-only mode that strips access to <code>gmail_create_draft</code> so a generation session cannot accidentally create real drafts. Drafting is gated to the explicit triage cron, never to ad-hoc generation runs. I picked the rule because I once let a draft be created against the wrong account during testing and I did not want a second incident of that kind.</p>
+<p><code>[VERIFY: how many threads per week the system actually processes once steady-state]</code>. <code>[VERIFY: average latency per tick and the cost per tick in API tokens]</code>. <code>[VERIFY: how often I edit drafts versus accept them as-is]</code>. <code>[VERIFY: the smoke-test contract the GitHub Actions deploy uses to decide pass or fail]</code>. <code>[VERIFY: how token rotation works in practice when both channels are live]</code>.</p>
+<p>The piece that surprised me is how much of the design ended up being about deployment ergonomics rather than the LLM. The model side is small. The interesting part was carving the trust boundary so that local development, EC2 production, GitHub history, and ambient Claude sessions all stay isolated.</p>

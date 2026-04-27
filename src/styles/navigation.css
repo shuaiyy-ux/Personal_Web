@@ -5,7 +5,7 @@
 
 .navigation {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--space-4);
   padding: var(--space-8) var(--space-4);
   max-width: 72rem;
@@ -126,51 +126,25 @@
   transition: color var(--duration-normal) var(--ease-smooth);
 }
 
-/* ---------- Tools Banner (above nav grid) ---------- */
-.tools-banner {
-  max-width: 72rem;
-  margin-inline: auto;
-  padding: 0 var(--space-4);
-  padding-top: var(--space-8);
-}
-
-.nav-block--featured {
-  border-color: rgba(230, 57, 70, 0.25);
-}
-
-.nav-block--featured::before {
-  background: linear-gradient(135deg, rgba(230, 57, 70, 0.06), transparent 60%);
-}
-
-.nav-block--featured:hover {
-  border-color: rgba(230, 57, 70, 0.5);
-}
-
-.nav-block--featured__badge {
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-xs);
-  letter-spacing: var(--letter-spacing-wider);
-  text-transform: uppercase;
-  color: var(--color-accent);
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid rgba(230, 57, 70, 0.3);
-  border-radius: var(--radius-sm);
-  line-height: 1;
-  vertical-align: middle;
-  margin-left: var(--space-3);
-}
-
-/* ---------- Mobile: Stack Vertically ---------- */
+/* ---------- Mobile: 2×2 grid ---------- */
 @media (max-width: 768px) {
   .navigation {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-3);
   }
 
   .nav-block {
-    padding: var(--space-5);
+    padding: var(--space-4);
   }
-  
+
+  .nav-block__label {
+    font-size: var(--font-size-lg);
+  }
+
+  .nav-block__description {
+    font-size: var(--font-size-sm);
+  }
+
   /* Reduce hover lift on mobile for touch */
   .nav-block:hover {
     transform: translateY(-2px);

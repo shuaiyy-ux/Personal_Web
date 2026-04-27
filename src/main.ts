@@ -6,6 +6,7 @@ import './styles/hero.css';
 import './styles/statement.css';
 import './styles/navigation.css';
 import './styles/writing.css';
+import './styles/projects.css';
 import './styles/cta.css';
 import './styles/footer.css';
 
@@ -14,10 +15,10 @@ import { t } from './i18n';
 import { renderHero } from './sections/hero';
 import { renderStatement } from './sections/statement';
 import { renderNavigation } from './sections/navigation';
+import { renderProjects, initProjectSpotlight } from './sections/projects';
 import { renderWriting } from './sections/writing';
 import { renderCTA } from './sections/cta';
 import { renderFooter } from './sections/footer';
-import { renderToolsBanner } from './sections/tools-banner';
 import initShiftBackground from './backgrounds/shift';
 
 const app = document.getElementById('app');
@@ -30,18 +31,21 @@ function render(): void {
     <a href="#main-content" class="visually-hidden">${t('post.skip')}</a>
     ${renderHeader()}
     ${renderHero()}
-    ${renderToolsBanner()}
-    ${renderNavigation()}
     <main id="main-content" class="container">
       ${renderStatement()}
+      ${renderProjects()}
+    </main>
+    ${renderNavigation()}
+    <div class="container">
       ${renderWriting()}
       ${renderCTA()}
-    </main>
+    </div>
     ${renderFooter()}
   `;
 
   initShiftBackground('.content--canvas');
   initLangSwitcher();
+  initProjectSpotlight();
 }
 
 render();

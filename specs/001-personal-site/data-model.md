@@ -16,16 +16,20 @@
 
 ### ProjectItem
 - **Fields**:
-  - `id`: string (slug or UUID; unique)
+  - `id`: string (slug; unique; must match an icon key in `src/sections/project-icons.ts`)
+  - `code`: string (2–3 uppercase letters; mono badge in card meta)
   - `title`: string (1-120 chars)
-  - `summary`: string (1-160 chars)
-  - `tags`: string[] (1-8 tags, each 1-24 chars) representing stack/areas
+  - `tagline`: string (1-line; 3-line clamp at narrow widths; ≤80 chars recommended)
+  - `tagline_zh`: string (optional zh translation; falls back to `tagline`)
+  - `summary`: string (1-160 chars; long-form, reserved for future detail view)
+  - `summary_zh`: string (optional zh translation)
+  - `tags`: string[] (1-8 tags, each 1-24 chars) representing stack/areas (surfaced in detail page meta, not on the home grid)
   - `githubUrl`: string (required, https)
-  - `liveUrl`: string (optional, https)
-  - `thumbnail`: string (optional path to optimized asset)
-  - `order`: number (optional for manual ordering)
-- **Validation rules**: githubUrl required https; thumbnail optional but must be optimized/accessible; summary <=160 chars; tags deduped.
-- **Relationships**: ordered list; linkable from cards.
+  - `liveUrl`: string (optional, https or relative path; presence triggers LIVE badge and `→` arrow)
+  - `year`: string (4-digit year)
+  - `featured`: boolean (optional, default false; true triggers AI shimmer border + 2-column 2-row grid span on the card)
+- **Validation rules**: githubUrl required https; tagline ≤80 chars recommended; tags deduped; `id` must match an entry in `project-icons.ts` ICONS map.
+- **Relationships**: rendered in `src/sections/projects.ts` as a card on a variable-count responsive grid. The grid auto-fills at min 280px width; `featured: true` cards span 2 columns × 2 rows on viewports ≥720px. See [projects-bento.md](./projects-bento.md).
 
 ### ContactLink
 - **Fields**:

@@ -2,44 +2,35 @@
 
 ## Prerequisites
 - Node.js 20+
-- pnpm or npm
-- Vercel CLI (optional for preview promotion)
+- npm (the project ships `package-lock.json`)
+- Python 3.10+ (for the blog and project markdown pipelines under `scripts/`)
 
 ## Setup
 1) Install dependencies
 ```bash
-pnpm install
+npm install
 ```
 
 2) Run locally
 ```bash
-pnpm dev
+npm run dev
 ```
-- Opens local dev server with live reload.
+- Opens local dev server on `http://localhost:5173` with live reload.
 
-3) Lint and test accessibility/e2e
+3) Test accessibility and e2e
 ```bash
-pnpm test:e2e        # Playwright flows
-pnpm test:a11y       # Playwright + axe checks (hero, nav blocks, CTA, reduced motion)
+npm run test:e2e        # Playwright flows
+npm run test:a11y       # Playwright + axe checks (hero, nav blocks, CTA, reduced motion)
 ```
 
 4) Build static assets
 ```bash
-pnpm build
+npm run build
 ```
-- Outputs static files suitable for Vercel static hosting.
+- TypeScript check plus Vite production build. Outputs to `dist/` for Vercel static hosting.
 
-5) Preview on Vercel
-```bash
-vercel --prebuilt --confirm
-```
-- Creates a preview URL; ensure checks pass before promoting.
-
-6) Promote to production (after review)
-```bash
-vercel deploy --prebuilt --prod --confirm
-```
-- Use custom domain per constitution; only after preview approval.
+5) Deploy
+- Pushing to the `001-personal-site` branch triggers Vercel auto-deploy via the git integration. No local Vercel CLI is required for routine releases.
 
 ## Content inputs
 - `src/data/writing.json`: array of WritingItem (see contracts/content-schema.json)

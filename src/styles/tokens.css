@@ -14,6 +14,11 @@
   /* Accent */
   --color-accent: #e63946;
   --color-accent-glow: rgba(230, 57, 70, 0.15);
+
+  /* Cool accent — used for code/data motifs, mono numbers, AI shimmer */
+  --color-accent-cool: #22d3ee;
+  --color-accent-cool-glow: rgba(34, 211, 238, 0.18);
+  --color-accent-cool-soft: rgba(34, 211, 238, 0.08);
   
   /* ---------- Depth System ---------- */
   /* Guide lines and brackets */
