@@ -310,6 +310,48 @@
   margin: var(--space-6) 0;
 }
 
+/* -- Product screenshot grid (iOS phone aspect, side-by-side) -- */
+.product-screens {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-6) 0 var(--space-2);
+}
+
+.product-screens figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.product-screens img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #000;
+  box-shadow: 0 12px 40px -16px rgba(0, 0, 0, 0.6);
+}
+
+.product-screens figcaption {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-2xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-fg-subtle);
+  text-align: center;
+  line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+  .product-screens {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2);
+  }
+}
+
 /* -- Inline code -- */
 .project-detail__body code {
   font-family: var(--font-family-mono);

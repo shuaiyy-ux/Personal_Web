@@ -24,12 +24,14 @@
   - `summary`: string (1-160 chars; long-form, reserved for future detail view)
   - `summary_zh`: string (optional zh translation)
   - `tags`: string[] (1-8 tags, each 1-24 chars) representing stack/areas (surfaced in detail page meta, not on the home grid)
-  - `githubUrl`: string (required, https)
+  - `githubUrl`: string (optional; https URL or empty string)
+  - `repoPrivate`: boolean (optional, default false; when true the detail page hides the "Source ↗" link even when `githubUrl` is set)
   - `liveUrl`: string (optional, https or relative path; presence triggers LIVE badge and `→` arrow)
   - `year`: string (4-digit year)
-  - `featured`: boolean (optional, default false; true triggers AI shimmer border + 2-column 2-row grid span on the card)
-- **Validation rules**: githubUrl required https; tagline ≤80 chars recommended; tags deduped; `id` must match an entry in `project-icons.ts` ICONS map.
-- **Relationships**: rendered in `src/sections/projects.ts` as a card on a variable-count responsive grid. The grid auto-fills at min 280px width; `featured: true` cards span 2 columns × 2 rows on viewports ≥720px. See [projects-bento.md](./projects-bento.md).
+  - `featured`: boolean (optional, default false; true triggers AI shimmer border on the card)
+  - `status`: enum `'shipped' | 'wip' | 'archived'` (optional, default `'shipped'`; drives the status badge in card top-left and detail-page eyebrow: a custom SVG glyph + uppercase mono label `SHIPPED` / `WIP` / `ARCHIVED`. Shipped is cyan with a soft drop-shadow glow; wip is amber with a slow rotation animation; archived is muted gray and static)
+- **Validation rules**: when `githubUrl` is set it must be https; tagline ≤80 chars recommended; tags deduped; `id` must match an entry in `project-icons.ts` ICONS map.
+- **Relationships**: rendered in `src/sections/projects.ts` as a card on a variable-count responsive mosaic. The desktop grid auto-fills at min 140px width with `grid-auto-rows: 140px` and `grid-auto-flow: dense`; project cards span 2 columns × 2 rows so they read as anchor tiles; the keyword scatter `tag-card` entries stay 1×1 and fill remaining cells. See [projects-bento.md](./projects-bento.md).
 
 ### ContactLink
 - **Fields**:

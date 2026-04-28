@@ -10,7 +10,7 @@ import './styles/footer.css';
 import projectsData from './data/projects.json';
 import { renderHeader, initLangSwitcher } from './sections/header';
 import { renderFooter } from './sections/footer';
-import { ProjectItem } from './sections/projects';
+import { ProjectItem, projectStatus, renderStatusBadge } from './sections/projects';
 import initShiftBackground from './backgrounds/shift';
 import { t, getLocale } from './i18n';
 
@@ -117,15 +117,10 @@ function localSummary(p: ProjectItem): string {
   return getLocale() === 'zh' ? (p.summary_zh ?? p.summary) : p.summary;
 }
 
-function projectIndex(p: ProjectItem): string {
-  const list = projectsData as ProjectItem[];
-  const idx = list.findIndex((item) => item.id === p.id);
-  return String(idx + 1).padStart(2, '0');
-}
-
 function renderArticle(project: ProjectItem, bodyHtml: string | null, neighbors: Neighbors): string {
   const body = bodyHtml ?? '';
-  const idx = projectIndex(project);
+  const status = projectStatus(project);
+  const statusBadge = renderStatusBadge(status, 'eyebrow');
 
   const liveBadge = project.liveUrl
     ? `<span class="project-detail__live">${t('projects.live')}</span>`
@@ -154,7 +149,9 @@ function renderArticle(project: ProjectItem, bodyHtml: string | null, neighbors:
       <p class="project-detail__eyebrow">
         <span class="project-detail__eyebrow-label">${t('projects.heading').toUpperCase()}</span>
         <span class="project-detail__eyebrow-sep">·</span>
-        <span class="project-detail__eyebrow-num">${idx} / ${project.code}</span>
+        ${statusBadge}
+        <span class="project-detail__eyebrow-sep">·</span>
+        <span class="project-detail__eyebrow-num">${project.code}</span>
         <span class="project-detail__eyebrow-sep">·</span>
         <span class="project-detail__eyebrow-year">${project.year}</span>
       </p>

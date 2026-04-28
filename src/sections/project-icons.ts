@@ -56,11 +56,24 @@ const iconFinanceAnalyzer = `
   </svg>
 `;
 
+const iconToiletAlarm = `
+  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="24" cy="26" r="14" />
+    <path d="M14 12 L11 9" opacity="0.65" />
+    <path d="M34 12 L37 9" opacity="0.65" />
+    <path d="M24 18 L24 26 L29 28" />
+    <rect x="20" y="33" width="8" height="6" rx="1.5" stroke-width="1.25" />
+    <circle cx="24" cy="36" r="1.6" fill="currentColor" stroke="none" />
+    <path d="M27 31.5 L29 31.5" opacity="0.5" />
+  </svg>
+`;
+
 const ICONS: Record<string, string> = {
   speckit: iconSpecKit,
   'finance-analyzer': iconFinanceAnalyzer,
   'email-digest': iconEmailDigest,
   vigil: iconVigil,
+  'toilet-alarm': iconToiletAlarm,
 };
 
 export function projectIcon(id: string): string {

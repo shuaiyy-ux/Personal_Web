@@ -2,9 +2,9 @@
 
 **Feature Branch**: `001-personal-site`
 **Created**: 2026-04-25
-**Updated**: 2026-04-27 (replaced fixed bento with variable-count grid)
+**Updated**: 2026-04-28 (kept keyword scatter cards as 1×1 fillers in the mosaic; mobile mosaic preserves layout instead of stacking)
 **Status**: Shipped
-**Input**: The Projects section is the centerpiece of the home page. It started as a hand-curated 6×4 bento mosaic of 4 project cards + 8 keyword scatter cards. After the portfolio outgrew 4 projects, the layout was rewritten as a variable-count responsive grid that auto-fills at min 280px width, with `featured: true` projects spanning 2 columns × 2 rows. The keyword scatter cards were removed.
+**Input**: The Projects section is the centerpiece of the home page. It started as a hand-curated 6×4 bento mosaic of 4 project cards + 8 keyword scatter cards. After the portfolio outgrew 4 projects, the layout was rewritten as a variable-count responsive mosaic that auto-fills at min 140px width with `grid-auto-rows: 140px` and `grid-auto-flow: dense`. Project cards span 2 columns × 2 rows; the 8 keyword scatter cards stay 1×1 and fill the gaps so the rhythm reads as a curated mosaic rather than a uniform tile board.
 
 ## Design Purpose
 
@@ -12,7 +12,7 @@ The portfolio is the primary trust signal for the site. The section reads as the
 
 1. **Hierarchy through `featured`.** Featured project cards span 2×2; the rest are 1×1. The size difference declares "this is the featured work today, those are the rest." A flat grid would imply equal weight.
 2. **Variable count without layout edits.** New projects drop into the grid through `projects.json` only. No CSS or layout array edits are required.
-3. **Cyan as a semantic layer.** The site uses red `#e63946` for interactive accents (CTA, hover, links). Code/AI motifs use a separate token `--color-accent-cool: #22d3ee` for project numbers, code abbreviations, icon strokes, AI shimmer borders, and the dot-grid pattern. Result: red = action, cyan = system data.
+3. **Cyan as a semantic layer.** The site uses red `#e63946` for interactive accents (CTA, hover, links). Code/AI motifs use a separate token `--color-accent-cool: #22d3ee` for project status glyphs (shipped), code abbreviations, icon strokes, AI shimmer borders, and the dot-grid pattern. Result: red = action, cyan = system data.
 4. **Feathered translucent panel anchors the section.** The grid sits inside a card whose background is `rgba(10, 10, 10, 0.5)` blurred 28px on a separate ::before layer, producing a true gaussian-feathered edge rather than a hard mask.
 5. **Motion that signals "intelligent system" without becoming theater.** Cursor spotlight, scramble title decode, AI shimmer border on featured cards, and stagger reveal on scroll: each reads as instrumented, not decorative.
 
@@ -57,11 +57,11 @@ The bilingual switcher swaps every project's tagline to its `tagline_zh`, plus t
 
 ### User Story 4: Stay readable on a phone (Priority: P2)
 
-On screens ≤720px wide, the grid collapses to a single-column stack of project cards. Featured cards lose their span and render at the standard 1×1 footprint.
+On screens ≤720px wide, the mosaic stays intact at smaller scale. Project cards remain 2×2 anchor tiles; the keyword scatter cards remain 1×1 fillers. Padding, icon size, and tagline line-clamp tighten so content stays legible.
 
 **Acceptance Scenarios**:
-1. **Given** the viewport is ≤720px, **When** the section renders, **Then** all project cards stack vertically full-width and the panel padding/feather inset both shrink.
-2. **Given** the same mobile viewport, **When** the user taps a card, **Then** the card responds without the desktop hover-lift transform.
+1. **Given** the viewport is ≤720px, **When** the section renders, **Then** the grid resolves to 2 to 3 columns of 100px cells, project cards span 2×2 (≈210px square), tag cards stay 1×1 (≈100px square), and panel padding/feather inset both shrink.
+2. **Given** the same mobile viewport, **When** the user taps a card, **Then** the card responds without the desktop hover-lift transform; the title scramble re-fires on every tap (not gated by the desktop once-per-hover guard).
 
 ### Edge Cases
 
@@ -79,18 +79,18 @@ On screens ≤720px wide, the grid collapses to a single-column stack of project
 ### Functional Requirements
 
 #### Layout
-- **FR-PB-001**: Render the Projects section as a CSS Grid with `grid-template-columns: repeat(auto-fill, minmax(280px, 1fr))`, `grid-auto-rows: minmax(220px, auto)`, and `grid-auto-flow: dense` at viewports >720px.
-- **FR-PB-002**: Each `featured: true` project card spans `grid-column: span 2; grid-row: span 2` at viewports ≥720px. Non-featured cards span 1×1.
-- **FR-PB-003**: Collapse the grid to a single column (`grid-template-columns: 1fr`) on viewports ≤720px; featured spans are reset.
+- **FR-PB-001**: Render the Projects section as a CSS Grid with `grid-template-columns: repeat(auto-fill, minmax(140px, 1fr))`, `grid-auto-rows: 140px`, and `grid-auto-flow: dense` at viewports >720px.
+- **FR-PB-002**: Every project card spans `grid-column: span 2; grid-row: span 2` at viewports ≥720px (project cards are the anchor tiles). Keyword scatter cards stay at 1×1 and fill gaps via dense flow.
+- **FR-PB-003**: On viewports ≤720px the mosaic stays intact at smaller scale: `grid-template-columns: repeat(auto-fill, minmax(100px, 1fr))` with `grid-auto-rows: 100px`. Project cards continue to span 2×2; tag cards continue to fill 1×1 cells. Project-card padding, icon size, and tagline line-clamp are tightened so content stays readable at the smaller cell size.
 - **FR-PB-004**: Position the section between the hero and the contact navigation (i.e., above `[data-section="navigation"]`).
 
 #### Visual treatment
 - **FR-PB-005**: Wrap the section in a translucent panel using a pseudo-element with `background: rgba(10, 10, 10, 0.5)`, `border-radius: 32px`, `filter: blur(28px)`, `inset: 24px` (12px on mobile) to produce gaussian-feathered edges.
 - **FR-PB-006**: Overlay a cyan dot-grid (`radial-gradient` 28px tile) on the section, masked by `radial-gradient(ellipse 75% 65% at 50% 50%, black 25%, transparent 85%)` so the pattern concentrates at center and fades to edges.
-- **FR-PB-007**: Apply the new design token `--color-accent-cool: #22d3ee` to: project numbers, mono codes, project icon strokes, terminal cursor in the hero, and the AI shimmer border.
+- **FR-PB-007**: Apply the new design token `--color-accent-cool: #22d3ee` to: project status glyphs (shipped), mono codes, project icon strokes, terminal cursor in the hero, and the AI shimmer border.
 
 #### Project cards
-- **FR-PB-008**: Each project card displays: 2-digit zero-padded number (matching the array index), 44×44 SVG icon, title (700 weight), optional LIVE badge, tagline (3-line clamp; 5-line clamp for featured), and a footer row with `code · year` mono meta and a directional arrow.
+- **FR-PB-008**: Each project card displays: a status badge (custom SVG glyph + uppercase mono label `SHIPPED` / `WIP` / `ARCHIVED`) inside a thin pill in the top-left corner, 44×44 SVG icon, title (700 weight), optional LIVE badge, tagline (3-line clamp; 5-line clamp for featured), and a footer row with `code · year` mono meta and a directional arrow. The status badge color follows status: cyan for shipped (with subtle drop-shadow glow on the glyph), amber for wip (with a slow rotation on the glyph, suppressed under reduced motion), muted gray for archived. The status carries a localized accessible label via `role="img"` + `aria-label`.
 - **FR-PB-009**: A project marked `featured: true` renders an animated conic-gradient cyan border via `::after` rotating 360° per 4.5s; reduced-motion users see a static linear-gradient instead.
 - **FR-PB-010**: Hover state lifts the card 2px, raises background to `rgba(255, 255, 255, 0.04)`, sets border to `rgba(34, 211, 238, 0.25)`, glows the icon box, and translates the arrow `+4px / -4px`.
 - **FR-PB-011**: Cursor-spotlight effect uses CSS variables `--x` and `--y` set by a `pointermove` listener; opacity fades in over `--duration-normal`.
@@ -126,10 +126,12 @@ Source: `src/data/projects.json`. Schema in `src/sections/projects.ts`.
 | `summary` | string | yes | Long-form summary for the detail page |
 | `summary_zh` | string | no | Chinese long-form summary |
 | `tags` | string[] | yes | Stack/area tags; surfaced on the detail page meta, not on the grid |
-| `githubUrl` | string | yes | Required https URL |
+| `githubUrl` | string | no | https URL or empty string; the empty case suppresses the Source link entirely |
+| `repoPrivate` | boolean | no | Default false; when true, the detail page hides the "Source ↗" link even if `githubUrl` is set (keeps the URL on record for when the repo is published) |
 | `liveUrl` | string | no | Optional https URL or relative path; presence triggers the LIVE badge |
 | `year` | string | yes | 4-digit year; mono in card meta |
-| `featured` | boolean | no | Default false; true triggers AI shimmer border + 2×2 grid span at viewports ≥720px |
+| `featured` | boolean | no | Default false; true triggers AI shimmer border (project cards already span 2×2 by default) |
+| `status` | enum | no | `'shipped'` (default) / `'wip'` / `'archived'`. Drives the status badge (custom SVG glyph + uppercase mono label) in the card top-left and the detail-page eyebrow |
 
 ---
 
@@ -140,7 +142,7 @@ Source: `src/data/projects.json`. Schema in `src/sections/projects.ts`.
 - **SC-PB-003**: Page passes axe-core audit on the projects section with zero violations.
 - **SC-PB-004**: Reduced-motion users see a fully readable section with no animation artifacts.
 - **SC-PB-005**: zh locale renders zh tagline + zh header strings on every project; falls back to en gracefully when zh fields missing.
-- **SC-PB-006**: Mobile viewport (≤720px) shows projects stacked, no horizontal scroll, featured cards de-spanned.
+- **SC-PB-006**: Mobile viewport (≤720px) shows the mosaic intact at smaller scale (project cards 2×2, tag cards 1×1), no horizontal scroll, and tag cards remain visible.
 - **SC-PB-007**: Adding a project requires only a JSON edit + an SVG icon; no CSS or layout-array changes.
 
 ---

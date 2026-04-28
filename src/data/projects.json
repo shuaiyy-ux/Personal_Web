@@ -9,7 +9,8 @@
     "summary_zh": "如何在 spec-kit 工作流中保住 spec、plan、tasks、tests 的对齐，加上我用来防止 LLM 压缩红绿循环的几条硬规则。",
     "tags": ["Spec-Kit", "TDD", "Workflow"],
     "githubUrl": "https://github.com/github/spec-kit",
-    "year": "2026"
+    "year": "2026",
+    "status": "shipped"
   },
   {
     "id": "finance-analyzer",
@@ -24,7 +25,8 @@
     "repoPrivate": true,
     "liveUrl": "/tools/finance-analyzer/",
     "year": "2025",
-    "featured": true
+    "featured": true,
+    "status": "shipped"
   },
   {
     "id": "email-digest",
@@ -36,7 +38,8 @@
     "summary_zh": "",
     "tags": ["Next.js", "Claude Code", "Glassmorphism"],
     "githubUrl": "",
-    "year": "2026"
+    "year": "2026",
+    "status": "wip"
   },
   {
     "id": "vigil",
@@ -49,6 +52,20 @@
     "tags": ["Python", "FastAPI", "WebSocket"],
     "githubUrl": "https://github.com/cmyao/vigil",
     "repoPrivate": true,
-    "year": "2026"
+    "year": "2026",
+    "status": "wip"
+  },
+  {
+    "id": "toilet-alarm",
+    "code": "TA",
+    "title": "ToiletAlarm",
+    "tagline": "iOS 26 alarm dismissed only by photographing the toilet, on-device Vision",
+    "tagline_zh": "iOS 26 闹钟，必须拍到马桶才能关，端上 Vision 识别不联网",
+    "summary": "",
+    "summary_zh": "",
+    "tags": ["Swift", "AlarmKit", "Vision"],
+    "githubUrl": "",
+    "year": "2026",
+    "status": "shipped"
   }
 ]

@@ -2,7 +2,8 @@
 
 **Feature Branch**: `001-personal-site`
 **Created**: 2026-04-26
-**Status**: Shipped (template + 1 fully realized example + 3 stubs)
+**Updated**: 2026-04-28 (4 deep-dive drafts shipped; daily cadence to add more from `~/Downloads/`)
+**Status**: Shipped (4 fully realized detail pages: speckit, finance-analyzer, email-digest, vigil)
 **Input**: User asked for project detail pages that (a) take design cues from juliakrantz.com's editorial catalog model but (b) are improved for code/AI projects (which need diagrams, code blocks, terminal output, and metrics: not photo galleries). Must support mermaid + code highlighting. The bento cards on the home page link to these detail pages instead of jumping straight to GitHub.
 
 ## Design Purpose
@@ -15,7 +16,7 @@ Specific decisions:
 2. **`FIG.NN: caption` after every artifact.** Inspired by juliakrantz's catalog and Anthropic's "Figure 1:" convention. Achieved with markdown italics on their own line: `*FIG.01: caption*`. CSS upgrades these into uppercase mono captions.
 3. **Pygments code highlighting via `codehilite`** (already in `md_to_body.py`). Pygments emits semantic CSS classes (`.k`, `.s`, `.c`, etc.); the project-detail stylesheet defines a custom dark theme over those classes (cyan keywords, amber strings, dim italic comments) matching the site's tokens. Zero JS bundle cost.
 4. **Mermaid diagrams use the site's cyan accent.** Theme variables override defaults so diagrams read as native to the site, not pasted in.
-5. **Foot navigation = adjacent project prev/next + back-to-home.** No sidebar of all projects (overkill at 4); no marketing CTA at the end.
+5. **Foot navigation = adjacent project prev/next + back-to-home.** No sidebar of all projects (the bento grid on the home page is the index); no marketing CTA at the end.
 6. **One feathered translucent panel** per page, echoing the home-page bento's container so the section feels like a continuation of the same surface.
 
 ---
@@ -27,7 +28,7 @@ Specific decisions:
 A visitor clicks a bento card on the home page, lands on the project detail page, and reads the full case study without leaving the page. The page tells them what the project is, why it exists, how it works, and what shipped.
 
 **Acceptance Scenarios**:
-1. **Given** a visitor on the home page, **When** they click a project bento card, **Then** the URL navigates to `/projects/<slug>/` and the detail page renders with: breadcrumb (`PROJECTS · 01 / SK · 2025`), title, optional LIVE badge, tagline, metadata table (Year, Stack, Code, Source/Live links), summary paragraph, body content, foot navigation.
+1. **Given** a visitor on the home page, **When** they click a project bento card, **Then** the URL navigates to `/projects/<slug>/` and the detail page renders with: breadcrumb (`PROJECTS · [glyph] SHIPPED · SK · 2025` where the status badge inlines the custom SVG glyph and the uppercase label, swapping in `WIP` or `ARCHIVED` per `status`), title, optional LIVE badge, tagline, metadata table (Year, Stack, Code, Source/Live links), summary paragraph, body content, foot navigation.
 2. **Given** the body markdown contains a ```` ```mermaid ```` block, **When** the page loads, **Then** mermaid lazy-initializes with the dark + cyan theme and renders the diagram inside a styled card.
 3. **Given** the body contains code blocks, **When** the page renders, **Then** Pygments classes are styled with cyan keywords, amber strings, dim italic comments: no raw VS-Code-style colors, no line numbers by default.
 4. **Given** the body contains italic text on its own line (`*FIG.01: ...*`), **When** rendered, **Then** the italic appears as an uppercase mono caption in the muted token color.
@@ -68,7 +69,7 @@ Small screens collapse the meta table to compact rows, stack the foot nav, and s
 ### Functional Requirements
 
 #### Routing & data
-- **FR-PD-001**: Each project gets its own static MPA route at `/projects/<slug>/index.html`, with all 4 routes registered in `vite.config.ts` rollupOptions.input.
+- **FR-PD-001**: Each project gets its own static MPA route at `/projects/<slug>/index.html`, with every project's route registered in `vite.config.ts` rollupOptions.input. `scripts/generate_projects.py` adds new entries idempotently as projects are added.
 - **FR-PD-002**: The renderer (`src/project-detail.ts`) extracts the slug from `window.location.pathname`, looks up the project in `projects.json`, fetches `/projects/<slug>/body.html` (or `body.zh.html` if locale is zh and the file exists), and renders the article.
 - **FR-PD-003**: The renderer computes `prev` and `next` from the array order in `projects.json` and renders foot-navigation cards accordingly.
 
@@ -112,7 +113,7 @@ Small screens collapse the meta table to compact rows, stack the foot nav, and s
 
 ## Success Criteria
 
-- **SC-PD-001**: A user clicking any of the 4 bento cards lands on a populated detail page with title + metadata + body in 100% of cases.
+- **SC-PD-001**: A user clicking any project bento card lands on a populated detail page with title + metadata + body in 100% of cases.
 - **SC-PD-002**: Mermaid diagrams render with the site's theme (cyan, dark): not the default purple.
 - **SC-PD-003**: Code blocks show cyan keywords + amber strings + dim italic comments. No flash-of-default-styling.
 - **SC-PD-004**: Page passes axe-core a11y audit on `[data-section]`-equivalent (the `.project-detail` article).
@@ -125,20 +126,18 @@ Small screens collapse the meta table to compact rows, stack the foot nav, and s
 
 ### Adding a new project
 
-1. **Add the project entry to `src/data/projects.json`** with all required fields (`id`, `code`, `title`, `tagline`, `tagline_zh`, `summary`, `summary_zh`, `tags`, `githubUrl`, optional `liveUrl`, `year`, optional `featured`). The `id` is the slug used in the URL `/projects/<id>/`.
+1. **Add the project entry to `src/data/projects.json`** with all required fields (`id`, `code`, `title`, `tagline`, `tagline_zh`, `summary`, `summary_zh`, `tags`, `githubUrl`, optional `repoPrivate`, optional `liveUrl`, `year`, optional `featured`). The `id` is the slug used in the URL `/projects/<id>/`. If the GitHub repo is private (or the URL is a placeholder for a yet-to-publish repo), set `"repoPrivate": true` to suppress the Source link.
 
 2. **Add an SVG icon to `src/sections/project-icons.ts`** (48×48 viewBox, stroke-based, currentColor). Register: `ICONS['<id>'] = iconForId`.
 
-3. **Update `BENTO_LAYOUT` in `src/sections/projects.ts`** if changing from 4 projects (the layout is fixed for 4 project + 8 tag slots; rebuild the grid for any other count).
+3. **Copy `content/projects/_TEMPLATE.md` to `content/projects/<slug>.md`** and fill in the lede, problem, mermaid diagram, code blocks, and outcome. Optionally also create `<slug>.zh.md`. (No grid-array edit is required: the variable-count mosaic auto-fills.)
 
-4. **Copy `content/projects/_TEMPLATE.md` to `content/projects/<slug>.md`** and fill in the lede, problem, mermaid diagram, code blocks, and outcome. Optionally also create `<slug>.zh.md`.
-
-5. **Run `python3 scripts/generate_projects.py`** (or `.venv/bin/python scripts/generate_projects.py`). The script:
+4. **Run `python3 scripts/generate_projects.py`** (or `.venv/bin/python scripts/generate_projects.py`). The script:
    - Compiles markdown to `public/projects/<slug>/body.html` (and `body.zh.html` if zh exists)
    - Creates `projects/<slug>/index.html` (route shell) if missing
    - Adds `"project-<slug>"` to `vite.config.ts` rollup inputs
 
-6. **Run `npm run build`** to verify the new entry compiles. Optionally `npm run dev` to preview.
+5. **Run `npm run build`** to verify the new entry compiles. Optionally `npm run dev` to preview.
 
 ### Markdown structure conventions
 

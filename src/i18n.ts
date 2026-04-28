@@ -31,6 +31,9 @@ const translations: Record<Locale, Record<string, string>> = {
     'projects.heading': 'Projects',
     'projects.count_label': 'ITEMS',
     'projects.live': 'LIVE',
+    'projects.status.shipped': 'shipped',
+    'projects.status.wip': 'wip',
+    'projects.status.archived': 'archived',
 
     // Project detail page
     'projects.detail.year': 'Year',
@@ -106,6 +109,9 @@ const translations: Record<Locale, Record<string, string>> = {
     'projects.heading': '项目',
     'projects.count_label': '项',
     'projects.live': '在线',
+    'projects.status.shipped': '已上线',
+    'projects.status.wip': '开发中',
+    'projects.status.archived': '已归档',
 
     // Project detail page
     'projects.detail.year': '年份',

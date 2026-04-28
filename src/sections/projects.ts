@@ -18,6 +18,46 @@ export interface ProjectItem {
   liveUrl?: string;
   year: string;
   featured?: boolean;
+  status?: ProjectStatus;
+}
+
+export type ProjectStatus = 'shipped' | 'wip' | 'archived';
+
+const STATUS_SVG: Record<ProjectStatus, string> = {
+  shipped: `
+    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+      <circle cx="7" cy="7" r="6" stroke-width="0.75" opacity="0.32" />
+      <circle cx="7" cy="7" r="3.5" stroke-width="0.75" opacity="0.7" />
+      <circle cx="7" cy="7" r="1.6" fill="currentColor" stroke="none" />
+    </svg>`,
+  wip: `
+    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+      <path d="M 13 7 A 6 6 0 1 1 7 1" stroke-width="1.25" />
+      <circle cx="7" cy="7" r="1.1" fill="currentColor" stroke="none" />
+    </svg>`,
+  archived: `
+    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-linejoin="round" aria-hidden="true">
+      <path d="M 7 1 L 13 7 L 7 13 L 1 7 Z" stroke-width="1.25" />
+      <path d="M 4.5 7 L 9.5 7" stroke-width="0.75" opacity="0.55" stroke-linecap="round" />
+    </svg>`,
+};
+
+export function projectStatus(item: ProjectItem): ProjectStatus {
+  return item.status ?? 'shipped';
+}
+
+export function projectStatusGlyph(status: ProjectStatus): string {
+  return STATUS_SVG[status];
+}
+
+export function renderStatusBadge(status: ProjectStatus, scope: 'card' | 'eyebrow' = 'card'): string {
+  const label = t(`projects.status.${status}`);
+  const cls = scope === 'eyebrow' ? 'project-status project-status--eyebrow' : 'project-status';
+  return `
+    <span class="${cls} project-status--${status}" role="img" aria-label="${label}" title="${label}">
+      <span class="project-status__glyph" aria-hidden="true">${STATUS_SVG[status]}</span>
+      <span class="project-status__label">${label}</span>
+    </span>`;
 }
 
 interface TagCard {
@@ -116,8 +156,9 @@ function renderTagCard(tag: TagCard): string {
   `;
 }
 
-function renderProjectCard(item: ProjectItem, index: number): string {
-  const number = String(index).padStart(2, '0');
+function renderProjectCard(item: ProjectItem, _index: number): string {
+  const status = projectStatus(item);
+  const statusBadge = renderStatusBadge(status, 'card');
   const href = `/projects/${item.id}/`;
   const featuredClass = item.featured ? ' project-card--featured' : '';
   const liveBadge = item.liveUrl
@@ -132,7 +173,7 @@ function renderProjectCard(item: ProjectItem, index: number): string {
         data-project-id="${item.id}"
       >
         <div class="project-card__head">
-          <span class="project-card__number" aria-hidden="true">${number}</span>
+          ${statusBadge}
           <span class="project-card__icon" aria-hidden="true">${projectIcon(item.id)}</span>
         </div>
         <div class="project-card__body">
