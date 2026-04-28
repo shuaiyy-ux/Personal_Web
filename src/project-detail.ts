@@ -2,6 +2,7 @@ import './styles/global.css';
 import './styles/header.css';
 import './styles/background.css';
 import './styles/animations.css';
+import './styles/project-status.css';
 import './styles/project-detail.css';
 import './styles/email-digest-mock.css';
 import './styles/vigil-mock.css';

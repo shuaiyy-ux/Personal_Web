@@ -6,6 +6,7 @@ import './styles/hero.css';
 import './styles/statement.css';
 import './styles/navigation.css';
 import './styles/writing.css';
+import './styles/project-status.css';
 import './styles/projects.css';
 import './styles/cta.css';
 import './styles/footer.css';

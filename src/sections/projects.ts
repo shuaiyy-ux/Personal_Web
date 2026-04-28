@@ -83,6 +83,9 @@ const TAG_CARDS: TagCard[] = [
   { short: 'SVG', label: 'Vector Graphics', annotation: '<svg/>' },
   { short: 'TDD', label: 'Test-Driven Dev', annotation: '✓ red→grn' },
   { short: 'I18N', label: 'i18n / locale',  annotation: 'en · zh' },
+  { short: 'LLM', label: 'Language Model',  annotation: '⚡ token' },
+  { short: 'E2E', label: 'End-to-End Test', annotation: '✓ flow' },
+  { short: 'VEC', label: 'Vector Embed',    annotation: '⟢ cos' },
 ];
 
 type Slot =
@@ -91,6 +94,24 @@ type Slot =
 
 function localTagline(item: ProjectItem): string {
   return getLocale() === 'zh' ? (item.tagline_zh ?? item.tagline) : item.tagline;
+}
+
+/**
+ * Deterministic non-adjacent placement for project cards on a 6-column desktop
+ * grid. Projects are 2x2; columns rotate through [1, 5, 3] and rows step by 4
+ * every three projects, so no two project tiles share an edge:
+ *
+ *     row 1-2:  P0(1-2) . . P1(5-6)
+ *     row 3-4:  .  P2(3-4)  .
+ *     row 5-6:  P3(1-2) . . P4(5-6)
+ *     row 7-8:  .  P5(3-4)  .
+ */
+function projectGridPos(displayIndex: number): { col: number; row: number } {
+  const cols = [1, 5, 3];
+  const baseRows = [1, 1, 3];
+  const slot = displayIndex % 3;
+  const cycle = Math.floor(displayIndex / 3);
+  return { col: cols[slot], row: baseRows[slot] + cycle * 4 };
 }
 
 /**
@@ -109,55 +130,43 @@ function stableShuffle<T>(arr: T[], seed: number): T[] {
 }
 
 /**
- * Build a scattered grid of project cards (2x2) + keyword tag cards (1x1).
- * Featured projects are anchored at the start so the top-left reads as the
- * focal point; regular projects and tag cards are interleaved via a stable
- * shuffle so the layout looks organic but does not flicker on reload.
+ * Build the slot list. Project cards are placed first with stable display
+ * indices (featured then shuffled regulars); their grid coordinates are
+ * computed by `projectGridPos` so they never share edges. Tag cards follow
+ * and fill remaining cells via CSS `grid-auto-flow: dense`.
  */
 function buildSlots(projects: ProjectItem[], tags: TagCard[]): Slot[] {
-  const tagCount = Math.min(tags.length, Math.max(8, Math.ceil(projects.length * 2.5)));
-  const usableTags = tags.slice(0, tagCount);
+  // Each project occupies a 2×2 block on the 6-column desktop grid.
+  // Compute the real last row from the last project's coordinates (not
+  // ceil(N/3)×4, which over-counts when the final cycle has 1 or 2
+  // projects and rounds up to a phantom extra row of empty tag cells).
+  const lastPos = projects.length > 0 ? projectGridPos(projects.length - 1) : { col: 1, row: 1 };
+  const lastRow = lastPos.row + 1; // each project spans 2 rows
+  const totalCells = lastRow * 6;
+  const projectCells = projects.length * 4;
+  const tagsNeeded = Math.max(8, totalCells - projectCells);
+  const tagCount = Math.min(tags.length, tagsNeeded);
 
-  const featured: Slot[] = [];
-  const regular: Slot[] = [];
-  projects.forEach((item, i) => {
-    const slot: Slot = { kind: 'project', item, index: i + 1 };
-    (item.featured ? featured : regular).push(slot);
+  const featured: ProjectItem[] = [];
+  const regular: ProjectItem[] = [];
+  projects.forEach((item) => {
+    (item.featured ? featured : regular).push(item);
   });
 
-  // Shuffle each list independently with different seeds so the layout
-  // reads as scattered but stays deterministic across reloads.
   const seed = projects.length * 31 + tagCount * 7;
-  const tagsShuffled = stableShuffle(usableTags, seed);
+  // Shuffle all tags first so the trailing entries in TAG_CARDS still
+  // get a chance to appear when the slice is smaller than the pool.
+  const tagsShuffled = stableShuffle(tags, seed).slice(0, tagCount);
   const regularsShuffled = stableShuffle(regular, seed * 13 + 1);
 
-  // Bucket each regular project into its own slice of the mixed list, then
-  // jitter the exact position within the bucket using an LCG. This keeps the
-  // big picture spread out (projects don't cluster on one side) while
-  // breaking the metronome of strictly-even placement.
-  const total = regularsShuffled.length + tagsShuffled.length;
-  const projectPositions = new Set<number>();
-  let lcg = seed * 23 + 11;
-  for (let k = 0; k < regularsShuffled.length; k++) {
-    const bucketStart = Math.floor((k * total) / regularsShuffled.length);
-    const bucketEnd = Math.floor(((k + 1) * total) / regularsShuffled.length);
-    const bucketSize = Math.max(1, bucketEnd - bucketStart);
-    lcg = (lcg * 9301 + 49297) % 233280;
-    const offset = Math.floor((lcg / 233280) * bucketSize);
-    projectPositions.add(bucketStart + offset);
-  }
-
-  const result: Slot[] = [...featured];
-  let pIdx = 0;
-  let tIdx = 0;
-  for (let i = 0; i < total; i++) {
-    if (projectPositions.has(i) && pIdx < regularsShuffled.length) {
-      result.push(regularsShuffled[pIdx++]);
-    } else if (tIdx < tagsShuffled.length) {
-      result.push({ kind: 'tag', tag: tagsShuffled[tIdx++] });
-    } else if (pIdx < regularsShuffled.length) {
-      result.push(regularsShuffled[pIdx++]);
-    }
+  const ordered: ProjectItem[] = [...featured, ...regularsShuffled];
+  const result: Slot[] = ordered.map((item, displayIndex) => ({
+    kind: 'project',
+    item,
+    index: displayIndex,
+  }));
+  for (const tag of tagsShuffled) {
+    result.push({ kind: 'tag', tag });
   }
   return result;
 }
@@ -187,19 +196,26 @@ export function renderProjects(): string {
   `;
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 function renderTagCard(tag: TagCard): string {
   return `
     <li class="projects__cell projects__cell--tag" aria-hidden="true">
       <div class="tag-card">
-        <span class="tag-card__annotation">${tag.annotation}</span>
-        <span class="tag-card__short">${tag.short}</span>
-        <span class="tag-card__label">${tag.label}</span>
+        <span class="tag-card__annotation">${escapeHtml(tag.annotation)}</span>
+        <span class="tag-card__short">${escapeHtml(tag.short)}</span>
+        <span class="tag-card__label">${escapeHtml(tag.label)}</span>
       </div>
     </li>
   `;
 }
 
-function renderProjectCard(item: ProjectItem, _index: number): string {
+function renderProjectCard(item: ProjectItem, displayIndex: number): string {
   const status = projectStatus(item);
   const statusBadge = renderStatusBadge(status, 'card');
   const href = `/projects/${item.id}/`;
@@ -207,9 +223,11 @@ function renderProjectCard(item: ProjectItem, _index: number): string {
   const liveBadge = item.liveUrl
     ? `<span class="project-card__live" aria-label="${t('projects.live')}">${t('projects.live')}</span>`
     : '';
+  const { col, row } = projectGridPos(displayIndex);
+  const cellStyle = `--p-col: ${col}; --p-row: ${row};`;
 
   return `
-    <li class="projects__cell projects__cell--project${item.featured ? ' projects__cell--featured' : ''}">
+    <li class="projects__cell projects__cell--project${item.featured ? ' projects__cell--featured' : ''}" style="${cellStyle}">
       <a
         class="project-card${featuredClass}"
         href="${href}"
