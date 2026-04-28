@@ -67,14 +67,22 @@ interface TagCard {
 }
 
 const TAG_CARDS: TagCard[] = [
-  { short: 'TS',  label: 'TypeScript',     annotation: '// lang' },
+  { short: 'TS',  label: 'TypeScript',      annotation: '// lang' },
   { short: 'AI',  label: 'Machine Learning', annotation: '<ml/>' },
-  { short: 'CLI', label: 'Command Line',   annotation: '$ run' },
-  { short: 'GH',  label: 'GitHub Actions', annotation: '◆ ci' },
-  { short: 'PY',  label: 'Python',         annotation: '# script' },
-  { short: 'OPS', label: 'DevOps',         annotation: '⎈ infra' },
-  { short: 'RAG', label: 'Retrieval Aug',  annotation: '⟶ ctx' },
-  { short: 'AGT', label: 'Agents',         annotation: '◐ loop' },
+  { short: 'CLI', label: 'Command Line',    annotation: '$ run' },
+  { short: 'GH',  label: 'GitHub Actions',  annotation: '◆ ci' },
+  { short: 'PY',  label: 'Python',          annotation: '# script' },
+  { short: 'OPS', label: 'DevOps',          annotation: '⎈ infra' },
+  { short: 'RAG', label: 'Retrieval Aug',   annotation: '⟶ ctx' },
+  { short: 'AGT', label: 'Agents',          annotation: '◐ loop' },
+  { short: 'iOS', label: 'iOS Native',      annotation: '<App/>' },
+  { short: 'CV',  label: 'Computer Vision', annotation: '▣ ml' },
+  { short: 'WS',  label: 'WebSocket',       annotation: '↯ live' },
+  { short: 'API', label: 'HTTP API',        annotation: '→ rest' },
+  { short: 'MD',  label: 'Markdown',        annotation: '# doc' },
+  { short: 'SVG', label: 'Vector Graphics', annotation: '<svg/>' },
+  { short: 'TDD', label: 'Test-Driven Dev', annotation: '✓ red→grn' },
+  { short: 'I18N', label: 'i18n / locale',  annotation: 'en · zh' },
 ];
 
 type Slot =
@@ -107,16 +115,51 @@ function stableShuffle<T>(arr: T[], seed: number): T[] {
  * shuffle so the layout looks organic but does not flicker on reload.
  */
 function buildSlots(projects: ProjectItem[], tags: TagCard[]): Slot[] {
-  const tagCount = Math.min(tags.length, Math.max(6, projects.length * 2));
-  const tagSlots: Slot[] = tags.slice(0, tagCount).map((tag) => ({ kind: 'tag', tag }));
-  const featuredSlots: Slot[] = [];
-  const regularSlots: Slot[] = [];
+  const tagCount = Math.min(tags.length, Math.max(8, Math.ceil(projects.length * 2.5)));
+  const usableTags = tags.slice(0, tagCount);
+
+  const featured: Slot[] = [];
+  const regular: Slot[] = [];
   projects.forEach((item, i) => {
     const slot: Slot = { kind: 'project', item, index: i + 1 };
-    (item.featured ? featuredSlots : regularSlots).push(slot);
+    (item.featured ? featured : regular).push(slot);
   });
-  const mixed = stableShuffle([...regularSlots, ...tagSlots], projects.length * 31 + tagCount * 7);
-  return [...featuredSlots, ...mixed];
+
+  // Shuffle each list independently with different seeds so the layout
+  // reads as scattered but stays deterministic across reloads.
+  const seed = projects.length * 31 + tagCount * 7;
+  const tagsShuffled = stableShuffle(usableTags, seed);
+  const regularsShuffled = stableShuffle(regular, seed * 13 + 1);
+
+  // Bucket each regular project into its own slice of the mixed list, then
+  // jitter the exact position within the bucket using an LCG. This keeps the
+  // big picture spread out (projects don't cluster on one side) while
+  // breaking the metronome of strictly-even placement.
+  const total = regularsShuffled.length + tagsShuffled.length;
+  const projectPositions = new Set<number>();
+  let lcg = seed * 23 + 11;
+  for (let k = 0; k < regularsShuffled.length; k++) {
+    const bucketStart = Math.floor((k * total) / regularsShuffled.length);
+    const bucketEnd = Math.floor(((k + 1) * total) / regularsShuffled.length);
+    const bucketSize = Math.max(1, bucketEnd - bucketStart);
+    lcg = (lcg * 9301 + 49297) % 233280;
+    const offset = Math.floor((lcg / 233280) * bucketSize);
+    projectPositions.add(bucketStart + offset);
+  }
+
+  const result: Slot[] = [...featured];
+  let pIdx = 0;
+  let tIdx = 0;
+  for (let i = 0; i < total; i++) {
+    if (projectPositions.has(i) && pIdx < regularsShuffled.length) {
+      result.push(regularsShuffled[pIdx++]);
+    } else if (tIdx < tagsShuffled.length) {
+      result.push({ kind: 'tag', tag: tagsShuffled[tIdx++] });
+    } else if (pIdx < regularsShuffled.length) {
+      result.push(regularsShuffled[pIdx++]);
+    }
+  }
+  return result;
 }
 
 export function renderProjects(): string {
@@ -207,6 +250,11 @@ export function initProjectSpotlight(): void {
   const reduced = prefersReducedMotion();
 
   cards.forEach((card) => {
+    // Desync the shimmer animation across cards: each gets a random
+    // negative delay within one cycle so the rotating cyan arc starts
+    // mid-cycle at a different angle on every card.
+    card.style.setProperty('--shimmer-delay', `${-Math.random() * 4.5}s`);
+
     card.addEventListener('pointermove', (event) => {
       const rect = card.getBoundingClientRect();
       card.style.setProperty('--x', `${event.clientX - rect.left}px`);
