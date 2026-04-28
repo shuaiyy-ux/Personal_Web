@@ -1,0 +1,875 @@
+/* ==========================================================================
+   EmailDigest in-article mockups.
+   Replicates the source repo's "Midnight Signal" glass aesthetic so the
+   mockups embedded in the project detail page read as faithful to the
+   product, not as the personal-site palette. Selectors are namespaced
+   under .email-digest-mock so this file is safe to load globally on
+   every project detail page.
+   ========================================================================== */
+
+.email-digest-mock {
+  --ed-bg: #07080c;
+  --ed-fg: #e7e5e4;
+  --ed-fg-dim: #a8a29e;
+  --ed-fg-muted: #78716c;
+  --ed-glass: rgba(20, 20, 24, 0.62);
+  --ed-glass-hi: rgba(255, 255, 255, 0.06);
+  --ed-border: rgba(255, 255, 255, 0.10);
+  --ed-border-strong: rgba(255, 255, 255, 0.14);
+  --ed-blue: #7ab7ff;
+  --ed-violet: #c4b5fd;
+  --ed-emerald: #6ee7b7;
+  --ed-amber: #fcd34d;
+  --ed-rose: #fda4af;
+  --ed-r-panel: 20px;
+  --ed-r-card: 14px;
+  --ed-r-ctl: 10px;
+  --ed-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  --ed-sans: -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", sans-serif;
+
+  position: relative;
+  margin: 2.5rem 0;
+  padding: 1rem;
+  background: linear-gradient(180deg, #0c0d12 0%, #07080c 100%);
+  border: 1px solid var(--ed-border-strong);
+  border-radius: calc(var(--ed-r-panel) + 4px);
+  color: var(--ed-fg);
+  font-family: var(--ed-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.email-digest-mock::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(60% 50% at 20% 10%, rgba(122, 183, 255, 0.05), transparent 70%),
+    radial-gradient(50% 40% at 80% 90%, rgba(196, 181, 253, 0.04), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.email-digest-mock > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- Hero (3-pane) ---------- */
+
+.email-digest-mock--hero {
+  display: grid;
+  grid-template-columns: 56px 1.1fr 1fr;
+  grid-template-rows: 480px;
+  gap: 1px;
+  padding: 0;
+  background: var(--ed-border);
+}
+
+.email-digest-mock--hero > div {
+  background: var(--ed-bg);
+  padding: 1rem 0.875rem;
+  overflow: hidden;
+}
+
+.email-digest-mock__sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1.25rem !important;
+}
+
+.email-digest-mock__sidebar-brand {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, rgba(122, 183, 255, 0.18), rgba(196, 181, 253, 0.18));
+  border: 1px solid var(--ed-border-strong);
+  border-radius: var(--ed-r-ctl);
+  font-family: var(--ed-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ed-blue);
+  margin-bottom: 0.25rem;
+}
+
+.email-digest-mock__sidebar-item {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--ed-r-ctl);
+  color: var(--ed-fg-dim);
+  font-size: 14px;
+  cursor: default;
+}
+
+.email-digest-mock__sidebar-item--active {
+  background: var(--ed-glass-hi);
+  border: 1px solid var(--ed-border);
+  color: var(--ed-fg);
+}
+
+/* ---------- List ---------- */
+
+.email-digest-mock__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.email-digest-mock__tabs {
+  display: flex;
+  gap: 0.375rem;
+  padding: 0 0.25rem 0.5rem;
+  border-bottom: 1px solid var(--ed-border);
+  margin-bottom: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.email-digest-mock__tab {
+  font-family: var(--ed-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--ed-fg-muted);
+}
+
+.email-digest-mock__tab--active {
+  background: rgba(252, 211, 77, 0.10);
+  border-color: rgba(252, 211, 77, 0.32);
+  color: var(--ed-amber);
+}
+
+.email-digest-mock__row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.625rem 0.5rem;
+  border-radius: var(--ed-r-card);
+  cursor: default;
+  transition: background 0.15s ease;
+}
+
+.email-digest-mock__row--selected {
+  background: var(--ed-glass-hi);
+  outline: 1px solid var(--ed-border-strong);
+}
+
+.email-digest-mock__row--muted {
+  opacity: 0.55;
+}
+
+.email-digest-mock__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-top: 0.6rem;
+  flex-shrink: 0;
+}
+
+.email-digest-mock__dot--urgent { background: var(--ed-rose); box-shadow: 0 0 8px rgba(253, 164, 175, 0.55); }
+.email-digest-mock__dot--action { background: var(--ed-amber); }
+.email-digest-mock__dot--fyi    { background: var(--ed-blue); }
+.email-digest-mock__dot--low    { background: var(--ed-fg-muted); }
+
+.email-digest-mock__row-main {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.email-digest-mock__row-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.email-digest-mock__row-from {
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--ed-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.email-digest-mock__row-time {
+  font-family: var(--ed-mono);
+  font-size: 10.5px;
+  color: var(--ed-fg-muted);
+  flex-shrink: 0;
+}
+
+.email-digest-mock__row-subject {
+  font-size: 12.5px;
+  color: var(--ed-fg);
+  margin-top: 0.125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.email-digest-mock__row-summary {
+  font-size: 11.5px;
+  color: var(--ed-fg-dim);
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
+.email-digest-mock__row-meta {
+  display: flex;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.email-digest-mock__bucket {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-family: var(--ed-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--ed-border);
+  color: var(--ed-fg-dim);
+}
+
+.email-digest-mock__bucket--primary { color: var(--ed-blue);    border-color: rgba(122, 183, 255, 0.32); }
+.email-digest-mock__bucket--track   { color: var(--ed-violet);  border-color: rgba(196, 181, 253, 0.32); }
+.email-digest-mock__bucket--news    { color: var(--ed-emerald); border-color: rgba(110, 231, 183, 0.32); }
+.email-digest-mock__bucket--junk    { color: var(--ed-fg-muted); border-color: var(--ed-border); }
+
+.email-digest-mock__chip {
+  font-family: var(--ed-mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--ed-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--ed-fg-dim);
+  letter-spacing: 0.04em;
+}
+
+.email-digest-mock__chip--action {
+  color: var(--ed-amber);
+  border-color: rgba(252, 211, 77, 0.32);
+  background: rgba(252, 211, 77, 0.05);
+}
+
+.email-digest-mock__chip--mention {
+  color: var(--ed-fg-dim);
+}
+
+/* ---------- Detail pane ---------- */
+
+.email-digest-mock__detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.email-digest-mock__detail-meta {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--ed-border);
+}
+
+.email-digest-mock__detail-from {
+  font-size: 11.5px;
+  color: var(--ed-fg-dim);
+  font-family: var(--ed-mono);
+}
+
+.email-digest-mock__detail-subject {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ed-fg);
+  margin-top: 0.25rem;
+  line-height: 1.3;
+}
+
+.email-digest-mock__detail-time {
+  font-family: var(--ed-mono);
+  font-size: 11px;
+  color: var(--ed-fg-muted);
+  margin-top: 0.25rem;
+}
+
+.email-digest-mock__detail-body {
+  font-size: 12.5px;
+  color: var(--ed-fg);
+  line-height: 1.6;
+}
+
+.email-digest-mock__detail-body p {
+  margin: 0;
+}
+
+.email-digest-mock__detail-draft {
+  padding: 0.75rem 0.875rem;
+  background: linear-gradient(180deg, rgba(122, 183, 255, 0.08), rgba(196, 181, 253, 0.05));
+  border: 1px solid rgba(122, 183, 255, 0.20);
+  border-radius: var(--ed-r-card);
+  margin-top: auto;
+}
+
+.email-digest-mock__detail-draft-label {
+  font-family: var(--ed-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.10em;
+  color: var(--ed-blue);
+  font-weight: 700;
+  margin-bottom: 0.375rem;
+}
+
+.email-digest-mock__detail-draft p {
+  font-size: 12.5px;
+  color: var(--ed-fg);
+  margin: 0 0 0.625rem;
+  line-height: 1.5;
+}
+
+.email-digest-mock__detail-draft-actions {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.email-digest-mock__btn {
+  font-family: var(--ed-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--ed-r-ctl);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--ed-border);
+  color: var(--ed-fg);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.email-digest-mock__btn--primary {
+  background: rgba(122, 183, 255, 0.15);
+  border-color: rgba(122, 183, 255, 0.40);
+  color: var(--ed-blue);
+}
+
+.email-digest-mock__btn--ghost {
+  color: var(--ed-fg-muted);
+}
+
+/* ---------- Single-card variant ---------- */
+
+.email-digest-mock--card {
+  padding: 1.25rem 1.5rem;
+}
+
+.email-digest-mock__row--zoom {
+  background: var(--ed-glass);
+  border: 1px solid var(--ed-border-strong);
+  padding: 1rem 1.125rem;
+  font-size: 14px;
+}
+
+.email-digest-mock__row--zoom .email-digest-mock__row-from {
+  font-size: 14px;
+}
+
+.email-digest-mock__row--zoom .email-digest-mock__row-subject {
+  font-size: 15px;
+  margin-top: 0.25rem;
+}
+
+.email-digest-mock__row--zoom .email-digest-mock__row-summary {
+  font-size: 13px;
+  margin-top: 0.5rem;
+}
+
+.email-digest-mock__row--zoom .email-digest-mock__bucket {
+  position: static;
+}
+
+/* ---------- Ask AI ---------- */
+
+.email-digest-mock--ask {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.email-digest-mock__chat-header {
+  font-family: var(--ed-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--ed-fg-muted);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--ed-border);
+}
+
+.email-digest-mock__chat-msg {
+  padding: 0.75rem 1rem;
+  border-radius: var(--ed-r-card);
+  font-size: 13px;
+  line-height: 1.55;
+  max-width: 85%;
+}
+
+.email-digest-mock__chat-msg p { margin: 0 0 0.5rem; }
+.email-digest-mock__chat-msg p:last-child { margin-bottom: 0; }
+.email-digest-mock__chat-msg ol { margin: 0; padding-left: 1.25rem; }
+.email-digest-mock__chat-msg li { margin: 0.25rem 0; }
+
+.email-digest-mock__chat-msg--user {
+  align-self: flex-end;
+  background: rgba(122, 183, 255, 0.12);
+  border: 1px solid rgba(122, 183, 255, 0.30);
+  color: var(--ed-fg);
+}
+
+.email-digest-mock__chat-msg--ai {
+  align-self: flex-start;
+  background: var(--ed-glass);
+  border: 1px solid var(--ed-border-strong);
+  color: var(--ed-fg);
+}
+
+.email-digest-mock__chat-cite {
+  font-family: var(--ed-mono);
+  font-size: 11px;
+  color: var(--ed-violet);
+  background: rgba(196, 181, 253, 0.08);
+  padding: 0 5px;
+  border-radius: 4px;
+  margin-left: 0.25rem;
+}
+
+.email-digest-mock__chat-meta {
+  font-size: 11px !important;
+  color: var(--ed-fg-muted);
+  font-style: italic;
+  margin-top: 0.5rem !important;
+}
+
+/* ---------- Calendar extraction ---------- */
+
+.email-digest-mock--cal {
+  display: grid;
+  grid-template-columns: 1fr auto 200px;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.5rem;
+}
+
+.email-digest-mock__cal-source {
+  background: var(--ed-glass);
+  border: 1px solid var(--ed-border);
+  border-radius: var(--ed-r-card);
+  padding: 0.875rem 1rem;
+}
+
+.email-digest-mock__cal-from {
+  font-family: var(--ed-mono);
+  font-size: 11px;
+  color: var(--ed-fg-muted);
+  margin-bottom: 0.375rem;
+}
+
+.email-digest-mock__cal-text {
+  font-size: 12.5px;
+  color: var(--ed-fg);
+  line-height: 1.5;
+}
+
+.email-digest-mock__cal-text b {
+  background: rgba(110, 231, 183, 0.16);
+  color: var(--ed-emerald);
+  padding: 0 4px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.email-digest-mock__cal-arrow {
+  font-family: var(--ed-mono);
+  font-size: 24px;
+  color: var(--ed-emerald);
+}
+
+.email-digest-mock__cal-tile {
+  background: linear-gradient(180deg, rgba(110, 231, 183, 0.10), rgba(110, 231, 183, 0.04));
+  border: 1px solid rgba(110, 231, 183, 0.30);
+  border-radius: var(--ed-r-card);
+  padding: 0.875rem 1rem;
+}
+
+.email-digest-mock__cal-tile-day {
+  font-family: var(--ed-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  color: var(--ed-emerald);
+  font-weight: 700;
+}
+
+.email-digest-mock__cal-tile-time {
+  font-family: var(--ed-mono);
+  font-size: 13px;
+  color: var(--ed-fg);
+  font-weight: 600;
+  margin-top: 0.125rem;
+}
+
+.email-digest-mock__cal-tile-title {
+  font-size: 13px;
+  color: var(--ed-fg);
+  margin-top: 0.375rem;
+}
+
+.email-digest-mock__cal-tile-source {
+  font-family: var(--ed-mono);
+  font-size: 10px;
+  color: var(--ed-fg-muted);
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+/* ---------- Calendar week view (FIG.05) ---------- */
+
+.email-digest-mock--week {
+  padding: 1.25rem 1.5rem;
+}
+
+.email-digest-mock__week-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid var(--ed-border);
+  margin-bottom: 1rem;
+}
+
+.email-digest-mock__week-title {
+  font-family: var(--ed-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--ed-fg);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.email-digest-mock__week-actions {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.email-digest-mock__week-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+}
+
+.email-digest-mock__week-day {
+  background: var(--ed-glass);
+  border: 1px solid var(--ed-border);
+  border-radius: var(--ed-r-card);
+  padding: 0.625rem 0.5rem;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.email-digest-mock__week-day--today {
+  background: rgba(252, 211, 77, 0.05);
+  border-color: rgba(252, 211, 77, 0.24);
+}
+
+.email-digest-mock__week-day-head {
+  font-family: var(--ed-mono);
+  font-size: 10.5px;
+  color: var(--ed-fg-muted);
+  letter-spacing: 0.06em;
+  padding-bottom: 0.375rem;
+  border-bottom: 1px solid var(--ed-border);
+}
+
+.email-digest-mock__week-day-head b {
+  color: var(--ed-fg);
+  margin-right: 0.25rem;
+}
+
+.email-digest-mock__week-day--today .email-digest-mock__week-day-head b {
+  color: var(--ed-amber);
+}
+
+.email-digest-mock__week-evt {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--ed-border);
+  border-left: 2px solid var(--ed-fg-muted);
+  border-radius: 8px;
+  padding: 0.375rem 0.5rem;
+}
+
+.email-digest-mock__week-evt--meeting {
+  border-left-color: var(--ed-blue);
+  background: rgba(122, 183, 255, 0.05);
+}
+
+.email-digest-mock__week-evt--deadline {
+  border-left-color: var(--ed-amber);
+  background: rgba(252, 211, 77, 0.05);
+}
+
+.email-digest-mock__week-evt--info {
+  border-left-color: var(--ed-violet);
+  background: rgba(196, 181, 253, 0.04);
+}
+
+.email-digest-mock__week-evt-time {
+  font-family: var(--ed-mono);
+  font-size: 10.5px;
+  color: var(--ed-fg-dim);
+  letter-spacing: 0.04em;
+}
+
+.email-digest-mock__week-evt--meeting  .email-digest-mock__week-evt-time { color: var(--ed-blue); }
+.email-digest-mock__week-evt--deadline .email-digest-mock__week-evt-time { color: var(--ed-amber); }
+.email-digest-mock__week-evt--info     .email-digest-mock__week-evt-time { color: var(--ed-violet); }
+
+.email-digest-mock__week-evt-title {
+  font-size: 11.5px;
+  color: var(--ed-fg);
+  margin-top: 0.125rem;
+  line-height: 1.35;
+}
+
+.email-digest-mock__week-evt-src {
+  font-family: var(--ed-mono);
+  font-size: 9.5px;
+  color: var(--ed-fg-muted);
+  margin-top: 0.25rem;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Job board kanban (FIG.06) ---------- */
+
+.email-digest-mock--jobs {
+  padding: 1.25rem 1.5rem;
+}
+
+.email-digest-mock__kanban {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.email-digest-mock__kcol {
+  background: var(--ed-glass);
+  border: 1px solid var(--ed-border);
+  border-top: 2px solid var(--ed-fg-muted);
+  border-radius: var(--ed-r-card);
+  padding: 0.625rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 180px;
+}
+
+.email-digest-mock__kcol--applied { border-top-color: var(--ed-fg-dim); }
+.email-digest-mock__kcol--ack     { border-top-color: var(--ed-blue); }
+.email-digest-mock__kcol--int     { border-top-color: var(--ed-amber); }
+.email-digest-mock__kcol--done    { border-top-color: var(--ed-violet); }
+.email-digest-mock__kcol--offer   { border-top-color: var(--ed-emerald); }
+.email-digest-mock__kcol--closed  { border-top-color: var(--ed-fg-muted); opacity: 0.85; }
+
+.email-digest-mock__kcol-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--ed-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  color: var(--ed-fg-muted);
+  padding-bottom: 0.375rem;
+  border-bottom: 1px solid var(--ed-border);
+}
+
+.email-digest-mock__kcol-head b {
+  color: var(--ed-fg);
+  font-size: 11px;
+}
+
+.email-digest-mock__kcol-empty {
+  font-family: var(--ed-mono);
+  font-size: 10px;
+  color: var(--ed-fg-muted);
+  text-align: center;
+  padding: 1rem 0.25rem;
+  font-style: italic;
+}
+
+.email-digest-mock__job-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--ed-border);
+  border-radius: 8px;
+  padding: 0.5rem 0.5rem;
+}
+
+.email-digest-mock__job-card--action {
+  border-color: rgba(253, 164, 175, 0.32);
+  background: rgba(253, 164, 175, 0.05);
+}
+
+.email-digest-mock__job-card--muted {
+  opacity: 0.55;
+}
+
+.email-digest-mock__job-co {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ed-fg);
+  line-height: 1.3;
+}
+
+.email-digest-mock__job-role {
+  font-size: 10.5px;
+  color: var(--ed-fg-dim);
+  margin-top: 0.125rem;
+  line-height: 1.35;
+}
+
+.email-digest-mock__job-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.4rem;
+}
+
+.email-digest-mock__job-pri {
+  font-family: var(--ed-mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  padding: 1px 5px;
+  border-radius: 999px;
+  border: 1px solid var(--ed-border);
+  color: var(--ed-fg-muted);
+  text-transform: lowercase;
+}
+
+.email-digest-mock__job-pri--xhigh {
+  color: var(--ed-rose);
+  border-color: rgba(253, 164, 175, 0.40);
+  background: rgba(253, 164, 175, 0.08);
+}
+
+.email-digest-mock__job-pri--high {
+  color: var(--ed-amber);
+  border-color: rgba(252, 211, 77, 0.36);
+  background: rgba(252, 211, 77, 0.06);
+}
+
+.email-digest-mock__job-pri--medium {
+  color: var(--ed-fg-dim);
+  border-color: var(--ed-border-strong);
+}
+
+.email-digest-mock__job-pri--low {
+  color: var(--ed-fg-muted);
+}
+
+.email-digest-mock__job-time {
+  font-family: var(--ed-mono);
+  font-size: 9.5px;
+  color: var(--ed-fg-muted);
+  margin-left: auto;
+}
+
+.email-digest-mock__job-action {
+  font-family: var(--ed-mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(253, 164, 175, 0.10);
+  border: 1px solid rgba(253, 164, 175, 0.36);
+  color: var(--ed-rose);
+  text-transform: uppercase;
+  margin-left: auto;
+}
+
+/* ---------- Mobile ---------- */
+
+@media (max-width: 720px) {
+  .email-digest-mock {
+    margin: 1.5rem -0.5rem;
+    border-radius: var(--ed-r-panel);
+  }
+
+  .email-digest-mock--hero {
+    grid-template-columns: 44px 1fr;
+    grid-template-rows: 320px 280px;
+  }
+
+  .email-digest-mock--hero .email-digest-mock__sidebar {
+    grid-row: span 2;
+  }
+
+  .email-digest-mock--hero .email-digest-mock__list {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .email-digest-mock--hero .email-digest-mock__detail {
+    grid-column: 2;
+    grid-row: 2;
+    border-top: 1px solid var(--ed-border);
+  }
+
+  .email-digest-mock--cal {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 0.75rem;
+  }
+
+  .email-digest-mock__cal-arrow {
+    transform: rotate(90deg);
+    text-align: center;
+  }
+
+  .email-digest-mock--week,
+  .email-digest-mock--jobs {
+    padding: 1rem 0.875rem;
+  }
+
+  .email-digest-mock__week-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .email-digest-mock__week-day {
+    min-height: 110px;
+  }
+
+  .email-digest-mock__kanban {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .email-digest-mock__kcol {
+    min-height: 140px;
+  }
+}

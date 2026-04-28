@@ -117,6 +117,73 @@
   font-weight: 500;
 }
 
+/* ---------- Launch CTA (only when liveUrl is present) ---------- */
+
+.project-detail__launch-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: var(--space-12) 0;
+  padding: var(--space-8) 0;
+}
+
+.project-detail__launch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-10);
+  background: var(--color-accent-cool-soft);
+  border: 1px solid var(--color-accent-cool-glow);
+  border-radius: var(--radius-lg);
+  color: var(--color-accent-cool);
+  text-decoration: none;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-lg);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  font-weight: 700;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--duration-normal) var(--ease-smooth),
+    box-shadow var(--transition-fast);
+}
+
+.project-detail__launch:hover {
+  background: rgba(34, 211, 238, 0.12);
+  border-color: var(--color-accent-cool);
+  transform: translateY(-2px);
+  box-shadow: 0 0 36px var(--color-accent-cool-glow);
+}
+
+.project-detail__launch:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.project-detail__launch-arrow {
+  font-size: var(--font-size-xl);
+  line-height: 1;
+  transition: transform var(--transition-fast);
+}
+
+.project-detail__launch:hover .project-detail__launch-arrow {
+  transform: translate(3px, -3px);
+}
+
+@media (max-width: 720px) {
+  .project-detail__launch-wrap {
+    margin: var(--space-8) 0;
+    padding: var(--space-5) 0;
+  }
+  .project-detail__launch {
+    padding: var(--space-4) var(--space-6);
+    font-size: var(--font-size-base);
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* ---------- Inline metadata (Year · Stack · Code · Repo · Live) ---------- */
 
 .project-detail__meta {

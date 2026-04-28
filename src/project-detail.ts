@@ -3,6 +3,7 @@ import './styles/header.css';
 import './styles/background.css';
 import './styles/animations.css';
 import './styles/project-detail.css';
+import './styles/email-digest-mock.css';
 import './styles/footer.css';
 
 import projectsData from './data/projects.json';
@@ -129,11 +130,19 @@ function renderArticle(project: ProjectItem, bodyHtml: string | null, neighbors:
     ? `<span class="project-detail__live">${t('projects.live')}</span>`
     : '';
 
+  const isExternalLive = project.liveUrl ? /^https?:\/\//.test(project.liveUrl) : false;
+  const launchCta = project.liveUrl
+    ? `<a class="project-detail__launch" href="${project.liveUrl}"${isExternalLive ? ' target="_blank" rel="noopener noreferrer"' : ''}>
+         <span class="project-detail__launch-label">${t('projects.detail.launch')}</span>
+         <span class="project-detail__launch-arrow" aria-hidden="true">${isExternalLive ? '↗' : '→'}</span>
+       </a>`
+    : '';
+
   const repoLink = project.githubUrl
     ? `<a class="project-detail__meta-link" href="${project.githubUrl}" target="_blank" rel="noopener noreferrer">${t('projects.detail.repo')} ↗</a>`
     : '';
   const liveLink = project.liveUrl
-    ? `<a class="project-detail__meta-link" href="${project.liveUrl}" target="_blank" rel="noopener noreferrer">${t('projects.detail.live')} ↗</a>`
+    ? `<a class="project-detail__meta-link" href="${project.liveUrl}"${isExternalLive ? ' target="_blank" rel="noopener noreferrer"' : ''}>${t('projects.detail.live')} ${isExternalLive ? '↗' : '→'}</a>`
     : '';
   const hasLinks = Boolean(repoLink || liveLink);
 
@@ -175,7 +184,9 @@ function renderArticle(project: ProjectItem, bodyHtml: string | null, neighbors:
         </div>` : ''}
       </dl>
 
-      <p class="project-detail__summary">${localSummary(project)}</p>
+      ${localSummary(project) ? `<p class="project-detail__summary">${localSummary(project)}</p>` : ''}
+
+      ${launchCta ? `<div class="project-detail__launch-wrap">${launchCta}</div>` : ''}
 
       <div class="project-detail__body">${body}</div>
 
