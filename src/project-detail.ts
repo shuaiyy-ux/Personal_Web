@@ -4,6 +4,7 @@ import './styles/background.css';
 import './styles/animations.css';
 import './styles/project-detail.css';
 import './styles/email-digest-mock.css';
+import './styles/vigil-mock.css';
 import './styles/footer.css';
 
 import projectsData from './data/projects.json';
@@ -138,7 +139,7 @@ function renderArticle(project: ProjectItem, bodyHtml: string | null, neighbors:
        </a>`
     : '';
 
-  const repoLink = project.githubUrl
+  const repoLink = project.githubUrl && !project.repoPrivate
     ? `<a class="project-detail__meta-link" href="${project.githubUrl}" target="_blank" rel="noopener noreferrer">${t('projects.detail.repo')} ↗</a>`
     : '';
   const liveLink = project.liveUrl

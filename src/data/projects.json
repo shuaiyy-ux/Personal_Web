@@ -21,6 +21,7 @@
     "summary_zh": "",
     "tags": ["Next.js", "RAG", "OpenAI"],
     "githubUrl": "https://github.com/cmyao/finance-analyzer",
+    "repoPrivate": true,
     "liveUrl": "/tools/finance-analyzer/",
     "year": "2025",
     "featured": true
@@ -41,12 +42,13 @@
     "id": "vigil",
     "code": "VG",
     "title": "Vigil",
-    "tagline": "Orchestrator that watches every Claude Code session",
-    "tagline_zh": "盯着所有 Claude Code 会话的总指挥",
-    "summary": "A localhost web server that tails JSONL logs across all my Claude Code sessions, runs scheduled patrols, dispatches self-inspections to idle panes, and writes activity digests so I can context-switch without losing state.",
-    "summary_zh": "在 localhost 跑的 web server，监控所有 Claude Code 会话的 JSONL 日志，做定时巡检、给闲置 pane 派自检任务，把进展写成简报，让我切换项目时不丢上下文。",
-    "tags": ["Python", "Orchestration", "AI"],
+    "tagline": "Four-layer monitor for every Claude Code session on the box",
+    "tagline_zh": "盯着每一个 Claude Code 会话的四层监控总指挥",
+    "summary": "",
+    "summary_zh": "",
+    "tags": ["Python", "FastAPI", "WebSocket"],
     "githubUrl": "https://github.com/cmyao/vigil",
+    "repoPrivate": true,
     "year": "2026"
   }
 ]

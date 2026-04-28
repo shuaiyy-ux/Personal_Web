@@ -1,0 +1,280 @@
+/* ==========================================================================
+   Vigil in-article mockups.
+   Replicates the source app's "Declassified dossier" aesthetic: paper tones,
+   serif body, monospace metadata. Selectors are namespaced under .vigil-mock
+   so this file is safe to load globally on every project detail page.
+   The personal site is dark-themed; these mockups intentionally invert to
+   paper because that is what Vigil's UI actually looks like.
+   ========================================================================== */
+
+.vigil-mock {
+  --vg-paper:       #f4f0e5;
+  --vg-paper-warm:  #ece7d8;
+  --vg-paper-deep:  #e3ddcc;
+  --vg-ink:         #1c1c1c;
+  --vg-ink-soft:    #4a4a46;
+  --vg-ink-ghost:   #9a978e;
+  --vg-rule:        #c8c2b0;
+  --vg-rule-faint:  #ddd8ca;
+  --vg-green:       #2d5a27;
+  --vg-red:         #8b2500;
+  --vg-amber:       #8b6914;
+  --vg-blue:        #2b5a8c;
+  --vg-neutral:     #6b6b68;
+  --vg-serif:       'Newsreader', 'Georgia', serif;
+  --vg-mono:        'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --vg-display:     'Instrument Serif', 'Georgia', serif;
+
+  position: relative;
+  margin: 2.5rem 0;
+  padding: 1.5rem 1.75rem;
+  background: var(--vg-paper);
+  color: var(--vg-ink);
+  font-family: var(--vg-serif);
+  font-size: 14px;
+  line-height: 1.6;
+  border: 1px solid var(--vg-rule);
+  border-radius: 4px;
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.04),
+    0 12px 32px -16px rgba(28, 28, 28, 0.45);
+}
+
+.vigil-mock::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 28px,
+      rgba(28, 28, 28, 0.018) 28px,
+      rgba(28, 28, 28, 0.018) 29px
+    );
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.vigil-mock > * {
+  position: relative;
+}
+
+/* ---------- Masthead ---------- */
+
+.vigil-mock__masthead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1.5rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 2px solid var(--vg-ink);
+  margin-bottom: 1.25rem;
+}
+
+.vigil-mock__brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.875rem;
+}
+
+.vigil-mock__title {
+  font-family: var(--vg-display);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--vg-ink);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.vigil-mock__subtitle {
+  font-family: var(--vg-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  color: var(--vg-ink-soft);
+  text-transform: uppercase;
+}
+
+.vigil-mock__stats {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.vigil-mock__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: var(--vg-mono);
+  line-height: 1.1;
+}
+
+.vigil-mock__stat b {
+  font-family: var(--vg-display);
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--vg-ink);
+  letter-spacing: 0.01em;
+}
+
+.vigil-mock__stat span {
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  color: var(--vg-ink-soft);
+  text-transform: uppercase;
+  margin-top: 0.125rem;
+}
+
+.vigil-mock__stat--alert b {
+  color: var(--vg-red);
+}
+
+/* ---------- Dossier grid ---------- */
+
+.vigil-mock__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.875rem;
+}
+
+.vigil-mock__card {
+  position: relative;
+  padding: 0.75rem 0.875rem 0.75rem 1.125rem;
+  background: var(--vg-paper-warm);
+  border: 1px solid var(--vg-rule);
+  border-radius: 3px;
+}
+
+.vigil-mock__card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--vg-neutral);
+}
+
+.vigil-mock__card--running::before { background: var(--vg-green); }
+.vigil-mock__card--idle::before    { background: var(--vg-blue); }
+.vigil-mock__card--waiting::before { background: var(--vg-amber); }
+.vigil-mock__card--blocked::before { background: var(--vg-red); }
+
+.vigil-mock__card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.vigil-mock__card-project {
+  font-family: var(--vg-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--vg-ink);
+  letter-spacing: 0.02em;
+}
+
+.vigil-mock__chip {
+  font-family: var(--vg-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.10em;
+  padding: 1px 7px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+
+.vigil-mock__chip--running { color: var(--vg-green); background: rgba(45, 90, 39, 0.06); }
+.vigil-mock__chip--idle    { color: var(--vg-blue);  background: rgba(43, 90, 140, 0.06); }
+.vigil-mock__chip--waiting { color: var(--vg-amber); background: rgba(139, 105, 20, 0.08); }
+.vigil-mock__chip--blocked { color: var(--vg-red);   background: rgba(139, 37, 0, 0.06); }
+
+.vigil-mock__card-summary {
+  font-family: var(--vg-serif);
+  font-size: 12.5px;
+  color: var(--vg-ink-soft);
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+.vigil-mock__card-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-family: var(--vg-mono);
+  font-size: 9.5px;
+  color: var(--vg-ink-ghost);
+  letter-spacing: 0.04em;
+  border-top: 1px solid var(--vg-rule-faint);
+  padding-top: 0.4rem;
+}
+
+/* ---------- Digest excerpt ---------- */
+
+.vigil-mock--digest {
+  padding: 1.5rem 1.75rem 1.75rem;
+}
+
+.vigil-mock__digest-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding-bottom: 0.625rem;
+  border-bottom: 1px solid var(--vg-rule);
+  margin-bottom: 0.875rem;
+}
+
+.vigil-mock__digest-label {
+  font-family: var(--vg-display);
+  font-size: 18px;
+  color: var(--vg-ink);
+}
+
+.vigil-mock__digest-stamp {
+  font-family: var(--vg-mono);
+  font-size: 10px;
+  color: var(--vg-ink-soft);
+  letter-spacing: 0.10em;
+}
+
+.vigil-mock--digest p {
+  font-family: var(--vg-serif);
+  font-size: 14px;
+  color: var(--vg-ink);
+  margin: 0 0 0.625rem;
+  line-height: 1.65;
+}
+
+.vigil-mock--digest p:last-child {
+  margin-bottom: 0;
+  color: var(--vg-ink-soft);
+  font-style: italic;
+}
+
+/* ---------- Mobile ---------- */
+
+@media (max-width: 720px) {
+  .vigil-mock {
+    margin: 1.5rem -0.5rem;
+    padding: 1.25rem 1.125rem;
+    font-size: 13px;
+  }
+
+  .vigil-mock__masthead {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .vigil-mock__stats {
+    gap: 1rem;
+  }
+
+  .vigil-mock__grid {
+    grid-template-columns: 1fr;
+  }
+}

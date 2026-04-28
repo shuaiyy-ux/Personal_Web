@@ -14,6 +14,7 @@ export interface ProjectItem {
   summary_zh?: string;
   tags: string[];
   githubUrl: string;
+  repoPrivate?: boolean;
   liveUrl?: string;
   year: string;
   featured?: boolean;
@@ -175,18 +176,27 @@ export function initProjectSpotlight(): void {
     if (titleEl && !reduced) {
       let scrambled = false;
       let cancel: (() => void) | null = null;
-      card.addEventListener('pointerenter', () => {
-        if (scrambled) return;
-        scrambled = true;
+      const runScramble = () => {
         const finalText = titleEl.dataset.title ?? titleEl.textContent ?? '';
         cancel?.();
         cancel = scramble(titleEl, finalText, 520);
+      };
+      card.addEventListener('pointerenter', (event) => {
+        if (event.pointerType === 'touch') return;
+        if (scrambled) return;
+        scrambled = true;
+        runScramble();
       });
-      card.addEventListener('pointerleave', () => {
+      card.addEventListener('pointerleave', (event) => {
+        if (event.pointerType === 'touch') return;
         scrambled = false;
         cancel?.();
         cancel = null;
         titleEl.textContent = titleEl.dataset.title ?? titleEl.textContent ?? '';
+      });
+      card.addEventListener('pointerdown', (event) => {
+        if (event.pointerType !== 'touch') return;
+        runScramble();
       });
     }
   });
