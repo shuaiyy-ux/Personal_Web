@@ -86,6 +86,7 @@ const TAG_CARDS: TagCard[] = [
   { short: 'LLM', label: 'Language Model',  annotation: '⚡ token' },
   { short: 'E2E', label: 'End-to-End Test', annotation: '✓ flow' },
   { short: 'VEC', label: 'Vector Embed',    annotation: '⟢ cos' },
+  { short: 'A11Y', label: 'Accessibility',  annotation: '◉ wcag' },
 ];
 
 type Slot =
@@ -115,6 +116,24 @@ function projectGridPos(displayIndex: number): { col: number; row: number } {
 }
 
 /**
+ * Mobile (≤720px) placement on a 4-column grid. Projects zigzag between the
+ * left half (cols 1-2) and right half (cols 3-4), stepping down 2 rows each
+ * time. Diagonal corners only — no two project tiles share an edge — and the
+ * tag cards fill the open quadrants on each row pair, breaking the regular
+ * "project-left, tags-right" stripe that auto-flow produced.
+ *
+ *     row 1-2:  P0(1-2)   tags(3-4)
+ *     row 3-4:  tags(1-2) P1(3-4)
+ *     row 5-6:  P2(1-2)   tags(3-4)
+ *     row 7-8:  tags(1-2) P3(3-4)
+ */
+function projectGridPosMobile(displayIndex: number): { col: number; row: number } {
+  const col = displayIndex % 2 === 0 ? 1 : 3;
+  const row = 1 + displayIndex * 2;
+  return { col, row };
+}
+
+/**
  * Stable pseudo-random shuffle (LCG seeded so the order is deterministic
  * across reloads but reads as scattered). Used to mix project + tag slots.
  */
@@ -136,15 +155,16 @@ function stableShuffle<T>(arr: T[], seed: number): T[] {
  * and fill remaining cells via CSS `grid-auto-flow: dense`.
  */
 function buildSlots(projects: ProjectItem[], tags: TagCard[]): Slot[] {
-  // Each project occupies a 2×2 block on the 6-column desktop grid.
-  // Compute the real last row from the last project's coordinates (not
-  // ceil(N/3)×4, which over-counts when the final cycle has 1 or 2
-  // projects and rounds up to a phantom extra row of empty tag cells).
-  const lastPos = projects.length > 0 ? projectGridPos(projects.length - 1) : { col: 1, row: 1 };
-  const lastRow = lastPos.row + 1; // each project spans 2 rows
-  const totalCells = lastRow * 6;
-  const projectCells = projects.length * 4;
-  const tagsNeeded = Math.max(8, totalCells - projectCells);
+  // Each project is a 2×2 block. Compute the cell budget for both the
+  // desktop 6-col layout and the mobile 4-col zigzag, then pick the
+  // larger so the same set of tags fills either grid without trailing
+  // empty cells.
+  const lastIdx = Math.max(0, projects.length - 1);
+  const desktopLastRow = projects.length > 0 ? projectGridPos(lastIdx).row + 1 : 0;
+  const mobileLastRow = projects.length > 0 ? projectGridPosMobile(lastIdx).row + 1 : 0;
+  const desktopFreeCells = desktopLastRow * 6 - projects.length * 4;
+  const mobileFreeCells = mobileLastRow * 4 - projects.length * 4;
+  const tagsNeeded = Math.max(8, desktopFreeCells, mobileFreeCells);
   const tagCount = Math.min(tags.length, tagsNeeded);
 
   const featured: ProjectItem[] = [];
@@ -223,8 +243,9 @@ function renderProjectCard(item: ProjectItem, displayIndex: number): string {
   const liveBadge = item.liveUrl
     ? `<span class="project-card__live" aria-label="${t('projects.live')}">${t('projects.live')}</span>`
     : '';
-  const { col, row } = projectGridPos(displayIndex);
-  const cellStyle = `--p-col: ${col}; --p-row: ${row};`;
+  const desktop = projectGridPos(displayIndex);
+  const mobile = projectGridPosMobile(displayIndex);
+  const cellStyle = `--p-col: ${desktop.col}; --p-row: ${desktop.row}; --m-col: ${mobile.col}; --m-row: ${mobile.row};`;
 
   return `
     <li class="projects__cell projects__cell--project${item.featured ? ' projects__cell--featured' : ''}" style="${cellStyle}">
