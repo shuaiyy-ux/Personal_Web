@@ -105,8 +105,8 @@
     grid-template-columns: repeat(6, 1fr);
   }
   .projects__cell--project {
-    grid-column: var(--p-col, auto) / span 2;
-    grid-row: var(--p-row, auto) / span 2;
+    grid-column: var(--p-col, auto) / span var(--p-col-span, 2);
+    grid-row: var(--p-row, auto) / span var(--p-row-span, 2);
   }
 }
 
@@ -497,8 +497,8 @@
   }
 
   .projects__cell--project {
-    grid-column: var(--m-col, auto) / span 2;
-    grid-row: var(--m-row, auto) / span 2;
+    grid-column: var(--m-col, auto) / span var(--m-col-span, 2);
+    grid-row: var(--m-row, auto) / span var(--m-row-span, 2);
   }
 
   .project-card {

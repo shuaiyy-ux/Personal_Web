@@ -1,0 +1,39 @@
+The product hypothesis behind DJ Selector is that a DJ's real cognitive load at a gig is not beatmatching (the decks have done that since the 2010s). It is the next track. There are a thousand songs in the crate, the floor is reading the energy of the current drop, and the DJ has about ninety seconds to pick what comes next. Rekordbox and Serato will surface "related tracks," but those lists are built on metadata: same key, same BPM, same genre tag. Two house tracks at 124 BPM in F-sharp minor can still clash sonically, and the lists ignore the part of "fits next" that lives in texture and timbre. DJ Selector replaces the metadata list with a sonic similarity map. Every track in my library becomes a point in a 2176-dimensional embedding space, and "what plays next" turns into "what neighbors does this seed have."
+
+The reason metadata lists fall short is that they correlate with sonic fit but do not equal it. A working DJ knows this in the hands and has to learn it for each library separately: which two unrelated artists actually layer well, which tracks read as a transition even when the BPMs are off by 20 percent. Modeling the library as a vector space is interesting because it captures the "sounds like" relation directly, with no genre tags required.
+
+```mermaid
+flowchart LR
+  Lib[Music folders<br/>~600 tracks] --> MERT[MERT-v1-95M<br/>texture and timbre]
+  Lib --> Disc[Discogs EffNet<br/>genre and style]
+  MERT --> Fuse[Concatenate<br/>0.3 MERT + 0.7 Discogs]
+  Disc --> Fuse
+  Fuse --> Idx[library_fusion.npz<br/>2176-dim per track]
+  Bpm[librosa BPM and energy] --> Idx
+  Idx --> Search[seed track to top-20<br/>cosine similarity]
+  Search --> Web[FastAPI plus HTML<br/>localhost:7778]
+```
+
+*FIG.01: the index pipeline. MERT is a deep music transformer that captures texture and timbre. Discogs EffNet is trained on a much larger genre-labelled corpus and brings genre fluency. Fusing them at α=0.3 lets the genre half anchor the recommendations while MERT pulls in the secondary "and these two specifically sound alike" signal.*
+
+The fusion weight is the load-bearing decision. MERT alone clusters by mood and instrumentation but is genre-agnostic in a way that punishes a DJ playlist (it will surface a beatless ambient track because it shares timbre with the seed's pad). Discogs alone is genre-rigid (only deep house when the seed is deep house, even when the next slot wants a transition track that crosses into something else). Concatenating the two L2-normalized vectors with 0.3 weight on MERT and 0.7 on Discogs lets Discogs decide the rough neighborhood, then MERT does the fine-grained sort inside it. I tried 0.5 and 0.7 first and both bled the genre boundary too much.
+
+The musically interesting decision is BPM tolerance. A DJ knows that 70 BPM and 140 BPM are not opposites: half-time hip-hop sits on every other beat of a house track, and the math says they share the same grid. So the BPM filter accepts three windows: same BPM (within tolerance), exact half-time, and exact double-time. With a 6 percent tolerance, a 124 BPM seed reaches house at 117 to 131, drum-and-bass at 234 to 262 (double-time), and hip-hop at 58 to 66 (half-time). That single rule is the difference between "this is a sonic similarity engine" and "this is a usable DJ tool."
+
+```text
+seed: 124 BPM
+  accept windows (6 percent tolerance):
+    direct:      117 - 131 BPM
+    half-time:    58 -  66 BPM   (twice the seed beat)
+    double-time: 234 - 262 BPM   (half the seed beat)
+```
+
+*FIG.02: the BPM acceptance windows for a 124 BPM seed. The half- and double-time windows are why a hip-hop track at 92 BPM and a footwork track at 184 BPM get treated correctly relative to the same seed, instead of being filtered out as "too far."*
+
+Energy is the second axis. The embedding gives me sonic similarity. I want to be able to push the floor along a deliberate energy curve (warmup, build, peak, cooldown). The scoring function is `cosine(emb, seed) - 0.2 × |energy - seed_energy|`. The 0.2 weight is small enough that the embedding still dominates, but large enough that, between two equally-similar tracks, the one closer to the current floor energy wins. The DJ can flip the sort to "energy ascending" to deliberately crawl down at the end of a set, or to "BPM ascending" to set up a tempo build over the next hour.
+
+The interactive loop is what makes the tool work as a tool. Pick a seed, get 20 neighbors, pick one to play, hit "exclude" so it never resurfaces, that becomes the next seed, repeat. A 60-track set takes about five minutes of clicking instead of an hour of crate-digging, and the embedding catches sonic adjacencies the metadata-driven lists miss. There is also a deduplication mode (find near-duplicates in my library, since the same track ripped from different sources often has slightly different filenames), an import path for a hand-curated Rekordbox crate, and a converter for NetEase Cloud Music's encrypted format so I can fold those tracks into the same library.
+
+The cluster training (triplet loss with a 2048→128 projection head over four hand-curated Rekordbox crates: Balie, HOUSE2, Hyperpop, and one carved out of my recent rotation) is a planned upgrade that learns my personal "fits next" function from the playlists I already saved. The unsupervised fusion is good enough that I have not needed it yet. Everything runs on disk on one machine. No upload, no API, no analytics: the music files are licensed and the embedding library is mine.
+
+`[VERIFY: actual track count in library_fusion.npz once I rerun build_fusion.py]`. `[VERIFY: how the trained projection head performs versus the raw fusion on a held-out 20 percent of each cluster]`. The qualitative claim that the tool works is solid. The numbers are the next thing on the list.

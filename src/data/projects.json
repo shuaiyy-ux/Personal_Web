@@ -56,6 +56,19 @@
     "status": "wip"
   },
   {
+    "id": "dj-selector",
+    "code": "DJ",
+    "title": "DJ Selector",
+    "tagline": "Sonic-similarity recommender over my DJ library, MERT plus Discogs embeddings, all local",
+    "tagline_zh": "本地 DJ 曲库的声学相似推荐器，MERT 与 Discogs 嵌入融合，离线运行",
+    "summary": "",
+    "summary_zh": "",
+    "tags": ["Python", "MERT", "Embeddings"],
+    "githubUrl": "",
+    "year": "2026",
+    "status": "shipped"
+  },
+  {
     "id": "toilet-alarm",
     "code": "TA",
     "title": "ToiletAlarm",

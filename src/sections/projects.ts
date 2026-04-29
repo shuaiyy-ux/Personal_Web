@@ -87,6 +87,10 @@ const TAG_CARDS: TagCard[] = [
   { short: 'E2E', label: 'End-to-End Test', annotation: '✓ flow' },
   { short: 'VEC', label: 'Vector Embed',    annotation: '⟢ cos' },
   { short: 'A11Y', label: 'Accessibility',  annotation: '◉ wcag' },
+  { short: 'BPM', label: 'Tempo / Rhythm',  annotation: '♪ tempo' },
+  { short: 'WAV', label: 'Audio Signal',    annotation: '∿ signal' },
+  { short: 'SSE', label: 'Server Events',   annotation: '⥅ stream' },
+  { short: 'JSON', label: 'JSON / NDJSON',  annotation: '{ } map' },
 ];
 
 type Slot =
@@ -97,40 +101,69 @@ function localTagline(item: ProjectItem): string {
   return getLocale() === 'zh' ? (item.tagline_zh ?? item.tagline) : item.tagline;
 }
 
-/**
- * Deterministic non-adjacent placement for project cards on a 6-column desktop
- * grid. Projects are 2x2; columns rotate through [1, 5, 3] and rows step by 4
- * every three projects, so no two project tiles share an edge:
- *
- *     row 1-2:  P0(1-2) . . P1(5-6)
- *     row 3-4:  .  P2(3-4)  .
- *     row 5-6:  P3(1-2) . . P4(5-6)
- *     row 7-8:  .  P5(3-4)  .
- */
-function projectGridPos(displayIndex: number): { col: number; row: number } {
-  const cols = [1, 5, 3];
-  const baseRows = [1, 1, 3];
-  const slot = displayIndex % 3;
-  const cycle = Math.floor(displayIndex / 3);
-  return { col: cols[slot], row: baseRows[slot] + cycle * 4 };
+interface GridBox {
+  col: number;
+  row: number;
+  colSpan: number;
+  rowSpan: number;
 }
 
 /**
- * Mobile (≤720px) placement on a 4-column grid. Projects zigzag between the
- * left half (cols 1-2) and right half (cols 3-4), stepping down 2 rows each
- * time. Diagonal corners only — no two project tiles share an edge — and the
- * tag cards fill the open quadrants on each row pair, breaking the regular
- * "project-left, tags-right" stripe that auto-flow produced.
+ * Desktop placement on a 6-column grid. The featured project (displayIndex 0)
+ * is a wide 3×2 hero anchored at top-left; the four 2×2 satellites scatter
+ * asymmetrically so the layout reads as bento, not a 2-1-2 grid:
  *
- *     row 1-2:  P0(1-2)   tags(3-4)
- *     row 3-4:  tags(1-2) P1(3-4)
- *     row 5-6:  P2(1-2)   tags(3-4)
- *     row 7-8:  tags(1-2) P3(3-4)
+ *           c1 c2 c3 c4 c5 c6
+ *     r1:   FA FA FA .  P1 P1
+ *     r2:   FA FA FA .  P1 P1
+ *     r3:   .  .  .  .  .  .
+ *     r4:   P2 P2 .  .  P3 P3
+ *     r5:   P2 P2 .  .  P3 P3
+ *     r6:   .  .  P4 P4 .  .
+ *     r7:   .  .  P4 P4 .  .
+ *
+ * Hardcoded for the first 5 cards (1 featured + 4 satellites) — the user's
+ * portfolio is in that range. Beyond that, fall back to the older triangle
+ * pattern (cols [1,5,3], rows step 4) so additions still don't touch.
  */
-function projectGridPosMobile(displayIndex: number): { col: number; row: number } {
+const DESKTOP_LAYOUT: GridBox[] = [
+  { col: 1, row: 1, colSpan: 3, rowSpan: 2 }, // FA — wide hero
+  { col: 5, row: 1, colSpan: 2, rowSpan: 2 }, // top-right
+  { col: 1, row: 4, colSpan: 2, rowSpan: 2 }, // mid-left
+  { col: 5, row: 4, colSpan: 2, rowSpan: 2 }, // mid-right
+  { col: 1, row: 7, colSpan: 2, rowSpan: 2 }, // bottom-left
+  { col: 5, row: 7, colSpan: 2, rowSpan: 2 }, // bottom-right
+];
+
+function projectGridPos(displayIndex: number): GridBox {
+  if (displayIndex < DESKTOP_LAYOUT.length) {
+    return DESKTOP_LAYOUT[displayIndex];
+  }
+  // Fallback for project counts beyond the hand-laid grid: continue the
+  // triangle pattern below row 9 (clears the row-8 buffer above the last
+  // pair of project tiles).
+  const overflow = displayIndex - DESKTOP_LAYOUT.length;
+  const cols = [3, 1, 5];
+  const baseRows = [10, 12, 12];
+  const slot = overflow % 3;
+  const cycle = Math.floor(overflow / 3);
+  return {
+    col: cols[slot],
+    row: baseRows[slot] + cycle * 4,
+    colSpan: 2,
+    rowSpan: 2,
+  };
+}
+
+/**
+ * Mobile (≤720px) placement on a 4-column grid. Projects zigzag between cols
+ * 1-2 and cols 3-4, stepping 2 rows each time. All-2×2 keeps project + tag
+ * cell counts balanced so neither layout has a trailing tag stripe.
+ */
+function projectGridPosMobile(displayIndex: number): GridBox {
   const col = displayIndex % 2 === 0 ? 1 : 3;
   const row = 1 + displayIndex * 2;
-  return { col, row };
+  return { col, row, colSpan: 2, rowSpan: 2 };
 }
 
 /**
@@ -155,15 +188,24 @@ function stableShuffle<T>(arr: T[], seed: number): T[] {
  * and fill remaining cells via CSS `grid-auto-flow: dense`.
  */
 function buildSlots(projects: ProjectItem[], tags: TagCard[]): Slot[] {
-  // Each project is a 2×2 block. Compute the cell budget for both the
-  // desktop 6-col layout and the mobile 4-col zigzag, then pick the
-  // larger so the same set of tags fills either grid without trailing
-  // empty cells.
-  const lastIdx = Math.max(0, projects.length - 1);
-  const desktopLastRow = projects.length > 0 ? projectGridPos(lastIdx).row + 1 : 0;
-  const mobileLastRow = projects.length > 0 ? projectGridPosMobile(lastIdx).row + 1 : 0;
-  const desktopFreeCells = desktopLastRow * 6 - projects.length * 4;
-  const mobileFreeCells = mobileLastRow * 4 - projects.length * 4;
+  // Compute the cell budget for both desktop (6-col) and mobile (4-col)
+  // layouts. Project tiles can have variable sizes (the desktop layout
+  // gives the featured project a 3×2 wide hero), so iterate the actual
+  // boxes instead of assuming uniform 2×2.
+  let desktopLastRow = 0;
+  let desktopProjectCells = 0;
+  let mobileLastRow = 0;
+  let mobileProjectCells = 0;
+  for (let i = 0; i < projects.length; i++) {
+    const d = projectGridPos(i);
+    const m = projectGridPosMobile(i);
+    desktopLastRow = Math.max(desktopLastRow, d.row + d.rowSpan - 1);
+    mobileLastRow = Math.max(mobileLastRow, m.row + m.rowSpan - 1);
+    desktopProjectCells += d.colSpan * d.rowSpan;
+    mobileProjectCells += m.colSpan * m.rowSpan;
+  }
+  const desktopFreeCells = desktopLastRow * 6 - desktopProjectCells;
+  const mobileFreeCells = mobileLastRow * 4 - mobileProjectCells;
   const tagsNeeded = Math.max(8, desktopFreeCells, mobileFreeCells);
   const tagCount = Math.min(tags.length, tagsNeeded);
 
@@ -245,7 +287,11 @@ function renderProjectCard(item: ProjectItem, displayIndex: number): string {
     : '';
   const desktop = projectGridPos(displayIndex);
   const mobile = projectGridPosMobile(displayIndex);
-  const cellStyle = `--p-col: ${desktop.col}; --p-row: ${desktop.row}; --m-col: ${mobile.col}; --m-row: ${mobile.row};`;
+  const cellStyle =
+    `--p-col: ${desktop.col}; --p-row: ${desktop.row};` +
+    ` --p-col-span: ${desktop.colSpan}; --p-row-span: ${desktop.rowSpan};` +
+    ` --m-col: ${mobile.col}; --m-row: ${mobile.row};` +
+    ` --m-col-span: ${mobile.colSpan}; --m-row-span: ${mobile.rowSpan};`;
 
   return `
     <li class="projects__cell projects__cell--project${item.featured ? ' projects__cell--featured' : ''}" style="${cellStyle}">

@@ -56,6 +56,18 @@ const iconFinanceAnalyzer = `
   </svg>
 `;
 
+const iconDjSelector = `
+  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="22" cy="26" r="13" />
+    <circle cx="22" cy="26" r="8" opacity="0.45" />
+    <circle cx="22" cy="26" r="3.5" opacity="0.7" />
+    <circle cx="22" cy="26" r="1.3" fill="currentColor" stroke="none" />
+    <circle cx="40" cy="11" r="1.6" fill="currentColor" stroke="none" opacity="0.85" />
+    <path d="M 40 11 L 30 22" />
+    <path d="M 30 22 L 27 24" stroke-width="2" />
+  </svg>
+`;
+
 const iconToiletAlarm = `
   <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <circle cx="24" cy="26" r="14" />
@@ -74,6 +86,7 @@ const ICONS: Record<string, string> = {
   'email-digest': iconEmailDigest,
   vigil: iconVigil,
   'toilet-alarm': iconToiletAlarm,
+  'dj-selector': iconDjSelector,
 };
 
 export function projectIcon(id: string): string {
