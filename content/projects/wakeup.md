@@ -44,3 +44,7 @@ shipped, not in scope:
 The privacy guarantee follows from the same architecture. The image is captured into memory, classified by Apple's on-device `VNClassifyImageRequest`, and released. There is no network layer in the app. There is no analytics SDK. The classifier returns a confidence score against a hand-curated list of accepted identifiers (`toilet_seat`, `frying_pan`, `water_bottle`, etc.) and the photo is gone. The product copy reads `图像只在本机识别，不上传、不保存` (images are classified on-device, not uploaded, not stored), and the codebase enforces it.
 
 After three weeks of running this on a real iPhone the loop has held every morning. The system alert always fires (Focus, silent switch, do-not-disturb all bypassed). The classifier hits the drawn target on the first try roughly nine times out of ten, with the failure mode being poorly-lit angles where only an edge of the object is in the frame. The "wake up in bed and dismiss" failure mode is gone, and replacing it with "physically walk to the kitchen and aim a camera at the kettle" turned out to be a more reliable getting-out-of-bed primitive than any willpower-based design I had tried before.
+
+---
+
+**App Store resources**: <a href="/projects/wakeup/privacy/" target="_blank" rel="noopener">Privacy Policy</a> · <a href="/projects/wakeup/privacy/" target="_blank" rel="noopener" lang="zh">隐私政策</a>

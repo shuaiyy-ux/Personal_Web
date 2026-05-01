@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WakeUp — Privacy Policy</title>
+  <meta name="description" content="Privacy policy for WakeUp, an iOS alarm app that runs entirely on-device with no data collection." />
+  <link rel="canonical" href="https://www.cmyao.com/projects/wakeup/privacy/" />
+  <meta name="robots" content="index,follow" />
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #1a1a1a;
+      --muted: #555;
+      --border: #d8d8d8;
+      --accent: #0066cc;
+      --code-bg: #f4f4f5;
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+        sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.7;
+      font-size: 16px;
+    }
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 48px 24px 96px;
+    }
+    header.page-header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      letter-spacing: -0.005em;
+    }
+    p, ul, table { margin: 12px 0; }
+    ul { padding-left: 24px; }
+    li { margin: 6px 0; }
+    strong { color: var(--fg); font-weight: 600; }
+    a { color: var(--accent); text-decoration: underline; }
+    code {
+      font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+      background: var(--code-bg);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--code-bg);
+      font-weight: 600;
+    }
+    .lang-toggle {
+      display: inline-flex;
+      gap: 4px;
+      font-size: 14px;
+    }
+    .lang-toggle button {
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .lang-toggle button[aria-pressed="true"] {
+      background: var(--fg);
+      color: var(--bg);
+      border-color: var(--fg);
+    }
+    .effective {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    section[hidden] { display: none; }
+    footer {
+      margin-top: 48px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 14px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a1a;
+        --fg: #f0f0f0;
+        --muted: #a0a0a0;
+        --border: #333;
+        --accent: #4d9eff;
+        --code-bg: #2a2a2a;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="page-header">
+      <h1>WakeUp — Privacy Policy</h1>
+      <div class="lang-toggle" role="tablist" aria-label="Language">
+        <button type="button" data-lang="en" aria-pressed="true">English</button>
+        <button type="button" data-lang="zh" aria-pressed="false">中文</button>
+      </div>
+    </header>
+
+    <section id="privacy-en" lang="en">
+      <p class="effective"><strong>Effective Date:</strong> 2026-04-30</p>
+      <p>WakeUp ("we," "us," or "the App") respects and protects user privacy. This policy describes how the App handles user data.</p>
+
+      <h2>1. Data Collection</h2>
+      <p>The App <strong>does not collect any user data or transmit it to external servers</strong>. Specifically:</p>
+      <ul>
+        <li><strong>Camera Images</strong>: When the user takes a photo to dismiss an alarm, the image is processed only by Apple's Vision framework on-device. After recognition completes, the image is <strong>immediately discarded from memory</strong> — never written to disk, never uploaded, never saved, never shared.</li>
+        <li><strong>Personally Identifiable Information (PII)</strong>: The App does not require account registration; it does not collect names, emails, phone numbers, or any identity information.</li>
+        <li><strong>Location</strong>: Not collected.</li>
+        <li><strong>Device Identifiers</strong>: We do not collect IDFA, IDFV, or any advertising or analytics identifiers.</li>
+        <li><strong>Usage Analytics</strong>: No analytics SDKs (no Firebase Analytics, no Mixpanel, no event tracking).</li>
+        <li><strong>Crash Reports</strong>: No crash-reporting services are integrated.</li>
+      </ul>
+
+      <h2>2. Local Storage</h2>
+      <p>The following data is stored only on the user's device and never leaves it:</p>
+      <ul>
+        <li><strong>Alarm Settings</strong>: Time, label, sound, repeat days, snooze configuration (stored in a local SwiftData database).</li>
+        <li><strong>User Preferences</strong>: Default sound, onboarding completion flag, dismissed notification banner tip (stored in UserDefaults).</li>
+        <li><strong>Runtime State</strong>: Current alarm's snooze count (stored in UserDefaults, keyed by alarm UUID).</li>
+      </ul>
+      <p>Uninstalling the App deletes all of the above.</p>
+
+      <h2>3. System Permissions</h2>
+      <p>The App requests the following iOS permissions, each with a clear purpose:</p>
+      <table>
+        <thead>
+          <tr><th>Permission</th><th>Purpose</th><th>Impact if Denied</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Camera</strong></td><td>Photographing target objects to dismiss alarms</td><td>Cannot dismiss alarms; App becomes unusable</td></tr>
+          <tr><td><strong>Notifications</strong></td><td>Ringing alarms at scheduled times</td><td>Alarms do not ring</td></tr>
+          <tr><td><strong>Time Sensitive Notifications</strong></td><td>Bypass Focus / Do Not Disturb so alarms reliably ring</td><td>Alarms may be silenced under Focus modes</td></tr>
+          <tr><td><strong>Live Activities</strong></td><td>Show alarm status on Lock Screen and Dynamic Island</td><td>Lock Screen alarm hint unavailable</td></tr>
+        </tbody>
+      </table>
+
+      <h2>4. Third-Party Services</h2>
+      <p>The App uses only the following third-party component:</p>
+      <ul>
+        <li><strong>Lottie</strong> (airbnb/lottie-ios): Used solely as a local animation rendering library. <strong>Does not access the network</strong> and does not collect any data.</li>
+      </ul>
+      <p>The App <strong>does not</strong> integrate any backend services, ad SDKs, analytics SDKs, crash reporting, or third-party login.</p>
+
+      <h2>5. Data Sharing</h2>
+      <p>We do <strong>not</strong> share user data with any third party. The App runs entirely offline; aside from requesting iOS system permissions, it makes no network requests.</p>
+
+      <h2>6. Children's Privacy</h2>
+      <p>The App is not designed for children under 13 years of age. We do not knowingly collect personal information from children.</p>
+
+      <h2>7. Policy Changes</h2>
+      <p>Updates to this policy ship with new App versions. Material changes will be prominently announced in-app.</p>
+
+      <h2>8. Contact Us</h2>
+      <p>For questions about this policy, please contact:</p>
+      <ul>
+        <li>Email: <a href="mailto:shuaiyy@uci.edu"><code>shuaiyy@uci.edu</code></a></li>
+      </ul>
+    </section>
+
+    <section id="privacy-zh" lang="zh-CN" hidden>
+      <p class="effective"><strong>生效日期：</strong>2026-04-30</p>
+      <p>WakeUp（下称"我们"或"本 App"）尊重并保护用户的隐私。本政策说明本 App 如何处理用户数据。</p>
+
+      <h2>1. 数据收集</h2>
+      <p>本 App <strong>不收集任何用户数据并发送至外部服务器</strong>。具体而言：</p>
+      <ul>
+        <li><strong>相机图像</strong>：用户在闹钟响起时拍照，图像仅用于本机 Apple Vision 框架的图像识别。识别完成后，图像<strong>立即从内存中丢弃</strong>，不写入磁盘、不上传、不保存、不分享。</li>
+        <li><strong>个人身份信息（PII）</strong>：本 App 不要求用户注册账号、不收集姓名、邮箱、电话或任何身份信息。</li>
+        <li><strong>位置信息</strong>：不收集。</li>
+        <li><strong>设备标识符</strong>：不收集 IDFA、IDFV 或其他广告/分析标识符。</li>
+        <li><strong>使用分析</strong>：不接入任何分析 SDK（无 Firebase Analytics、无 Mixpanel、无埋点）。</li>
+        <li><strong>崩溃日志</strong>：不接入崩溃上报服务。</li>
+      </ul>
+
+      <h2>2. 本地存储</h2>
+      <p>以下数据仅存储在用户设备上，不离开设备：</p>
+      <ul>
+        <li><strong>闹钟设置</strong>：时间、标签、铃声、重复日、贪睡配置（存于 SwiftData 本地数据库）。</li>
+        <li><strong>用户偏好</strong>：默认铃声、是否完成 Onboarding、是否关闭过通知横幅提示（存于 UserDefaults）。</li>
+        <li><strong>运行时状态</strong>：当前闹钟的贪睡计数（存于 UserDefaults，键名带闹钟 UUID）。</li>
+      </ul>
+      <p>卸载本 App 时，以上数据全部删除。</p>
+
+      <h2>3. 系统权限</h2>
+      <p>本 App 请求以下 iOS 权限，每项均有明确用途：</p>
+      <table>
+        <thead>
+          <tr><th>权限</th><th>用途</th><th>拒绝后的影响</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>相机</strong></td><td>拍照识别物品以关闭闹钟</td><td>无法关闭闹钟，本 App 无法使用</td></tr>
+          <tr><td><strong>通知</strong></td><td>在设定时间响铃</td><td>闹钟不会响</td></tr>
+          <tr><td><strong>时效性通知（Time Sensitive Notifications）</strong></td><td>突破勿扰模式以确保闹钟能响</td><td>勿扰模式下闹钟可能被静音</td></tr>
+          <tr><td><strong>Live Activities</strong></td><td>锁屏和灵动岛显示闹钟状态</td><td>锁屏看不到闹钟提示</td></tr>
+        </tbody>
+      </table>
+
+      <h2>4. 第三方服务</h2>
+      <p>本 App 仅使用以下第三方组件：</p>
+      <ul>
+        <li><strong>Lottie</strong>（airbnb/lottie-ios）：仅作为本地动画播放库使用，<strong>不联网</strong>、不收集任何数据。</li>
+      </ul>
+      <p>本 App <strong>不接入</strong>任何后端服务、广告 SDK、分析 SDK、崩溃上报或第三方登录。</p>
+
+      <h2>5. 数据共享</h2>
+      <p>我们<strong>不与任何第三方共享用户数据</strong>。本 App 完全离线运行；除请求 iOS 系统权限外，不发起任何网络请求。</p>
+
+      <h2>6. 儿童隐私</h2>
+      <p>本 App 不针对 13 岁以下儿童设计。我们不会有意收集儿童的个人信息。</p>
+
+      <h2>7. 政策变更</h2>
+      <p>如本政策有更新，新版本将随 App 新版本发布。重大变更会在 App 内显著通知。</p>
+
+      <h2>8. 联系我们</h2>
+      <p>如对本政策有疑问，请通过以下方式联系：</p>
+      <ul>
+        <li>邮箱：<a href="mailto:shuaiyy@uci.edu"><code>shuaiyy@uci.edu</code></a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>WakeUp · iOS 26 AlarmKit · <a href="/projects/wakeup/">Project page</a></p>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      var sections = {
+        en: document.getElementById('privacy-en'),
+        zh: document.getElementById('privacy-zh'),
+      };
+      var buttons = document.querySelectorAll('.lang-toggle button');
+      function set(lang) {
+        Object.keys(sections).forEach(function (k) {
+          sections[k].hidden = k !== lang;
+        });
+        buttons.forEach(function (b) {
+          b.setAttribute('aria-pressed', b.dataset.lang === lang ? 'true' : 'false');
+        });
+        document.documentElement.setAttribute('lang', lang === 'zh' ? 'zh-CN' : 'en');
+        try { localStorage.setItem('wakeup-privacy-lang', lang); } catch (e) {}
+      }
+      var initial = 'en';
+      try {
+        var saved = localStorage.getItem('wakeup-privacy-lang');
+        if (saved === 'en' || saved === 'zh') initial = saved;
+        else if ((navigator.language || '').toLowerCase().indexOf('zh') === 0) initial = 'zh';
+      } catch (e) {}
+      set(initial);
+      buttons.forEach(function (b) {
+        b.addEventListener('click', function () { set(b.dataset.lang); });
+      });
+    })();
+  </script>
+</body>
+</html>
