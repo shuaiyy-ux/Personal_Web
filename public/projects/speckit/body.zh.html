@@ -1,0 +1,22 @@
+<p>SpecKit 不是我做的。SpecKit 是一个开源的 spec-driven AI 开发框架：一组 slash command（<code>/speckit.constitution</code>、<code>/speckit.specify</code>、<code>/speckit.plan</code>、<code>/speckit.tasks</code>、<code>/speckit.implement</code>）和一组文档模板（<code>spec.md</code>、<code>plan.md</code>、<code>tasks.md</code>），把一次 LLM 编码会话变成一系列可以 diff、可以 review、可以重放的工件。我把它接入 Claude Code 作为所有项目的计划入口，几个月下来沉淀出一组小而硬的迭代规则，用来让 spec、plan、tasks、tests 不脱节。规则才是我的贡献，框架本身已经在那。</p>
+<p>没有这套纪律之前我反复踩的坑就是 LLM 最爱的那一种：悄悄压缩红绿循环。让模型写一个功能，它会很乐意一次性产出代码加测试，测试能过，是因为实现本身就是对着那个测试生成的。SpecKit 给了你工件，但不会强制你真的把测试当一个失败的红步骤先跑出来。我加在框架之上的纪律，正是把框架变成工作流的关键。</p>
+<div class="mermaid">
+flowchart TD
+  Spec[spec.md 改动] --> Plan{策略变了?}
+  Plan -- 是 --> Replan[重跑 /speckit.plan]
+  Plan -- 否 --> Tasks[改 tasks.md]
+  Replan --> Tasks
+  Tasks --> Tests[只写测试]
+  Tests --> Run[跑测试，期望红]
+  Run --> Red{是按预期失败?}
+  Red -- 否 --> Tests
+  Red -- 是 --> Impl[最小实现]
+  Impl --> Green{通过?}
+  Green -- 否 --> Impl
+  Green -- 是 --> Record[记录证据，合并]
+</div>
+<p><em>FIG.01：单次迭代循环。框架不强制的那几条分支，是我必须靠手工纪律守住的分支。</em></p>
+<p>最关键的三条规则很短。第一，不要为实现细节漂移而重跑 <code>/speckit.plan</code>。plan 回答的是「这件事怎么做」，不是「这一行代码怎么写」。如果只是实现细节变了，直接改 <code>tasks.md</code>，别动 plan。每次改动都重跑 plan 生成器，才是 plan 跟实际工作脱钩的根因。第二，把「写测试」和「写实现」拆成两个独立的 task 条目，让 agent 没法在一次会话里悄悄把两件事一起做了。第三，要证据：失败的测试输出和通过的测试输出都要作为工件留在迭代日志里，而不是在 chat 里口头声称。</p>
+<p>对于较大的功能，我按 milestone 切片，每个 milestone 必须交付一个可验证的纵向切片：一次 spec 改动、一次 plan 或 tasks 改动、提交了的测试、实现、真实的测试输出。我做的不是搭这套机制，是搞清楚框架允许你跳过哪些步骤，然后拒绝跳。</p>
+<p>完整写法在博客里：<a href="/blog/spec-kit/">Spec-Kit: Iteration, Planning, and TDD Notes</a>。里面有我在 <code>spec.md</code> 里使用的变更请求格式、用来让 agent 不跑偏的 prompt 模板、一个注册功能的 milestone 切片例子、以及把每个 milestone 链回它对应 spec 修订的可追溯规则。</p>
+<p><code>[VERIFY: 这套纪律在实践中实际抓到「压缩红绿循环」失败模式的频率]</code>。<code>[VERIFY: 加这套纪律前后迭代时间的具体数字]</code>。定性论据是站得住的，等我有一份干净的 milestone 运行日志再来填数字。</p>

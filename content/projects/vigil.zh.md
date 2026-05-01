@@ -1,0 +1,127 @@
+我做 Vigil 的起因是：我同时在不同项目上跑半打 Claude Code 会话，老是搞不清谁在推进、谁在 idle、谁卡了一小时在等我。Vigil 是一个跑在 7777 端口的本地 FastAPI + WebSocket 服务，盯着这台机器上每一份 Claude Code JSONL 日志，把每个会话归到四个状态之一，每十分钟给一个指定的 Orchestrator 会话发巡逻消息，再把活动 digest 写下来，让我可以离开一会儿回来不用重建上下文。
+
+跑很多会话的麻烦在于每个会话都是自己的世界。没有共享状态面板、没有「谁从什么时候 idle 到现在」的列表、也没有每个会话怎么走过 plan、develop、audit 的日志。我要么手动巡视每个 Zellij pane，要么接受某些会话会被遗忘到我下次注意到为止。Vigil 是那个唯一知道一切在哪里的地方，也是那只替我提问的钟。
+
+<div class="vigil-mock vigil-mock--dossier" aria-label="Vigil 会话档案仪表盘 mockup">
+  <div class="vigil-mock__masthead">
+    <div class="vigil-mock__brand">
+      <h3 class="vigil-mock__title">Vigil</h3>
+      <span class="vigil-mock__subtitle">Session Monitor</span>
+    </div>
+    <div class="vigil-mock__stats">
+      <div class="vigil-mock__stat"><b>6</b><span>sessions</span></div>
+      <div class="vigil-mock__stat vigil-mock__stat--alert"><b>2</b><span>alerts</span></div>
+      <div class="vigil-mock__stat"><b>09:32</b><span>local</span></div>
+    </div>
+  </div>
+  <div class="vigil-mock__grid">
+    <div class="vigil-mock__card vigil-mock__card--running">
+      <div class="vigil-mock__card-head">
+        <span class="vigil-mock__card-project">capstone</span>
+        <span class="vigil-mock__chip vigil-mock__chip--running">running</span>
+      </div>
+      <div class="vigil-mock__card-summary">把 utilization 权重接进 solver 循环，巡逻窗口里两次 commit。</div>
+      <div class="vigil-mock__card-meta">
+        <span>workflow: develop</span>
+        <span>idle 0m</span>
+      </div>
+    </div>
+    <div class="vigil-mock__card vigil-mock__card--idle">
+      <div class="vigil-mock__card-head">
+        <span class="vigil-mock__card-project">EmailDigest</span>
+        <span class="vigil-mock__chip vigil-mock__chip--idle">idle</span>
+      </div>
+      <div class="vigil-mock__card-summary">分类器准确率一轮跑完。等待 review 新的 bucket 权重。</div>
+      <div class="vigil-mock__card-meta">
+        <span>workflow: audit</span>
+        <span>idle 14m · 已发自检</span>
+      </div>
+    </div>
+    <div class="vigil-mock__card vigil-mock__card--waiting">
+      <div class="vigil-mock__card-head">
+        <span class="vigil-mock__card-project">ToiletAlarm</span>
+        <span class="vigil-mock__chip vigil-mock__chip--waiting">waiting</span>
+      </div>
+      <div class="vigil-mock__card-summary">权限请求：写 Widget extension target。确认?（y/n）。</div>
+      <div class="vigil-mock__card-meta">
+        <span>workflow: develop</span>
+        <span>等待用户输入</span>
+      </div>
+    </div>
+    <div class="vigil-mock__card vigil-mock__card--blocked">
+      <div class="vigil-mock__card-head">
+        <span class="vigil-mock__card-project">amigo_app</span>
+        <span class="vigil-mock__chip vigil-mock__chip--blocked">blocked</span>
+      </div>
+      <div class="vigil-mock__card-summary">capacitor.config.ts 上连续三次 Edit 失败。在 tool_use 里卡了 34 分钟。</div>
+      <div class="vigil-mock__card-meta">
+        <span>workflow: develop</span>
+        <span>error_streak=3 · ALERT</span>
+      </div>
+    </div>
+    <div class="vigil-mock__card vigil-mock__card--idle">
+      <div class="vigil-mock__card-head">
+        <span class="vigil-mock__card-project">vigil</span>
+        <span class="vigil-mock__chip vigil-mock__chip--idle">idle</span>
+      </div>
+      <div class="vigil-mock__card-summary">重构了 summarizer 的 debounce。上次巡逻起 idle。</div>
+      <div class="vigil-mock__card-meta">
+        <span>workflow: simplify</span>
+        <span>idle 6m</span>
+      </div>
+    </div>
+    <div class="vigil-mock__card vigil-mock__card--running">
+      <div class="vigil-mock__card-head">
+        <span class="vigil-mock__card-project">Auto_Vid_Gen</span>
+        <span class="vigil-mock__chip vigil-mock__chip--running">running</span>
+      </div>
+      <div class="vigil-mock__card-summary">渲染按平台打标的 shorts。context: 760k tokens（WARN）。</div>
+      <div class="vigil-mock__card-meta">
+        <span>workflow: e2e-test</span>
+        <span>context_high</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+*FIG.01：会话仪表盘。每张卡是 Vigil 通过扫描 `~/.claude/sessions/` 并对照 Zellij pane 检测到的一个 Claude Code 会话。状态是四个值之一；chip 颜色取自 dossier 调色板，让面板读起来像状态板，而不是日志 UI。*
+
+状态模型故意做小。每个会话刚好是 `running`、`idle`、`waiting`、`blocked` 中的一个。`running` 表示 JSONL 在 60 秒内有一个 `tool_use` 边界或活动。`idle` 表示一个 `end_turn` 边界，或者 60 秒静默。`waiting` 是 `screen_check.py` 在 `dump-screen` 看到 pane 上有权限提示或确认对话框时报上来的。`blocked` 是连续三次工具失败、或在 `tool_use` 里卡了 30 分钟以上。优先级是 `blocked > waiting > idle/running`，所以一个有麻烦的会话不会看起来健康。模式是另一条独立的轴，两个值：`monitored` 是默认，只读；`managed` 让 Vigil 自动放权限提示，并在会话 idle 时戳一下 Orchestrator。
+
+```mermaid
+flowchart LR
+  Hooks[Claude Code hooks<br/>SessionStart, Stop, Permission] -->|<1s| Server[Vigil server :7777]
+  Watch[watchdog Observer<br/>JSONL 文件改动] -->|ms 级| Server
+  Scan[scheduler sys:scan<br/>每 60s] -->|全量扫一次| Server
+  Patrol[scheduler sys:patrol<br/>每 600s] -->|orchestrate| Server
+  Server --> WS[WebSocket /ws]
+  Server --> Disp[dispatch.py<br/>Zellij CLI]
+  Disp --> Orch[Orchestrator pane]
+  WS --> UI[Dossier UI]
+```
+
+*FIG.02：四层检测，一台服务器。Hooks 是 Claude Code 自己 push 上来的权威信号，预算亚秒级。Watchdog 在会话写盘的瞬间读 JSONL 字节增量。Scheduler `sys:scan` 是慢一点的正确性扫描，捡前两层漏掉的漂移。Scheduler `sys:patrol` 是唯一调用人类层级判断的那层，它给 Orchestrator 会话发一条 `[PATROL]` 消息。*
+
+四层检测模型是这套里最难调对的部分。只用 Watchdog 太吵：Claude Code 在一次 assistant 回复里会流式写部分 JSONL 条目，每个字节增量都广播会把 UI 刷爆。只用 Scan 又太慢：对一个正在敲键盘的开发者来说，60 秒一次的轮询比 `tail -f` 还退步。所以 `watcher.py` 里的 watchdog handler 用一个线程安全字典维护每个文件的字节偏移，只在状态真的变化或一个 turn 关闭时发 `session_update`，并用 `_loop.call_soon_threadsafe` 把 asyncio 调度交还给主循环。Scan job 每 60 秒跑一次，捡那些缝里的情况：没发 hook 就死掉的会话、Zellij 重启后 ID 漂了的 pane、Orchestrator 自己的 JSONL（必须排除掉，不能监听自己）。Hook 是第三层。Claude Code 触发 `SessionStart`、`UserPromptSubmit`、`Stop`、`StopFailure` 这些 hook，本地 `vigil-hook.sh` 脚本把它们转给 `/api/hook/{event}`；同时一个 MCP channel 服务（`channel/vigil-channel.ts`，每个会话一份）直接转发权限请求。在 `managed` 模式下，channel 在 100 毫秒内返回 `allow`，替换掉过去 60 秒一次的截屏检查加正则匹配。
+
+Orchestrator 本身就是一个 Claude Code 会话。它的工作不是写项目代码；它读 `/api/sessions` 和 `/api/signals`，通过 `PUT /api/intents/{project}` 给每个项目设 `intent`，决定要不要给一个 idle pane 派一条自检 prompt，并写出 digest。触发是一条 `[PATROL]` 消息，由 scheduler 的 `sys:patrol` job 每 600 秒构造一次，`dispatch.py` 通过 `zellij action write-chars` 加 `send-keys Enter` 写进 Orchestrator 的 pane 里。Dispatch 通过 dump 屏幕回来在最底 20 行匹配那条消息来验证投递，重试三次后再报 `verified=false`。最关键的护栏是 `POST /api/inspections/{project}` 那条自检路径：idle 会话在 10 分钟节点上拿一条自检 prompt，结果记录下来，下次巡逻不会重复派。
+
+<div class="vigil-mock vigil-mock--digest" aria-label="活动 digest 节选">
+  <div class="vigil-mock__digest-head">
+    <span class="vigil-mock__digest-label">Activity Digest · 09:32</span>
+    <span class="vigil-mock__digest-stamp">DIGEST-2026-04-28-0932</span>
+  </div>
+  <p>capstone 完成了 solver 的 utilization 权重集成，两次 commit，目前 idle。</p>
+  <p>amigo_app 在 capacitor.config.ts 上连续三次 Edit 失败，已经 34 分钟卡在 tool_use，状态升为 blocked。建议人工介入或回滚最近一次 plan。</p>
+  <p>ToiletAlarm 等待权限确认中（写入 Widget extension target），需要用户回复 y/n。</p>
+  <p>Auto_Vid_Gen 上下文使用 760k tokens，已触发 context_high WARN，建议在下一个 turn 后 /compact。</p>
+  <p>其余项目无变化。</p>
+</div>
+
+*FIG.03：一份真实形态的 digest。生成器是 `sys:digest` job 每五分钟拉起的一个 `claude -p` 子进程；它的 prompt 禁用 bullet point、禁用「正在监控中」式样板、禁用「过去 X 分钟」开头，并要求它先读一份上一次的 digest，让这一次只汇报变化。*
+
+信号层故意做得机械。`signals.py` 只检测三件事：`stuck` 是 `tool_use` 30 分钟没关（`STUCK_THRESHOLD = 1800` 秒）、`error_streak` 是连续三次或以上工具调用失败、`context_high` 是 input token 总数越过 750,000（WARN）或 900,000（ALERT），朝百万 token 上下文窗口顶冲。任何需要判断的事，比如读一条最近 commit message 是不是诚实、一份 plan 文档跟代码现状是否还一致，都不是信号层的事；下一次巡逻 Orchestrator 会派一个 Agent 去做。
+
+最后真正最有用的那块是一个我差点跳过的分离。摘要生成跑在 Vigil 自己进程里，通过非交互的 `claude -p` 调用，加 10 秒 debounce，最多两个并发子进程，子进程的 `cwd` 强制设为 `/tmp` 以免污染被监听项目的 JSONL 流。战略性决定留给 Orchestrator。两件事混在一起会让 Orchestrator 又慢又啰嗦；拆开之后人类面前的 digest 短，每个会话的摘要又新。
+
+连续用了三周，Vigil 同时盯着六到八个会话，没丢过一个。四状态模型小到一眼就能扫过，又大到能抓住真要紧的情况。巡逻闭环把「每个会话此刻在干嘛」变成一个开着的浏览器 tab，digest 把「我离开期间发生了什么」变成一段 30 秒能读完的话。

@@ -18,7 +18,9 @@
   {
     "id": "agent-architecture",
     "title": "AI Agent Architecture Deep Dive",
+    "title_zh": "AI Agent 架构深度解析",
     "summary": "How to build a tool-calling AI agent with Claude CLI: streaming, tool loops, context management, and SDK migration paths.",
+    "summary_zh": "用 Claude CLI 搭一个会调用工具的 AI agent：流式输出、工具循环、上下文管理，以及 SDK 迁移路径。",
     "tags": [
       "AI",
       "agents",
@@ -32,7 +34,9 @@
   {
     "id": "spec-kit",
     "title": "Spec-Kit: Iteration, Planning, and TDD Notes",
+    "title_zh": "Spec-Kit：迭代、计划与 TDD 笔记",
     "summary": "How to rerun plans, write tests first, and keep SpecKit iterations traceable.",
+    "summary_zh": "怎么重跑 plan、怎么先写测试、怎么让 SpecKit 的每次迭代都可追溯。",
     "tags": [
       "process",
       "tdd",
@@ -46,7 +50,9 @@
   {
     "id": "nvidia-research",
     "title": "NVIDIA AI Infrastructure Research Report",
+    "title_zh": "NVIDIA AI 基础设施研究报告",
     "summary": "Rack-scale GB200 NVL72, cluster archetypes, deployment paths, costs, and supply chain.",
+    "summary_zh": "机架级 GB200 NVL72、集群形态、部署路径、成本与供应链。",
     "tags": [
       "AI",
       "infrastructure",
@@ -60,7 +66,9 @@
   {
     "id": "sniperbot-zero-to-one",
     "title": "SniperBot: Zero to One (Part 1)",
+    "title_zh": "SniperBot：从零到一（第一部分）",
     "summary": "How we built a real-time Twitter sniper bot with AI, end to end, for non-coders.",
+    "summary_zh": "我们怎么从零开始用 AI 搭一个实时 Twitter 狙击机器人，端到端，写给没编程基础的人。",
     "tags": [
       "AI",
       "automation",
