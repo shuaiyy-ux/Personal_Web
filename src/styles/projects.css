@@ -6,15 +6,15 @@
 .projects {
   position: relative;
   isolation: isolate;
-  padding: var(--space-14) var(--space-12);
-  margin-block: var(--space-12);
+  padding: var(--space-8) var(--space-12);
+  margin-block: var(--space-6);
 }
 
 /* Layer 1 — Translucent panel with gaussian-feathered edges */
 .projects::before {
   content: '';
   position: absolute;
-  inset: 24px;
+  inset: 16px;
   background: rgba(10, 10, 10, 0.5);
   border-radius: 32px;
   filter: blur(28px);
@@ -46,8 +46,8 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-4);
-  margin-bottom: var(--space-8);
-  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--color-bracket);
 }
 
@@ -66,16 +66,14 @@
   text-transform: uppercase;
 }
 
-/* ---------- Bento grid: small base cells, projects span 2x2, tags 1x1 ---------- */
+/* ---------- Project grid: simple auto-fill, projects only ---------- */
 
 .projects__grid {
   list-style: none;
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  grid-auto-rows: 140px;
-  grid-auto-flow: dense;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-3);
 }
 
@@ -87,34 +85,6 @@
   min-height: 0;
 }
 
-/* Project cards span 2 columns × 2 rows */
-@media (min-width: 720px) {
-  .projects__cell--project {
-    grid-column: span 2;
-    grid-row: span 2;
-  }
-}
-
-/* Desktop ≥960px: lock the grid to 6 columns and place each project card at
-   an explicit (col, row) coordinate so no two project tiles share an edge.
-   Coordinates come from the inline `--p-col` / `--p-row` custom properties
-   set by `renderProjectCard`. Tag cards keep `auto` placement and fill the
-   remaining cells via `grid-auto-flow: dense`. */
-@media (min-width: 960px) {
-  .projects__grid {
-    grid-template-columns: repeat(6, 1fr);
-  }
-  .projects__cell--project {
-    grid-column: var(--p-col, auto) / span var(--p-col-span, 2);
-    grid-row: var(--p-row, auto) / span var(--p-row-span, 2);
-  }
-}
-
-/* Tag cards stay 1×1 (default) */
-.projects__cell--tag {
-  /* default 1×1 footprint */
-}
-
 /* ===========================================================================
    Project card
    =========================================================================== */
@@ -124,7 +94,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
+  min-height: 220px;
   padding: var(--space-5);
   gap: var(--space-4);
   background: rgba(255, 255, 255, 0.025);
@@ -373,79 +343,84 @@
 }
 
 /* ===========================================================================
-   Keyword tag card — small decorative cell scattered between projects
+   Tag marquee — single horizontal strip of keyword chips, infinite scroll
    =========================================================================== */
 
-.tag-card {
+.tag-marquee {
   position: relative;
+  overflow: hidden;
+  margin-bottom: var(--space-5);
+  padding-block: var(--space-3);
+  border-block: 1px solid var(--color-bracket);
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    black 6%,
+    black 94%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    black 6%,
+    black 94%,
+    transparent 100%
+  );
+}
+
+.tag-marquee__track {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 100%;
-  height: 100%;
-  padding: var(--space-3);
-  background: rgba(255, 255, 255, 0.012);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  transition:
-    border-color var(--transition-fast),
-    background var(--transition-fast);
+  align-items: center;
+  gap: var(--space-5);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: max-content;
+  animation: tag-marquee 80s linear infinite;
 }
 
-.tag-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 80% 20%, rgba(34, 211, 238, 0.08), transparent 50%),
-    repeating-linear-gradient(
-      90deg,
-      transparent 0,
-      transparent 6px,
-      rgba(255, 255, 255, 0.02) 6px,
-      rgba(255, 255, 255, 0.02) 7px
-    );
-  pointer-events: none;
-  opacity: 0.6;
+.tag-marquee:hover .tag-marquee__track {
+  animation-play-state: paused;
 }
 
-.tag-card > * {
-  position: relative;
-}
-
-.tag-card:hover {
-  border-color: rgba(34, 211, 238, 0.25);
-  background: rgba(34, 211, 238, 0.02);
-}
-
-.tag-card__annotation {
+.tag-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-2xs);
-  color: var(--color-fg-subtle);
+  font-size: var(--font-size-xs);
   letter-spacing: var(--letter-spacing-wide);
-  opacity: 0.7;
-}
-
-.tag-card__short {
-  font-family: var(--font-family-mono);
-  font-size: clamp(1.5rem, 3vw, 2.25rem);
-  font-weight: 700;
-  color: var(--color-accent-cool);
-  letter-spacing: -0.02em;
-  line-height: 1;
-  align-self: flex-start;
-}
-
-.tag-card__label {
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-2xs);
-  color: var(--color-fg-subtle);
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  padding: 0;
+}
+
+.tag-chip__short {
+  color: var(--color-accent-cool);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.tag-chip__sep {
+  color: var(--color-bracket);
+}
+
+.tag-chip__label {
+  color: var(--color-fg-subtle);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wider);
+}
+
+@keyframes tag-marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tag-marquee__track {
+    animation: none;
+    /* Stop at start so the visible chips don't sit half-cut off the edge. */
+    transform: none;
+  }
 }
 
 /* ===========================================================================
@@ -475,40 +450,30 @@
 
 @media (max-width: 720px) {
   .projects {
-    padding: var(--space-10) var(--space-5);
-    margin-block: var(--space-8);
+    padding: var(--space-6) var(--space-5);
+    margin-block: var(--space-4);
   }
 
   .projects::before {
-    inset: 12px;
+    inset: 8px;
     border-radius: 24px;
     filter: blur(20px);
   }
 
   .projects__grid {
-    /* Lock to 4 columns on mobile and place each project at an explicit
-       (col, row) pair via inline `--m-col` / `--m-row` custom properties.
-       Projects zigzag between cols 1-2 and 3-4 down the page so no two
-       project tiles share an edge. Tag cards keep auto placement and fill
-       the open quadrants via `grid-auto-flow: dense`. */
-    grid-template-columns: repeat(4, 1fr);
-    grid-auto-rows: 88px;
+    grid-template-columns: 1fr;
     gap: var(--space-2);
-  }
-
-  .projects__cell--project {
-    grid-column: var(--m-col, auto) / span var(--m-col-span, 2);
-    grid-row: var(--m-row, auto) / span var(--m-row-span, 2);
   }
 
   .project-card {
-    padding: var(--space-3);
-    gap: var(--space-2);
+    min-height: 200px;
+    padding: var(--space-4);
+    gap: var(--space-3);
   }
 
   .project-card__icon {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
   }
 
   .project-card__title {
@@ -521,12 +486,14 @@
     line-clamp: 3;
   }
 
-  .tag-card {
-    padding: var(--space-2);
+  .tag-marquee {
+    margin-bottom: var(--space-3);
+    padding-block: var(--space-2);
   }
 
-  .tag-card__short {
-    font-size: 1.25rem;
+  .tag-marquee__track {
+    gap: var(--space-4);
+    animation-duration: 60s;
   }
 
   .projects__heading {

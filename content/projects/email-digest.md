@@ -293,6 +293,23 @@ The job-board surface is the second specialized view. Job-related emails are noi
 
 *FIG.06: the application Kanban. Columns are stages; chips are priority; cards collapse multiple emails per company+role into one application object so the inbox does not have to.*
 
+The pipeline behind these surfaces was eating three Sonnet spawns per prefetch cycle: classification of new emails (Step 2b), confirmation of maybe-work threads against the job board (Step 3), and refresh of stale dashboard briefings (Step 4). PROD averaged 150 to 300 Anthropic threads per day, the bulk of them from this loop. The three steps share inputs, share Sonnet, and emit JSON with no downstream side effects. After running them as separate spawns long enough to gather a baseline, I rolled them into one.
+
+Two tempting alternatives lost when I sketched the math. Sharing a Claude CLI session id across spawns with `--resume` replays the entire jsonl history into messages on every call, and the prefetch tasks carry no semantic continuity to amortize that cost: input tokens go up roughly threefold, and the prompt cache stays cold because the five-minute cache TTL is shorter than the one to three hour prefetch interval. Time-debouncing the cycle to coalesce email bursts saves a few spawns a day but adds up to five minutes of classification latency on the user-facing list, which is the wrong knob to turn. Merging the three prompts into one spawn was the only path that wins on every axis I cared about.
+
+```text
+                  3 spawns    merged    delta
+total latency        46.9s     36.3s    -23%
+spawns / cycle           3         1    -67%
+cache create        23,033     8,429    -63%
+cache read          19,032     9,516    -50%
+cost / cycle       $0.1199   $0.0677    -44%
+```
+
+*FIG.07: five real emails, same Sonnet model, same JSON shape; fewer than half the cost. The classifier and the job confirmer matched the 3-spawn baseline 5 out of 5; the briefings came back more precise, because the merged call grouped on the categories it had just computed instead of the ones stuck in the DB from the previous cycle.*
+
+The merged path is gated behind three hedges. The spawn uses `--system-prompt` to fully replace Claude Code's default prompt, never `--append-system-prompt`, because appending leaves the default "coding assistant" preamble in front of the strict JSON schema and dilutes it (`daily-digest.ts:282` already carries a comment about exactly that failure mode). The parser handles each top-level key (`classifications`, `jobs`, `briefings`) independently: a partial response writes the keys it got and leaves the missing ones for the next prefetch cycle to retry, since the trigger conditions (`needsLLM`, `maybe_work` queue, stale briefing) are still satisfied. And when the merged prompt exceeds 100K characters of user content (about 25K tokens), the pipeline falls back to the original three-spawn path; `classifyEmailsWithLLM`, `drainMaybeWorkQueue`, and `refreshStaleBriefings` are kept in place both for that fallback and for caller-driven flows like `forceClassifyAsJob` (right-click on a thread to force a job classification) and Ask AI (which deliberately keeps a real `--resume` chat session because that one is genuinely conversational).
+
 After three weeks of running this on a real inbox the daily total holds at fifteen minutes: roughly three minutes morning, three at noon, three at night for reading, plus two minutes per session for sending and replying. Eighty to one hundred forty threads a week pass through the classifier; I correct 0.7% of them by hand. The Calendar view turns "wait when was that deadline" into a click, and the Job board turns a job-search inbox from a stream into a tracked pipeline. `[VERIFY: AI draft accept rate, currently no clean instrumentation for "sent as-is" vs "edited then sent"]`. `[VERIFY: calendar events extracted per week and the false-positive rate on date phrases]`. `[VERIFY: how often the Kanban auto-stage transition is correct vs needs override]`.
 
 The deployment URL is private, gated to my account. If you want a walk-through, ask.

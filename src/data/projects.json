@@ -69,15 +69,29 @@
     "status": "shipped"
   },
   {
-    "id": "toilet-alarm",
-    "code": "TA",
-    "title": "ToiletAlarm",
-    "tagline": "iOS 26 alarm dismissed only by photographing the toilet, on-device Vision",
-    "tagline_zh": "iOS 26 闹钟，必须拍到马桶才能关，端上 Vision 识别不联网",
+    "id": "wakeup",
+    "code": "WU",
+    "title": "WakeUp",
+    "tagline": "An alarm that actually wakes you up. iOS 26 AlarmKit, dismissed only by aiming the camera at a randomly drawn target.",
+    "tagline_zh": "一个让你必须起床的闹钟。iOS 26 AlarmKit，相机识别随机目标才能关，全程本机不联网。",
     "summary": "",
     "summary_zh": "",
     "tags": ["Swift", "AlarmKit", "Vision"],
     "githubUrl": "",
+    "year": "2026",
+    "status": "shipped"
+  },
+  {
+    "id": "social-platforms",
+    "code": "SX",
+    "title": "Social Platforms",
+    "tagline": "One video, one caption, fans out to Douyin, Xiaohongshu, and Instagram with per-platform Claude rewrites when titles overflow.",
+    "tagline_zh": "一条视频一份文案，自动分发到抖音、小红书、Instagram，超限时按各家字数让 Claude 重写。",
+    "summary": "",
+    "summary_zh": "",
+    "tags": ["FastAPI", "Patchright", "Claude API"],
+    "githubUrl": "",
+    "repoPrivate": true,
     "year": "2026",
     "status": "shipped"
   }

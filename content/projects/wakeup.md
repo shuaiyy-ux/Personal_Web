@@ -1,24 +1,24 @@
-Most early-rise alarms fail at the same step. The user is in bed, the snooze button is one tap away, and willpower at 6:30 a.m. is not the asset the app can depend on. ToiletAlarm (马桶闹钟) is built around a single rule that takes the negotiation off the table: the alarm only stops when your camera sees a target object, and the system keeps ringing until you point it at one. The product hypothesis is "force the user out of bed, to a specific object, and have them aim a camera." Everything else is implementation in service of that.
+Most early-rise alarms fail at the same step. The user is in bed, the snooze button is one tap away, and willpower at 6:30 a.m. is not the asset the app can depend on. WakeUp is built around a single rule that takes the negotiation off the table: the alarm only stops when your camera sees a target object, and the system keeps ringing until you point it at one. The product hypothesis is "force the user out of bed, to a specific object, and have them aim a camera." Everything else is implementation in service of that.
 
 <div class="product-screens">
   <figure>
-    <img src="/projects/toilet-alarm/screens/01-onboarding.jpeg" alt="ToiletAlarm onboarding screen with the gradient alarm icon and the Chinese tagline 一个让你必须起床的闹钟" />
+    <img src="/projects/wakeup/screens/01-onboarding.jpeg" alt="WakeUp onboarding screen with the gradient alarm icon and the Chinese tagline 一个让你必须起床的闹钟" />
     <figcaption>Onboarding · 起床承诺</figcaption>
   </figure>
   <figure>
-    <img src="/projects/toilet-alarm/screens/02-list-empty.jpeg" alt="Empty alarm list with a gradient + button" />
+    <img src="/projects/wakeup/screens/02-list-empty.jpeg" alt="Empty alarm list with a gradient + button" />
     <figcaption>Alarm list · 空状态</figcaption>
   </figure>
   <figure>
-    <img src="/projects/toilet-alarm/screens/03-alarm-edit.jpeg" alt="New alarm sheet with time picker, repeat days, label, ringtone, snooze toggle" />
+    <img src="/projects/wakeup/screens/03-alarm-edit.jpeg" alt="New alarm sheet with time picker, repeat days, label, ringtone, snooze toggle" />
     <figcaption>新建闹钟 · 时间 / 重复 / 标签 / 铃声</figcaption>
   </figure>
   <figure>
-    <img src="/projects/toilet-alarm/screens/04-camera.jpeg" alt="Camera viewfinder with a 拍摄 马桶 pill at the top showing the random target for this ring" />
+    <img src="/projects/wakeup/screens/04-camera.jpeg" alt="Camera viewfinder with a 拍摄 马桶 pill at the top showing the random target for this ring" />
     <figcaption>拍摄目标 · 这次抽到马桶</figcaption>
   </figure>
   <figure>
-    <img src="/projects/toilet-alarm/screens/05-failure.jpeg" alt="Camera failure overlay: a red X with text 未识别到目标物品 over a Starbucks cup, prompting the user to try again" />
+    <img src="/projects/wakeup/screens/05-failure.jpeg" alt="Camera failure overlay: a red X with text 未识别到目标物品 over a Starbucks cup, prompting the user to try again" />
     <figcaption>未命中 · 再试一次</figcaption>
   </figure>
 </div>

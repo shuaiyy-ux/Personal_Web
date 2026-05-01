@@ -1,0 +1,62 @@
+写 Social Platforms 的起因，是把同一条视频发到抖音、小红书、Instagram 这件事，本来不该是三次单独的复制粘贴加重新剪标题。这个工具吃一份视频加一份文案，每个目标平台开一个独立浏览器窗口，自动填表，停在「发布」按钮之前，让我自己肉眼过一遍再点。哪个平台的标题字数比我的文案短（抖音 30 字、小红书 20 字、视频号 16 字、Instagram caption 2200 字），就交给 Claude haiku 原地重写。这几个国内平台说中文、查 bot 查得凶，所以浏览器层用 patchright（Playwright 的反检测分支），鉴权用每平台一份 Playwright `storage_state` Cookie，调度只用一个 FastAPI 进程加 SQLite 任务表加一条 WebSocket 实时流。
+
+现成的同类工具有两种走法都不对：一种自动点发布（一个错别字三平台同步打脸），另一种让你手动盯着每个 tab 一个一个发。我要的是中间状态：系统替我把表填好，最后那一下发布留给人。整套架构基本是被这一条决定推出来的。
+
+```mermaid
+flowchart LR
+  Up[一份视频<br/>一份文案] --> Adapt[各平台<br/>字数检查]
+  Adapt -->|超限| Claude[Claude haiku<br/>按字数重写]
+  Adapt -->|未超限| Pass[原样透传]
+  Claude --> Plan[分发任务<br/>一行 job 加<br/>N 行 platform_task]
+  Pass --> Plan
+  Plan --> DY[抖音 filler<br/>patchright 窗口]
+  Plan --> XHS[小红书 filler<br/>patchright 窗口]
+  Plan --> IG[Instagram filler<br/>patchright 窗口]
+  DY --> Watch[WebSocket<br/>填表 -> 等发布<br/>-> 成功/超时]
+  XHS --> Watch
+  IG --> Watch
+```
+
+*FIG.01：SQLite 里一行 job 拥有 N 行 platform_task，每行由一个独立 patchright filler 推进。前端只订阅一次 WebSocket，状态变化实时回放。*
+
+内容适配是整套 AI 里最简单的一块，也是用户最直接感受到的一块。规则就一条：文案不超平台 `title_limit`，原样透传；超了，就调 Claude haiku，one-shot prompt 写成「把这个标题缩到 N 个汉字以内，保留钩子，别加 hashtag」。没有 API key 时，降级成硬截断到 limit。把 AI 当作一个套在确定性内核外的可选层，是真实做的选择，意味着凌晨三点没网这工具也能跑，也意味着以后想换更强的模型不用重写调度。
+
+```python
+async def adapt_title(raw: str, limit: int | None) -> str:
+    if limit is None or len(raw) <= limit:
+        return raw
+    if not settings.anthropic_api_key:
+        return raw[:limit]
+    msg = await client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=120,
+        messages=[{"role": "user", "content": REWRITE_PROMPT.format(
+            raw=raw, limit=limit
+        )}],
+    )
+    return msg.content[0].text.strip()[:limit]
+```
+
+*FIG.02：「AI 是兜底层，确定性才是核心」的写法。几十字节的业务规则，一段 prompt，一次截断。值得看的是最后一行：允许重写超出，截断才是最后契约。*
+
+最难的从来不是 AI。是浏览器生命周期。每个 filler 走的路是 `async with patchright.chromium ...`、用保存好的 `storage_state` 开 context、跳到创作者页、拖入视频、等上传转圈结束（`VIDEO_PROCESS_TIMEOUT_SEC = 600`）、填标题和标签，然后最多等 30 分钟人来点发布。这条路上任何一处抛异常，context 和 browser 都得关掉、SQLite 里那行 platform_task 必须翻成 `failed`、父 job 状态必须重算。2026 年 4 月跑了两轮交叉审计，十六人次过下来揪出了几个我漏掉的失败路径：`asyncio.create_task` 的返回值没人持有被 GC（修：塞进 `_background_tasks` set 里）、`clients.discard()` 和 `for client in clients: await broadcast(client)` 抢同一份集合（修：迭代前 `list(clients)` 复制一份）、还有「永远卡在 distributing」的那种 job（filler 在 task row 更新前崩了）（修：所有读 job 状态的端点都从 platform_task 重新算一遍，启动时 `init_db()` 跑 `recover_stale_jobs()` 把所有断头 job 修好）。
+
+```text
+$ tail -f data/jobs.log
+[09:42:11] job 7c3a accept   video=demo.mp4 caption_len=87
+[09:42:11] douyin       fill_started
+[09:42:11] xiaohongshu  fill_started
+[09:42:11] instagram    fill_started
+[09:42:18] douyin       title_overflowed -> claude_rewrite -> 28 chars
+[09:42:31] xiaohongshu  filled, awaiting human publish
+[09:43:02] douyin       filled, awaiting human publish
+[09:43:14] instagram    filled, awaiting human publish
+[09:46:55] xiaohongshu  url_match /publish/success -> published
+[09:47:22] douyin       url_match /content/manage    -> published
+[09:48:01] instagram    dom_match "已分享"            -> published
+[09:48:01] job 7c3a     completed (3/3)
+```
+
+*FIG.03：一次完整运行。注意各平台的「发布成功」探测不一样：抖音、小红书是 URL 跳转匹配；Instagram 不变 URL（弹窗式上传），filler 改成在 DOM 里找「已分享」/「reel has been shared」文案。*
+
+发布版本覆盖抖音、小红书、Instagram。`platforms.yaml` 里写了快手和微信视频号，但 `enabled: false`，filler 文件还没建。下一步先做视频号 filler，因为它的标题限制最紧（16 字），重写层在它身上压力最大，是个值得做的真实测试。再往后真实的产品问题是要不要加「定时发布」（N 小时后发）或者「角色分发」（同一条视频对多个人设各出一份文案变体）。两个需求都来自我自己用工具的方式。`[VERIFY: 端到端的吞吐数字，目前自用稳定，但没系统测过 cookie 健康时每平台平均花多少秒]`。

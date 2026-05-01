@@ -91,171 +91,26 @@ const TAG_CARDS: TagCard[] = [
   { short: 'WAV', label: 'Audio Signal',    annotation: '∿ signal' },
   { short: 'SSE', label: 'Server Events',   annotation: '⥅ stream' },
   { short: 'JSON', label: 'JSON / NDJSON',  annotation: '{ } map' },
+  { short: 'DB',  label: 'Database',        annotation: '▤ rows' },
+  { short: 'KV',  label: 'Key-Value Store', annotation: '[k] → v' },
+  { short: 'CACHE', label: 'Cache Layer',   annotation: '⌬ ttl' },
+  { short: 'DOM', label: 'DOM Tree',        annotation: '<dom/>' },
+  { short: 'WASM', label: 'WebAssembly',    annotation: '<wasm/>' },
+  { short: 'CRON', label: 'Scheduled Job',  annotation: '⏱ tick' },
+  { short: 'GPU', label: 'GPU Compute',     annotation: '◫ cuda' },
+  { short: 'YAML', label: 'Config / YAML',  annotation: '--- key' },
+  { short: 'OAUTH', label: 'OAuth 2.0',     annotation: '⚿ scope' },
+  { short: 'CDN', label: 'CDN / Edge',      annotation: '⤳ edge' },
+  { short: 'DIFF', label: 'Diff / Patch',   annotation: '± delta' },
+  { short: 'ENV', label: 'Env Vars',        annotation: '$ getenv' },
+  { short: 'HOOK', label: 'Lifecycle Hook', annotation: '⚓ before' },
+  { short: 'PR', label: 'Pull Request',     annotation: '↳ merge' },
+  { short: 'LSP', label: 'Language Server', annotation: '⇄ rpc' },
+  { short: 'MAP', label: 'Source Map',      annotation: '↦ trace' },
 ];
-
-type Slot =
-  | { kind: 'project'; item: ProjectItem; index: number }
-  | { kind: 'tag'; tag: TagCard };
 
 function localTagline(item: ProjectItem): string {
   return getLocale() === 'zh' ? (item.tagline_zh ?? item.tagline) : item.tagline;
-}
-
-interface GridBox {
-  col: number;
-  row: number;
-  colSpan: number;
-  rowSpan: number;
-}
-
-/**
- * Desktop placement on a 6-column grid. The featured project (displayIndex 0)
- * is a wide 3×2 hero anchored at top-left; the four 2×2 satellites scatter
- * asymmetrically so the layout reads as bento, not a 2-1-2 grid:
- *
- *           c1 c2 c3 c4 c5 c6
- *     r1:   FA FA FA .  P1 P1
- *     r2:   FA FA FA .  P1 P1
- *     r3:   .  .  .  .  .  .
- *     r4:   P2 P2 .  .  P3 P3
- *     r5:   P2 P2 .  .  P3 P3
- *     r6:   .  .  P4 P4 .  .
- *     r7:   .  .  P4 P4 .  .
- *
- * Hardcoded for the first 5 cards (1 featured + 4 satellites) — the user's
- * portfolio is in that range. Beyond that, fall back to the older triangle
- * pattern (cols [1,5,3], rows step 4) so additions still don't touch.
- */
-const DESKTOP_LAYOUT: GridBox[] = [
-  { col: 1, row: 1, colSpan: 3, rowSpan: 2 }, // FA — wide hero
-  { col: 5, row: 1, colSpan: 2, rowSpan: 2 }, // top-right
-  { col: 1, row: 4, colSpan: 2, rowSpan: 2 }, // mid-left
-  { col: 5, row: 4, colSpan: 2, rowSpan: 2 }, // mid-right
-  { col: 1, row: 7, colSpan: 2, rowSpan: 2 }, // bottom-left
-  { col: 5, row: 7, colSpan: 2, rowSpan: 2 }, // bottom-right
-];
-
-function projectGridPos(displayIndex: number): GridBox {
-  if (displayIndex < DESKTOP_LAYOUT.length) {
-    return DESKTOP_LAYOUT[displayIndex];
-  }
-  // Fallback for project counts beyond the hand-laid grid: continue the
-  // triangle pattern below row 9 (clears the row-8 buffer above the last
-  // pair of project tiles).
-  const overflow = displayIndex - DESKTOP_LAYOUT.length;
-  const cols = [3, 1, 5];
-  const baseRows = [10, 12, 12];
-  const slot = overflow % 3;
-  const cycle = Math.floor(overflow / 3);
-  return {
-    col: cols[slot],
-    row: baseRows[slot] + cycle * 4,
-    colSpan: 2,
-    rowSpan: 2,
-  };
-}
-
-/**
- * Mobile (≤720px) placement on a 4-column grid. Projects zigzag between cols
- * 1-2 and cols 3-4, stepping 2 rows each time. All-2×2 keeps project + tag
- * cell counts balanced so neither layout has a trailing tag stripe.
- */
-function projectGridPosMobile(displayIndex: number): GridBox {
-  const col = displayIndex % 2 === 0 ? 1 : 3;
-  const row = 1 + displayIndex * 2;
-  return { col, row, colSpan: 2, rowSpan: 2 };
-}
-
-/**
- * Stable pseudo-random shuffle (LCG seeded so the order is deterministic
- * across reloads but reads as scattered). Used to mix project + tag slots.
- */
-function stableShuffle<T>(arr: T[], seed: number): T[] {
-  const out = [...arr];
-  let state = seed || 1;
-  for (let i = out.length - 1; i > 0; i--) {
-    state = (state * 9301 + 49297) % 233280;
-    const j = Math.floor((state / 233280) * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
-}
-
-/**
- * Build the slot list. Project cards are placed first with stable display
- * indices (featured then shuffled regulars); their grid coordinates are
- * computed by `projectGridPos` so they never share edges. Tag cards follow
- * and fill remaining cells via CSS `grid-auto-flow: dense`.
- */
-function buildSlots(projects: ProjectItem[], tags: TagCard[]): Slot[] {
-  // Compute the cell budget for both desktop (6-col) and mobile (4-col)
-  // layouts. Project tiles can have variable sizes (the desktop layout
-  // gives the featured project a 3×2 wide hero), so iterate the actual
-  // boxes instead of assuming uniform 2×2.
-  let desktopLastRow = 0;
-  let desktopProjectCells = 0;
-  let mobileLastRow = 0;
-  let mobileProjectCells = 0;
-  for (let i = 0; i < projects.length; i++) {
-    const d = projectGridPos(i);
-    const m = projectGridPosMobile(i);
-    desktopLastRow = Math.max(desktopLastRow, d.row + d.rowSpan - 1);
-    mobileLastRow = Math.max(mobileLastRow, m.row + m.rowSpan - 1);
-    desktopProjectCells += d.colSpan * d.rowSpan;
-    mobileProjectCells += m.colSpan * m.rowSpan;
-  }
-  const desktopFreeCells = desktopLastRow * 6 - desktopProjectCells;
-  const mobileFreeCells = mobileLastRow * 4 - mobileProjectCells;
-  const tagsNeeded = Math.max(8, desktopFreeCells, mobileFreeCells);
-  const tagCount = Math.min(tags.length, tagsNeeded);
-
-  const featured: ProjectItem[] = [];
-  const regular: ProjectItem[] = [];
-  projects.forEach((item) => {
-    (item.featured ? featured : regular).push(item);
-  });
-
-  const seed = projects.length * 31 + tagCount * 7;
-  // Shuffle all tags first so the trailing entries in TAG_CARDS still
-  // get a chance to appear when the slice is smaller than the pool.
-  const tagsShuffled = stableShuffle(tags, seed).slice(0, tagCount);
-  const regularsShuffled = stableShuffle(regular, seed * 13 + 1);
-
-  const ordered: ProjectItem[] = [...featured, ...regularsShuffled];
-  const result: Slot[] = ordered.map((item, displayIndex) => ({
-    kind: 'project',
-    item,
-    index: displayIndex,
-  }));
-  for (const tag of tagsShuffled) {
-    result.push({ kind: 'tag', tag });
-  }
-  return result;
-}
-
-export function renderProjects(): string {
-  const items = projectsData as ProjectItem[];
-  const slots = buildSlots(items, TAG_CARDS);
-  const cellsHtml = slots
-    .map((slot) =>
-      slot.kind === 'project'
-        ? renderProjectCard(slot.item, slot.index)
-        : renderTagCard(slot.tag),
-    )
-    .join('');
-  const count = String(items.length).padStart(2, '0');
-
-  return `
-    <section data-section="projects" class="projects" aria-labelledby="projects-heading">
-      <header class="projects__header">
-        <h2 id="projects-heading" class="projects__heading">${t('projects.heading')}</h2>
-        <span class="projects__count">${count} ${t('projects.count_label')}</span>
-      </header>
-      <ol class="projects__grid" role="list">
-        ${cellsHtml}
-      </ol>
-    </section>
-  `;
 }
 
 function escapeHtml(s: string): string {
@@ -265,15 +120,42 @@ function escapeHtml(s: string): string {
     .replace(/>/g, '&gt;');
 }
 
-function renderTagCard(tag: TagCard): string {
+function renderTagMarquee(tags: TagCard[]): string {
+  const item = (t: TagCard) => `
+    <li class="tag-chip" aria-hidden="true">
+      <span class="tag-chip__short">${escapeHtml(t.short)}</span>
+      <span class="tag-chip__sep">·</span>
+      <span class="tag-chip__label">${escapeHtml(t.label)}</span>
+    </li>`;
+  // Two copies of the track produce a seamless loop: the animation
+  // translates by exactly -50%, so when copy A scrolls off the left edge,
+  // copy B is already in the same position copy A started in.
+  const half = tags.map(item).join('');
   return `
-    <li class="projects__cell projects__cell--tag" aria-hidden="true">
-      <div class="tag-card">
-        <span class="tag-card__annotation">${escapeHtml(tag.annotation)}</span>
-        <span class="tag-card__short">${escapeHtml(tag.short)}</span>
-        <span class="tag-card__label">${escapeHtml(tag.label)}</span>
-      </div>
-    </li>
+    <div class="tag-marquee" aria-hidden="true">
+      <ul class="tag-marquee__track">${half}${half}</ul>
+    </div>`;
+}
+
+export function renderProjects(): string {
+  const items = projectsData as ProjectItem[];
+  // Newest first: new entries are appended to projects.json so reversing
+  // surfaces the most recent project at the top of the grid.
+  const ordered = [...items].reverse();
+  const cardsHtml = ordered.map((p, i) => renderProjectCard(p, i)).join('');
+  const count = String(items.length).padStart(2, '0');
+
+  return `
+    <section data-section="projects" class="projects" aria-labelledby="projects-heading">
+      <header class="projects__header">
+        <h2 id="projects-heading" class="projects__heading">${t('projects.heading')}</h2>
+        <span class="projects__count">${count} ${t('projects.count_label')}</span>
+      </header>
+      ${renderTagMarquee(TAG_CARDS)}
+      <ol class="projects__grid" role="list">
+        ${cardsHtml}
+      </ol>
+    </section>
   `;
 }
 
@@ -285,16 +167,9 @@ function renderProjectCard(item: ProjectItem, displayIndex: number): string {
   const liveBadge = item.liveUrl
     ? `<span class="project-card__live" aria-label="${t('projects.live')}">${t('projects.live')}</span>`
     : '';
-  const desktop = projectGridPos(displayIndex);
-  const mobile = projectGridPosMobile(displayIndex);
-  const cellStyle =
-    `--p-col: ${desktop.col}; --p-row: ${desktop.row};` +
-    ` --p-col-span: ${desktop.colSpan}; --p-row-span: ${desktop.rowSpan};` +
-    ` --m-col: ${mobile.col}; --m-row: ${mobile.row};` +
-    ` --m-col-span: ${mobile.colSpan}; --m-row-span: ${mobile.rowSpan};`;
 
   return `
-    <li class="projects__cell projects__cell--project${item.featured ? ' projects__cell--featured' : ''}" style="${cellStyle}">
+    <li class="projects__cell projects__cell--project${item.featured ? ' projects__cell--featured' : ''}" style="--card-index: ${displayIndex};">
       <a
         class="project-card${featuredClass}"
         href="${href}"

@@ -13,8 +13,9 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
+        "project-social-platforms": resolve(rootDir, "projects/social-platforms/index.html"),
+        "project-wakeup": resolve(rootDir, "projects/wakeup/index.html"),
         "project-dj-selector": resolve(rootDir, "projects/dj-selector/index.html"),
-        "project-toilet-alarm": resolve(rootDir, "projects/toilet-alarm/index.html"),
         "blog-nvidia-research": resolve(rootDir, "blog/nvidia-research/index.html"),
         "blog-sniperbot-zero-to-one": resolve(rootDir, "blog/sniperbot-zero-to-one/index.html"),
         "blog-spec-kit": resolve(rootDir, "blog/spec-kit/index.html"),

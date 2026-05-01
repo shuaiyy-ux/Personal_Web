@@ -68,7 +68,7 @@ const iconDjSelector = `
   </svg>
 `;
 
-const iconToiletAlarm = `
+const iconWakeUp = `
   <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <circle cx="24" cy="26" r="14" />
     <path d="M14 12 L11 9" opacity="0.65" />
@@ -80,13 +80,29 @@ const iconToiletAlarm = `
   </svg>
 `;
 
+const iconSocialPlatforms = `
+  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="17" y="19" width="14" height="10" rx="1.5" />
+    <path d="M22 22 L22 26 L26 24 Z" fill="currentColor" stroke="none" opacity="0.85" />
+    <circle cx="9" cy="10" r="2.5" />
+    <circle cx="39" cy="10" r="2.5" />
+    <circle cx="9" cy="38" r="2.5" />
+    <circle cx="39" cy="38" r="2.5" />
+    <path d="M17 21 L11 11" opacity="0.55" />
+    <path d="M31 21 L37 11" opacity="0.55" />
+    <path d="M17 27 L11 37" opacity="0.55" />
+    <path d="M31 27 L37 37" opacity="0.55" />
+  </svg>
+`;
+
 const ICONS: Record<string, string> = {
   speckit: iconSpecKit,
   'finance-analyzer': iconFinanceAnalyzer,
   'email-digest': iconEmailDigest,
   vigil: iconVigil,
-  'toilet-alarm': iconToiletAlarm,
+  wakeup: iconWakeUp,
   'dj-selector': iconDjSelector,
+  'social-platforms': iconSocialPlatforms,
 };
 
 export function projectIcon(id: string): string {
