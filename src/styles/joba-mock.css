@@ -1,0 +1,317 @@
+/* ==========================================================================
+   joba in-article mockups.
+   Dark glass aesthetic matching joba's actual UI (React + Tailwind v4 +
+   shadcn/ui). Selectors namespaced under .joba-mock so this file is safe
+   to load globally on every project detail page.
+   ========================================================================== */
+
+.joba-mock {
+  --jb-bg: #0c0d10;
+  --jb-panel: rgba(22, 24, 30, 0.78);
+  --jb-card: rgba(28, 30, 36, 0.85);
+  --jb-fg: #e5e3df;
+  --jb-fg-dim: #a3a09a;
+  --jb-fg-mute: #6e6b65;
+  --jb-border: rgba(255, 255, 255, 0.08);
+  --jb-border-strong: rgba(255, 255, 255, 0.14);
+  --jb-apply: #6ee7b7;
+  --jb-skip: #fda4af;
+  --jb-running: #93c5fd;
+  --jb-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  --jb-sans: -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", sans-serif;
+
+  margin: 2.5rem 0;
+  padding: 1.125rem 1.25rem 1.25rem;
+  background: var(--jb-bg);
+  background-image:
+    radial-gradient(ellipse at top right, rgba(110, 231, 183, 0.04), transparent 60%),
+    radial-gradient(ellipse at bottom left, rgba(147, 197, 253, 0.04), transparent 50%);
+  color: var(--jb-fg);
+  font-family: var(--jb-sans);
+  font-size: 13px;
+  line-height: 1.55;
+  border: 1px solid var(--jb-border-strong);
+  border-radius: 14px;
+  box-shadow: 0 24px 48px -28px rgba(0, 0, 0, 0.6);
+}
+
+.joba-mock__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.875rem;
+  border-bottom: 1px solid var(--jb-border);
+}
+
+.joba-mock__title {
+  font-family: var(--jb-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--jb-fg-dim);
+}
+
+.joba-mock__count {
+  font-family: var(--jb-mono);
+  font-size: 11px;
+  color: var(--jb-fg-mute);
+}
+
+/* ---------- job list ---------- */
+
+.joba-mock__joblist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.625rem;
+}
+
+.joba-mock__job {
+  position: relative;
+  padding: 0.75rem 0.875rem 0.75rem 1rem;
+  background: var(--jb-card);
+  border: 1px solid var(--jb-border);
+  border-radius: 10px;
+}
+
+.joba-mock__job::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 10px; bottom: 10px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--jb-fg-mute);
+}
+
+.joba-mock__job--apply::before { background: var(--jb-apply); }
+.joba-mock__job--skip::before  { background: var(--jb-skip); }
+
+.joba-mock__job-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.joba-mock__job-company {
+  font-family: var(--jb-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--jb-fg);
+  text-transform: uppercase;
+}
+
+.joba-mock__verdict {
+  font-family: var(--jb-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+
+.joba-mock__verdict--apply { color: var(--jb-apply); background: rgba(110, 231, 183, 0.08); }
+.joba-mock__verdict--skip  { color: var(--jb-skip);  background: rgba(253, 164, 175, 0.08); }
+
+.joba-mock__job-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--jb-fg);
+  margin-bottom: 0.25rem;
+}
+
+.joba-mock__job-meta {
+  display: flex;
+  gap: 0.875rem;
+  font-family: var(--jb-mono);
+  font-size: 10.5px;
+  color: var(--jb-fg-mute);
+  margin-bottom: 0.375rem;
+}
+
+.joba-mock__job-reason {
+  font-size: 12px;
+  color: var(--jb-fg-dim);
+  line-height: 1.55;
+}
+
+/* ---------- apply helper dialog ---------- */
+
+.joba-mock--dialog {
+  background: var(--jb-bg);
+}
+
+.joba-mock__dialog-head {
+  font-family: var(--jb-mono);
+  font-size: 11px;
+  letter-spacing: 0.10em;
+  color: var(--jb-fg-dim);
+  text-transform: uppercase;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.875rem;
+  border-bottom: 1px solid var(--jb-border);
+}
+
+.joba-mock__dialog-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 0.875rem;
+}
+
+.joba-mock__pane {
+  background: var(--jb-card);
+  border: 1px solid var(--jb-border);
+  border-radius: 10px;
+  padding: 0.75rem 0.875rem 0.875rem;
+}
+
+.joba-mock__pane-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--jb-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.10em;
+  color: var(--jb-fg-mute);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.joba-mock__copy {
+  font-family: var(--jb-mono);
+  font-size: 10px;
+  color: var(--jb-fg-dim);
+  border: 1px solid var(--jb-border-strong);
+  border-radius: 4px;
+  padding: 1px 6px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.joba-mock__pane p {
+  font-size: 12.5px;
+  color: var(--jb-fg);
+  line-height: 1.6;
+  margin: 0 0 0.5rem;
+}
+
+.joba-mock__pane p:last-child { margin-bottom: 0; }
+
+.joba-mock__answers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.joba-mock__answers li {
+  display: flex;
+  gap: 0.625rem;
+  font-size: 12px;
+}
+
+.joba-mock__answers b {
+  flex: 0 0 5.5rem;
+  font-family: var(--jb-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--jb-fg-mute);
+  text-transform: uppercase;
+}
+
+.joba-mock__answers span {
+  color: var(--jb-fg-dim);
+  line-height: 1.5;
+}
+
+/* ---------- live monitor ---------- */
+
+.joba-mock--monitor {
+  font-family: var(--jb-mono);
+}
+
+.joba-mock__monitor-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.625rem;
+  margin-bottom: 0.625rem;
+  border-bottom: 1px solid var(--jb-border);
+}
+
+.joba-mock__monitor-title {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--jb-fg);
+  text-transform: uppercase;
+}
+
+.joba-mock__monitor-title::before {
+  content: "● ";
+  color: var(--jb-running);
+  margin-right: 0.25rem;
+}
+
+.joba-mock__monitor-stats {
+  display: flex;
+  gap: 0.875rem;
+  font-size: 10.5px;
+  color: var(--jb-fg-mute);
+}
+
+.joba-mock__timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.joba-mock__t-item {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  font-size: 11.5px;
+  color: var(--jb-fg-dim);
+  padding: 0.2rem 0;
+}
+
+.joba-mock__t-item::before {
+  content: "✓";
+  color: var(--jb-apply);
+  font-size: 10px;
+  flex: 0 0 0.875rem;
+}
+
+.joba-mock__t-item--running::before {
+  content: "↻";
+  color: var(--jb-running);
+}
+
+.joba-mock__t-item--running {
+  color: var(--jb-fg);
+}
+
+.joba-mock__t-item code {
+  font-family: var(--jb-mono);
+  color: var(--jb-fg);
+  font-size: 11.5px;
+}
+
+/* ---------- mobile ---------- */
+
+@media (max-width: 720px) {
+  .joba-mock {
+    margin: 1.5rem -0.5rem;
+    padding: 1rem 0.875rem 1rem;
+    font-size: 12.5px;
+  }
+  .joba-mock__dialog-grid { grid-template-columns: 1fr; }
+  .joba-mock__answers b { flex: 0 0 4.5rem; }
+}

@@ -13,6 +13,9 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
+        "project-sync-docs": resolve(rootDir, "projects/sync-docs/index.html"),
+        "project-flow-canvas": resolve(rootDir, "projects/flow-canvas/index.html"),
+        "project-joba": resolve(rootDir, "projects/joba/index.html"),
         "project-social-platforms": resolve(rootDir, "projects/social-platforms/index.html"),
         "project-wakeup": resolve(rootDir, "projects/wakeup/index.html"),
         "project-dj-selector": resolve(rootDir, "projects/dj-selector/index.html"),

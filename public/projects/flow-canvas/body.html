@@ -1,0 +1,106 @@
+<p>Every project's interaction logic lives in four places: a <code>PLAN.md</code>, a few <code>docs/</code> spec files, the code, and my head. Claude touches one, the other three start to drift. flow-canvas starts from accepting that node canvases are a real intermediate format, the kind that lets a human and Claude edit the same source of truth, and that the source of truth has to be JSON, not a binary visual file.</p>
+<p>Push on that constraint and every design decision falls out. <strong>JSON files</strong>: Claude edits text natively. <strong><code>SCHEMA.md</code>, deliberately not named <code>CLAUDE.md</code> or <code>AGENTS.md</code></strong>: those names get auto-loaded by agent tools, which would inject about 150 lines of schema noise into the main context every time the agent touched anything in <code>.flows/</code>; SCHEMA.md only enters context when a slash command references it explicitly. <strong>A <code>refs</code> field on every node</strong>: the flow is a structured mirror of existing project docs, not a parallel source of truth, so each node carries <code>refs: ["docs/architecture.md#alarm"]</code> pointing back to the doc it came from. <strong>An inbox pattern</strong>: UI ↔ files is real-time bidirectional via chokidar plus WebSocket, but UI ↔ Claude session is not; clicking "notify Claude" in the UI appends a line to <code>.inbox.jsonl</code>, and the next <code>/flow-status</code> lets Claude pull it.</p>
+<div class="fc-mock fc-mock--canvas-wrap" aria-label="flow-canvas overview canvas mockup">
+  <div class="fc-mock__head">
+    <div class="fc-mock__crumbs">
+      <span class="fc-mock__crumb">your-app</span>
+      <span class="fc-mock__crumb-sep">/</span>
+      <span class="fc-mock__crumb">.flows</span>
+      <span class="fc-mock__crumb-sep">/</span>
+      <span class="fc-mock__crumb fc-mock__crumb--last">overview</span>
+    </div>
+    <span class="fc-mock__head-meta">5 nodes · 6 edges</span>
+  </div>
+  <div class="fc-mock__canvas">
+    <svg class="fc-mock__edges" viewBox="0 0 600 280" preserveAspectRatio="none">
+      <defs>
+        <marker id="fc-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" />
+        </marker>
+      </defs>
+      <path d="M 145 96 C 200 70, 200 70, 252 56" marker-end="url(#fc-arrow)" />
+      <path d="M 145 110 C 200 150, 200 170, 252 184" marker-end="url(#fc-arrow)" />
+      <path d="M 358 56 C 380 90, 380 130, 358 184" marker-end="url(#fc-arrow)" />
+      <path d="M 358 184 C 410 170, 430 140, 458 110" marker-end="url(#fc-arrow)" />
+      <path d="M 358 198 C 410 220, 430 220, 458 224" marker-end="url(#fc-arrow)" />
+      <path class="dashed" d="M 458 130 C 405 200, 380 215, 360 200" marker-end="url(#fc-arrow)" />
+    </svg>
+    <div class="fc-mock__node fc-mock__node--input" style="left:20px;top:88px;">
+      <span class="fc-mock__node-type">user_input</span>
+      User enters app
+    </div>
+    <div class="fc-mock__node fc-mock__node--logic" style="left:252px;top:36px;">
+      <span class="fc-mock__node-type">logic</span>
+      Onboarding (first run)
+    </div>
+    <div class="fc-mock__node fc-mock__node--state" style="left:252px;top:170px;">
+      <span class="fc-mock__node-type">state</span>
+      Home
+    </div>
+    <div class="fc-mock__node fc-mock__node--action fc-mock__node--has-subflow" style="left:458px;top:88px;">
+      <span class="fc-mock__node-type">action</span>
+      Alarm feature
+    </div>
+    <div class="fc-mock__node fc-mock__node--action" style="left:458px;top:210px;">
+      <span class="fc-mock__node-type">action</span>
+      Settings
+    </div>
+  </div>
+</div>
+
+<p><em>FIG.01: a small overview flow rendered on the canvas. The five node types (<code>user_input</code>, <code>logic</code>, <code>state</code>, <code>action</code>, <code>decision</code>) each get a left border colour. The arrow marked with <code>↓</code> carries a <code>subflow</code> reference, double-click drills into <code>alarm.flow.json</code>. The dashed back-edge is <code>style: "back"</code>, used for cancel or return-to-previous transitions.</em></p>
+<div class="mermaid">
+flowchart LR
+  Json[".flows/*.flow.json<br/>.inbox.jsonl<br/>state.json"] -->|chokidar watch| Watcher[FlowWatcher<br/>SHA1 dedup]
+  Watcher -->|broadcast| Hono[Hono server :7779]
+  Hono -->|WebSocket| UI[React Flow UI]
+  UI -->|REST PUT/POST/DELETE| Hono
+  Hono -->|writeFile + suppress hash| Json
+  Claude[Claude session] -->|direct file edit| Json
+  Claude -->|/flow-status| Inbox[reads inbox + last-edit + git diff]
+</div>
+<p><em>FIG.02: file ↔ UI is real-time bidirectional; Claude session ↔ files is asynchronous and Claude pulls. chokidar watches the <code>.flows/</code> directory; the server hashes its own pending writes into a suppress table so its own change events are silenced.</em></p>
+<p>The file ↔ UI loop looks basic. Getting it right takes a few details. chokidar runs with <code>awaitWriteFinish: { stabilityThreshold: 80, pollInterval: 30 }</code> so external editor writes only fire after they settle. Before the server writes a file in response to a UI save, it pre-hashes the about-to-be-written content into the watcher's suppress table; when the watcher fires its own resulting change event the hash matches, the event is dropped, and the UI never sees its own write echoed back. Claude editing the file directly bypasses that path, and the watcher treats it as a normal external change.</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// server/index.ts (UI write path)</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">json</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">parsed</span><span class="p">.</span><span class="nx">data</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39;\n&#39;</span><span class="p">;</span>
+<span class="nx">watcher</span><span class="p">.</span><span class="nx">suppress</span><span class="p">(</span><span class="nx">filePath</span><span class="p">,</span><span class="w"> </span><span class="nx">json</span><span class="p">);</span><span class="w">  </span><span class="c1">// hash first, drop the echo</span>
+<span class="k">await</span><span class="w"> </span><span class="nx">fs</span><span class="p">.</span><span class="nx">writeFile</span><span class="p">(</span><span class="nx">filePath</span><span class="p">,</span><span class="w"> </span><span class="nx">json</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;utf8&#39;</span><span class="p">);</span>
+<span class="k">await</span><span class="w"> </span><span class="nx">recordLastEdit</span><span class="p">(</span><span class="nx">name</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">FLOW_SUFFIX</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ui-save&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">summary</span><span class="p">);</span>
+</code></pre></div>
+
+<p><em>FIG.03: the suppress call on the UI write path. The watcher's lastHash table already knows the file is about to take this hash, so the change event it triggers itself is silently skipped. Standard "my own write does not trigger my own event" pattern in single-process file watchers.</em></p>
+<p>Naming the schema doc <code>SCHEMA.md</code> instead of <code>CLAUDE.md</code> is the most counterintuitive decision in this project. Claude Code, Codex, and similar agent tools automatically pull <code>CLAUDE.md</code> and <code>AGENTS.md</code> files into the agent's context. If the schema doc used either name, the main session would get about 150 lines of schema noise injected every time it touched anything under <code>.flows/</code>. The trick is to name it <code>SCHEMA.md</code> and add one line to the project's main <code>CLAUDE.md</code>: "before editing <code>.flows/*.flow.json</code>, read <code>.flows/SCHEMA.md</code>". Slash commands also reference it explicitly. Claude knows the schema doc exists but only opens it when actually editing flows.</p>
+<p>The <code>refs</code> field is the main anti-drift mechanism. Each node carries paths relative to the project root, with optional anchors: <code>docs/architecture.md#alarm-section</code>, <code>PHASE1.md#picker-design</code>. The first rule in <code>SCHEMA.md</code> says: read the existing project docs before touching flows. The flow is not a new write of the interaction logic; it is a structured view stitched out of existing docs, with each node pointing back to its source. The UI inspector lists <code>refs</code> as clickable paths. When a node's <code>notes</code> and the doc its <code>refs</code> points to disagree, the rule is to flag it and ask which side is the new truth.</p>
+<div class="fc-mock fc-mock--inspector" aria-label="flow-canvas node inspector mockup">
+  <div class="fc-mock__inspect-head">
+    <span>Inspector</span>
+    <span class="fc-mock__inspect-name">Alarm feature · action</span>
+  </div>
+  <dl class="fc-mock__inspect-grid">
+    <dt>id</dt>
+    <dd><code>n_alarm</code></dd>
+    <dt>label</dt>
+    <dd>Alarm feature</dd>
+    <dt>subflow</dt>
+    <dd><code>alarm.flow.json</code> ↓</dd>
+    <dt>notes</dt>
+    <dd>Enter the alarm management page. Detailed flow lives in <code>alarm.flow.json</code>.</dd>
+    <dt>refs</dt>
+    <dd>
+      <ul class="fc-mock__refs">
+        <li>docs/architecture.md#alarm</li>
+        <li>PHASE1.md#picker-design</li>
+      </ul>
+    </dd>
+    <dt>tags</dt>
+    <dd><code>feature</code></dd>
+  </dl>
+  <div class="fc-mock__inbox">
+    <span><b>Notify Claude</b> queues a `.inbox.jsonl` line</span>
+    <span>Last saved 14s ago by UI</span>
+  </div>
+</div>
+
+<p><em>FIG.04: the inspector for a single node. <code>refs</code> is the load-bearing field: every entry points back to the doc the node was synthesised from. When the inspector shows a node whose <code>notes</code> no longer matches what the linked doc says, that mismatch is the artefact <code>/flow-status</code> is meant to surface.</em></p>
+<p>The inbox pattern handles the UI ↔ Claude gap. Each node in the UI has a "notify Claude" button. Clicking it appends a JSON line to <code>.flows/.inbox.jsonl</code> and copies a <code>/flow-status</code> snippet plus the user comment to the clipboard. The server also maintains <code>.last-edit.json</code>, which it overwrites on every UI save / create / delete / notify. When I switch to a terminal and run <code>/flow-status</code>, Claude reads the inbox first (the user's active intent matters more than diffs), then <code>last-edit.json</code>, then <code>git diff .flows/</code>, and finally clears the inbox so processed entries do not repeat. The whole loop converges UI and Claude session asynchronously without giving Claude a live WebSocket.</p>
+<p>The stack is Hono plus chokidar plus xyflow/React Flow plus Zod plus Tailwind plus commander, all permissive licenses. After <code>npm link</code>, any project gets it via <code>flow-canvas init</code> followed by <code>flow-canvas serve</code>. <code>[VERIFY: number of projects this has been used in]</code>. <code>[VERIFY: which project actually exercised the inbox loop end to end]</code>. Known gaps: no cross-session undo (git is the backup), no auto-layout (positions are absolute coordinates), no multi-user merge (this is a single-machine tool). Stately assumes XState, n8n is an execution platform, tldraw makes you write 80% yourself; flow-canvas's compromise is to keep JSON as the intermediate format that humans and Claude both edit, let React Flow render the canvas, and write the project / Claude / multi-file glue myself.</p>

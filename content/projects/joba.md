@@ -1,0 +1,129 @@
+I sent `[VERIFY: actual count]` applications this season for `[VERIFY: actual interviews]` interviews. The resume was not rewritten for each one. The opening "Why this company" line was not actually written for each company. The HR system on the other side knows. The keyword filter has a hit rate, and that hit rate is the only thing the system was ever measuring. This is the unspoken contract: both sides know it is initial-screen filtering, not careful review, and the only thing a candidate has to do is clear the gate and get a recruiter call. Everyone is now playing under this rule. Spending an entire day "tailoring" the resume for each company under this rule is taxing yourself. joba is the tool I built after I admitted that.
+
+If you take the funnel apart, job application is a five-segment pipeline: discover roles, judge fit, draft cover letter and standard answers, fill the ATS form, contact a hiring manager. Each segment has tools individually. They do not compose into one pipe. joba's bet is to wire all five together on my own machine: local SQLite, local browser, my LinkedIn cookie, my Claude Code subscription. No cloud, no distribution, no public API.
+
+```mermaid
+flowchart LR
+  Discover[Phase 1<br/>discover + LLM judge] --> Helper[Phase 2A<br/>cover letter + answer drafts]
+  Helper --> Agent[Phase 2B / 2B-2<br/>agent loop fills ATS form]
+  Agent -.-> ExtAts[Phase 3<br/>external ATS auto-fill]
+  ExtAts -.-> Reach[Phase 4<br/>reach out half-auto]
+  Reach -.-> Orch[Phase 5<br/>orchestration + gates]
+  classDef done fill:#1e3a5f,stroke:#3b82f6,color:#fff
+  classDef todo fill:#1e1e1e,stroke:#525252,color:#888,stroke-dasharray:3 3
+  class Discover,Helper,Agent done
+  class ExtAts,Reach,Orch todo
+```
+
+*FIG.01: five segments of the application pipeline. The first three (solid) are wired through. The last three (dashed) unlock in order, each gated on three to five manual verifications of the previous segment running clean.*
+
+Segment one is discover plus judge. patchright launches a headed browser, reuses my logged-in cookie, walks the LinkedIn recommended pool at `/jobs/collections/recommended/`, scrapes a batch of cards, then enters each detail page and slices `main` inner text by three text anchors: "About the job", "About the company", "More jobs from". Each row gets a fingerprint of `(company, title, city)` for dedup. Anything new is fed to a `claude` CLI subprocess (opus 4.7, `--json-schema` enforcing six output fields): verdict, full English jd_summary, verbatim English requirements, English company_summary, Chinese reasons, Chinese signals. The one opinionated bit: jd_summary stays as a full English paragraph, never condensed. I want the entire context in front of me before I decide whether to override the model's verdict.
+
+<div class="joba-mock joba-mock--list" aria-label="joba job list mockup">
+  <div class="joba-mock__head">
+    <span class="joba-mock__title">Recommended</span>
+    <span class="joba-mock__count">5 / 5 judged</span>
+  </div>
+  <ul class="joba-mock__joblist">
+    <li class="joba-mock__job joba-mock__job--apply">
+      <div class="joba-mock__job-head">
+        <span class="joba-mock__job-company">Anthropic</span>
+        <span class="joba-mock__verdict joba-mock__verdict--apply">apply</span>
+      </div>
+      <div class="joba-mock__job-title">Forward Deployed Engineer</div>
+      <div class="joba-mock__job-meta"><span>San Francisco, CA</span><span>Easy Apply</span><span>fp: 7c4a</span></div>
+      <div class="joba-mock__job-reason">Forward-deployed + Python/TypeScript + enterprise rollout matches capstone solver work; JD asks for the exact stack on resume.</div>
+    </li>
+    <li class="joba-mock__job joba-mock__job--apply">
+      <div class="joba-mock__job-head">
+        <span class="joba-mock__job-company">Scale AI</span>
+        <span class="joba-mock__verdict joba-mock__verdict--apply">apply</span>
+      </div>
+      <div class="joba-mock__job-title">ML Engineer, Eval Pipelines</div>
+      <div class="joba-mock__job-meta"><span>San Francisco, CA</span><span>External</span><span>fp: 91b2</span></div>
+      <div class="joba-mock__job-reason">Eval-pipeline focus and Python heavy; JD lists vector retrieval + judge-LLM patterns I shipped twice this quarter.</div>
+    </li>
+    <li class="joba-mock__job joba-mock__job--skip">
+      <div class="joba-mock__job-head">
+        <span class="joba-mock__job-company">Palantir</span>
+        <span class="joba-mock__verdict joba-mock__verdict--skip">skip</span>
+      </div>
+      <div class="joba-mock__job-title">Forward Deployed Software Engineer III</div>
+      <div class="joba-mock__job-meta"><span>Washington, DC</span><span>External</span><span>fp: 4d18</span></div>
+      <div class="joba-mock__job-reason">Defense / clearance gated; JD requires active TS or above. Hard skip per preferences.md.</div>
+    </li>
+  </ul>
+</div>
+
+*FIG.02: discover plus judge output. Each card carries the verdict chip, fingerprint, and the `claude` subprocess's reason in its own language (English for international shops, Chinese signals on the right). The verdict only sets the default; I can flip any card and `user_overridden=1` keeps the model from undoing me on the next sync.*
+
+Segment two is the draft surface. On an apply candidate I click "Apply Helper" and a Dialog opens with a cover letter (sonnet, generated against this specific job, cached on the fingerprint), seven fixed standard-answer templates (visa, YOE, salary, start date, work mode, personal info, cover letter bullets), plus the JD requirements and company summary side by side. This segment is not "fill the form for me". It is "put everything I need to copy-paste on one screen so the form fill below collapses to a clipboard exercise".
+
+<div class="joba-mock joba-mock--dialog" aria-label="joba apply helper dialog mockup">
+  <div class="joba-mock__dialog-head">Apply Helper · Anthropic / Forward Deployed Engineer</div>
+  <div class="joba-mock__dialog-grid">
+    <section class="joba-mock__pane">
+      <div class="joba-mock__pane-head"><span>Cover Letter</span><span class="joba-mock__copy">Copy</span></div>
+      <p>I have spent the last year shipping forward-deployed AI tooling end-to-end: from JD ingestion and fingerprint-based dedup to MCP tool gating and budget-watchdog agent loops.</p>
+      <p>The Forward Deployed Engineer role at Anthropic is the closest fit I have read this season. The mix of customer-facing rollout and infra design is what I have been doing on solo capstones at small scale, and I want to do it at the surface where the model itself is owned.</p>
+    </section>
+    <section class="joba-mock__pane">
+      <div class="joba-mock__pane-head"><span>Standard Answers</span><span class="joba-mock__copy">Copy</span></div>
+      <ul class="joba-mock__answers">
+        <li><b>Visa</b><span>No sponsorship needed.</span></li>
+        <li><b>YOE</b><span>5 years total, 2 in production AI.</span></li>
+        <li><b>Salary</b><span>$180k–$220k base, open on equity.</span></li>
+        <li><b>Start</b><span>Two weeks after offer.</span></li>
+        <li><b>Mode</b><span>Hybrid SF preferred.</span></li>
+        <li><b>Info</b><span>US citizen, CA resident.</span></li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+*FIG.03: the Apply Helper Dialog. Left pane streams a sonnet-generated cover letter cached against the job fingerprint so a re-open does not regenerate. Right pane is the seven fixed-shape standard answers I edited once in the templates tab; this Dialog is just the read view a clipboard expects.*
+
+Segment three is the hard one, because "unattended" meets "real account on a real ATS". joba opens a local HTTP server on a random port, owns the patchright Page, and spawns a `claude -p --model opus` subprocess with `--strict-mcp-config` pointing at an ad-hoc MCP server I wrote. The tool set has exactly ten tools: `list_form_fields`, `fill_text_field`, `select_option`, `click_radio`, `click_checkbox`, `fill_date`, `upload_file` (slot whitelist), `scroll_to`, `get_screenshot`, `report_progress`.
+
+```text
+not in the tool set (and not added even if Claude asks):
+  goto_url / back / reload
+  click(arbitrary selector)
+  evaluate_js(arbitrary script)
+  submit_form / press_enter
+  set_cookie / local_storage_*
+  arbitrary path file IO
+```
+
+*FIG.04: the "not exposed" list of the restricted MCP tool set. Safety lives in the attack surface, not the prompt. Claude cannot click Submit because the tool does not exist, not because the prompt asked it not to.*
+
+Pagination runs through a separate gate. sonnet proposes a candidate "next page" button label. The label has to clear a `(submit|apply|send|finalize|finish|confirm|complete|提交|申请|完成|确认)` blocklist regex. After clicking, the new URL path cannot match `/confirm|/complete|/thank|/success|/done|/submitted`. Per session the gate fires at most five times. Three rules in series, all must pass; any miss and the loop stops for me to look. A watchdog ticks at 200 ms and triggers SIGTERM on any of: wall clock, tool call count, cost, no-progress timeout, stop file, in-page stop flag. Two monitors run in parallel: an in-tab floating panel that gets events via `page.evaluate` (bypassing the ATS site's CSP), and a same-origin SSE stream into the joba UI for the higher-density timeline.
+
+<div class="joba-mock joba-mock--monitor" aria-label="joba auto-apply live monitor mockup">
+  <div class="joba-mock__monitor-head">
+    <span class="joba-mock__monitor-title">Auto Apply · running</span>
+    <div class="joba-mock__monitor-stats">
+      <span>14 calls</span>
+      <span>02:31</span>
+      <span>$0.42</span>
+    </div>
+  </div>
+  <ul class="joba-mock__timeline">
+    <li class="joba-mock__t-item"><code>list_form_fields</code> → 28 fields tagged</li>
+    <li class="joba-mock__t-item"><code>fill_text_field("first_name", "Chao")</code></li>
+    <li class="joba-mock__t-item"><code>fill_text_field("last_name", "Yao")</code></li>
+    <li class="joba-mock__t-item"><code>fill_text_field("email", "...")</code></li>
+    <li class="joba-mock__t-item"><code>upload_file("resume", active_resume_pdf)</code></li>
+    <li class="joba-mock__t-item"><code>click_radio("auth_to_work_us", true)</code></li>
+    <li class="joba-mock__t-item"><code>click_checkbox("contact_consent", true)</code></li>
+    <li class="joba-mock__t-item"><code>fill_text_field("years_experience", "5")</code></li>
+    <li class="joba-mock__t-item"><code>fill_text_field("cover_letter", &lt;1.4kB&gt;)</code></li>
+    <li class="joba-mock__t-item joba-mock__t-item--running"><code>select_combobox("country", "United States")</code> ...</li>
+  </ul>
+</div>
+
+*FIG.05: the joba UI live monitor for one in-flight Phase 2B run. Same data also pushes through `page.evaluate` into a 320 px floating panel inside the patchright tab, because the ATS site's CSP would otherwise block an SSE stream to localhost. Stop button writes a stop file; watchdog SIGTERMs claude within 200 ms.*
+
+The back two segments are not started. Phase 3 is non-Easy-Apply external ATS (Workday, Greenhouse, Lever), planned via Skyvern attaching to my already-logged-in Chrome; the gate to start is candidates ≥10 plus enough data to know which ATS dominates. Phase 4 is reach out half-auto: locate likely hiring managers, draft connect requests and DMs into a local review queue. DMs never auto-send, which is a permanent decision. Phase 5 is the orchestrator: launchd at 9:30, Stop hook, `audit.jsonl`, desktop notification, daily digest, one `joba run-daily` command for the whole pipe.
+
+`[VERIFY: end-to-end runtime and cost for one Phase 2B agent loop]`. `[VERIFY: applications shipped via joba this season and response rate]`. "Full automation" to me is not pressing a button to fire 200 applications. It is the pipeline never quietly handing back an hour at any segment. Today it leaks at external ATS, reach out, and orchestration. The next three phases plug those leaks.

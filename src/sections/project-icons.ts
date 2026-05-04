@@ -95,7 +95,58 @@ const iconSocialPlatforms = `
   </svg>
 `;
 
+const iconSyncDocs = `
+  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="5" y="9" width="9" height="9" rx="1" />
+    <path d="M7 12 L12 12 M7 14 L11 14" stroke-width="1" opacity="0.55" />
+    <rect x="5" y="20" width="9" height="9" rx="1" />
+    <path d="M7 23 L12 23 M7 25 L11 25" stroke-width="1" opacity="0.55" />
+    <rect x="5" y="31" width="9" height="9" rx="1" />
+    <path d="M7 34 L12 34 M7 36 L11 36" stroke-width="1" opacity="0.55" />
+    <path d="M14 13 L23 22" opacity="0.6" />
+    <path d="M14 24 L23 24" opacity="0.6" />
+    <path d="M14 35 L23 26" opacity="0.6" />
+    <rect x="26" y="14" width="17" height="20" rx="1.5" />
+    <path d="M30 21 L39 21" stroke-width="1" opacity="0.7" />
+    <path d="M30 25 L39 25" stroke-width="1" opacity="0.7" />
+    <path d="M30 29 L36 29" stroke-width="1" opacity="0.7" />
+  </svg>
+`;
+
+const iconFlowCanvas = `
+  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="5" y="11" width="12" height="8" rx="1.5" />
+    <rect x="31" y="11" width="12" height="8" rx="1.5" />
+    <rect x="18" y="29" width="12" height="8" rx="1.5" />
+    <path d="M17 15 L31 15" />
+    <path d="M11 19 L21 29" />
+    <path d="M37 19 L27 29" />
+    <path d="M19 41 L29 41" stroke-dasharray="2 1.6" opacity="0.55" />
+    <circle cx="24" cy="33" r="0.9" fill="currentColor" stroke="none" opacity="0.85" />
+  </svg>
+`;
+
+const iconJoba = `
+  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="6" cy="24" r="3" />
+    <circle cx="6" cy="24" r="1.3" fill="currentColor" stroke="none" />
+    <path d="M9 24 L11.5 24" />
+    <circle cx="14.5" cy="24" r="3" />
+    <circle cx="14.5" cy="24" r="1.3" fill="currentColor" stroke="none" />
+    <path d="M17.5 24 L20 24" />
+    <circle cx="23" cy="24" r="3" />
+    <circle cx="23" cy="24" r="1.3" fill="currentColor" stroke="none" />
+    <path d="M26 24 L28.5 24" stroke-dasharray="2 2" opacity="0.5" />
+    <circle cx="31.5" cy="24" r="3" stroke-dasharray="2 2" opacity="0.5" />
+    <path d="M34.5 24 L37 24" stroke-dasharray="2 2" opacity="0.5" />
+    <circle cx="40" cy="24" r="3" stroke-dasharray="2 2" opacity="0.5" />
+  </svg>
+`;
+
 const ICONS: Record<string, string> = {
+  'sync-docs': iconSyncDocs,
+  'flow-canvas': iconFlowCanvas,
+  joba: iconJoba,
   speckit: iconSpecKit,
   'finance-analyzer': iconFinanceAnalyzer,
   'email-digest': iconEmailDigest,

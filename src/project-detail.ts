@@ -6,6 +6,8 @@ import './styles/project-status.css';
 import './styles/project-detail.css';
 import './styles/email-digest-mock.css';
 import './styles/vigil-mock.css';
+import './styles/joba-mock.css';
+import './styles/flow-canvas-mock.css';
 import './styles/footer.css';
 
 import projectsData from './data/projects.json';

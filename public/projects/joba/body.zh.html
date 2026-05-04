@@ -1,0 +1,115 @@
+<p>这一季我投了 <code>[VERIFY: 实际投递数]</code> 封简历，换 <code>[VERIFY: 实际面试数]</code> 个面试。简历没有为每家公司改过。开头那段「Why this company」也没有真的针对每家公司写。HR 那边的系统也知道，关键词命中率就那么几个数。这是一份双方默认的契约：双方都知道这是初筛过滤、不是认真审阅，candidate 要做的只有一件事，就是过掉对方系统那道闸、拿到 recruiter call。所有人都在这套规则下玩。在这套规则下还花一整天给每家公司「精修」简历，就是给自己上税。joba 是我承认这件事之后做出来的工具。</p>
+<p>把求职投递拆开看，它是一根五段的流水线：发现岗位、评估匹配度、起草 cover letter 与答题、填 ATS 表单、联系 hiring manager。每段单独都有现成工具，但它们不组合成一根管子。joba 的赌注是把这五段在我自己的机器上接通：本地 SQLite、本地浏览器、我自己的 LinkedIn cookie、我自己的 Claude Code 订阅。不上云端，不分发，不开放 API。</p>
+<div class="mermaid">
+flowchart LR
+  Discover[Phase 1<br/>发现 + LLM 评估] --> Helper[Phase 2A<br/>cover letter + 答题草稿]
+  Helper --> Agent[Phase 2B / 2B-2<br/>agent loop 填 ATS 表]
+  Agent -.-> ExtAts[Phase 3<br/>外部 ATS 全自动]
+  ExtAts -.-> Reach[Phase 4<br/>Reach Out 半自动]
+  Reach -.-> Orch[Phase 5<br/>编排 + 守门]
+  classDef done fill:#1e3a5f,stroke:#3b82f6,color:#fff
+  classDef todo fill:#1e1e1e,stroke:#525252,color:#888,stroke-dasharray:3 3
+  class Discover,Helper,Agent done
+  class ExtAts,Reach,Orch todo
+</div>
+<p><em>FIG.01：求职流水线五段。前三段（实线）已经接通；后三段（虚线）按顺序解锁，每一段要前一段连续手动验证 3 到 5 次无异常之后才动。</em></p>
+<p>第一段是发现加评估。patchright 起一个有头浏览器，复用我登录后的 cookie，访问 LinkedIn 推荐池 <code>/jobs/collections/recommended/</code>，抓出一组岗位卡片，再逐条进详情页拉 <code>main</code> inner_text 加 「About the job / About the company / More jobs from」三个文本 anchor 切片。每条用 <code>(company, title, city)</code> 算 fingerprint 去重，没见过的喂给 <code>claude</code> CLI 子进程（opus 4.7，<code>--json-schema</code> 强制结构化输出），返回六个字段：verdict、完整英文 jd_summary、原文英文 requirements、英文 company_summary、中文 reasons、中文 signals。设计上唯一的执拗：jd_summary 故意保留整段英文原文不浓缩。我要先看完整 context，再决定要不要反转 LLM 的 verdict。</p>
+<div class="joba-mock joba-mock--list" aria-label="joba 推荐岗位列表 mockup">
+  <div class="joba-mock__head">
+    <span class="joba-mock__title">推荐</span>
+    <span class="joba-mock__count">5 / 5 已评估</span>
+  </div>
+  <ul class="joba-mock__joblist">
+    <li class="joba-mock__job joba-mock__job--apply">
+      <div class="joba-mock__job-head">
+        <span class="joba-mock__job-company">Anthropic</span>
+        <span class="joba-mock__verdict joba-mock__verdict--apply">apply</span>
+      </div>
+      <div class="joba-mock__job-title">Forward Deployed Engineer</div>
+      <div class="joba-mock__job-meta"><span>San Francisco, CA</span><span>Easy Apply</span><span>fp: 7c4a</span></div>
+      <div class="joba-mock__job-reason">现场部署 + Python/TypeScript + 企业落地经验匹配 capstone solver 工作；JD 列的栈跟简历一一对得上。</div>
+    </li>
+    <li class="joba-mock__job joba-mock__job--apply">
+      <div class="joba-mock__job-head">
+        <span class="joba-mock__job-company">Scale AI</span>
+        <span class="joba-mock__verdict joba-mock__verdict--apply">apply</span>
+      </div>
+      <div class="joba-mock__job-title">ML Engineer, Eval Pipelines</div>
+      <div class="joba-mock__job-meta"><span>San Francisco, CA</span><span>External</span><span>fp: 91b2</span></div>
+      <div class="joba-mock__job-reason">eval 流水线为主、Python 重；JD 写到 vector retrieval + judge-LLM，正是这季节做过的两次。</div>
+    </li>
+    <li class="joba-mock__job joba-mock__job--skip">
+      <div class="joba-mock__job-head">
+        <span class="joba-mock__job-company">Palantir</span>
+        <span class="joba-mock__verdict joba-mock__verdict--skip">skip</span>
+      </div>
+      <div class="joba-mock__job-title">Forward Deployed Software Engineer III</div>
+      <div class="joba-mock__job-meta"><span>Washington, DC</span><span>External</span><span>fp: 4d18</span></div>
+      <div class="joba-mock__job-reason">国防 / clearance 锁定；JD 要求 active TS 以上。preferences.md 硬规则跳过。</div>
+    </li>
+  </ul>
+</div>
+
+<p><em>FIG.02：发现加评估输出。每张卡上的 verdict chip、fingerprint、<code>claude</code> 子进程回的 reason 在一个块里展示（英文岗位描述给国际公司，中文 signals 在右侧）。verdict 只是默认值，我可以反转任何一张卡，<code>user_overridden=1</code> 之后下次同步 LLM 不再覆盖。</em></p>
+<p>第二段是起草面板。apply 候选岗位点「投递助手」，打开一个 Dialog，里面同时摆出 sonnet 现生的 cover letter（按 fingerprint 缓存）、7 段固定的标准答题模板（visa、YOE、薪资、入职、工作模式、个人信息、cover letter 要点），以及 JD requirements 和 company summary。这一段不是「替我填表」，而是「把我所有要复制粘贴的东西摆在同一块屏上，让下面那段填表退化成一次剪贴板操作」。</p>
+<div class="joba-mock joba-mock--dialog" aria-label="joba 投递助手 Dialog mockup">
+  <div class="joba-mock__dialog-head">投递助手 · Anthropic / Forward Deployed Engineer</div>
+  <div class="joba-mock__dialog-grid">
+    <section class="joba-mock__pane">
+      <div class="joba-mock__pane-head"><span>Cover Letter</span><span class="joba-mock__copy">复制</span></div>
+      <p>I have spent the last year shipping forward-deployed AI tooling end-to-end: from JD ingestion and fingerprint-based dedup to MCP tool gating and budget-watchdog agent loops.</p>
+      <p>The Forward Deployed Engineer role at Anthropic is the closest fit I have read this season. The mix of customer-facing rollout and infra design is what I have been doing on solo capstones at small scale, and I want to do it where the model itself is owned.</p>
+    </section>
+    <section class="joba-mock__pane">
+      <div class="joba-mock__pane-head"><span>标准答题</span><span class="joba-mock__copy">复制</span></div>
+      <ul class="joba-mock__answers">
+        <li><b>Visa</b><span>不需要 sponsorship。</span></li>
+        <li><b>YOE</b><span>合计 5 年，其中 2 年 prod AI。</span></li>
+        <li><b>薪资</b><span>$180k–$220k base，equity 可谈。</span></li>
+        <li><b>入职</b><span>offer 后两周。</span></li>
+        <li><b>模式</b><span>SF 混合优先。</span></li>
+        <li><b>信息</b><span>美国公民，加州常驻。</span></li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<p><em>FIG.03：投递助手 Dialog。左栏是 sonnet 按 fingerprint 缓存的 cover letter，重新打开 Dialog 不会重生成。右栏是模板 tab 里编辑过一次的 7 段固定答题，这里只是个让剪贴板能直接抓的只读视图。</em></p>
+<p>第三段最难，因为「无人值守」要碰真号加真 ATS 表。joba 起一个本地随机端口的 HTTP server，patchright Page 由它独占；spawn 一个 <code>claude -p --model opus</code> 子进程，加 <code>--strict-mcp-config</code> 加载我们写的 ad-hoc MCP server，工具集只有 10 个：<code>list_form_fields</code>、<code>fill_text_field</code>、<code>select_option</code>、<code>click_radio</code>、<code>click_checkbox</code>、<code>fill_date</code>、<code>upload_file</code>（slot 白名单）、<code>scroll_to</code>、<code>get_screenshot</code>、<code>report_progress</code>。</p>
+<div class="highlight"><pre><span></span><code>不在工具集里（即使 Claude 让加也不加）：
+  goto_url / back / reload
+  click(任意 selector)
+  evaluate_js(任意脚本)
+  submit_form / press_enter
+  set_cookie / local_storage_*
+  任意路径文件读写
+</code></pre></div>
+
+<p><em>FIG.04：受限 MCP 工具集的「不暴露」清单。安全押在 attack surface 而不是 prompt 上：Claude 不能点 Submit，不是因为 prompt 让它别点，而是因为没有那个工具。</em></p>
+<p>翻页走一道独立的 gate。sonnet 给候选「下一页」按钮的 label，先过一条 <code>(submit|apply|send|finalize|finish|confirm|complete|提交|申请|完成|确认)</code> 黑名单正则；点完之后新 URL path 不能命中 <code>/confirm|/complete|/thank|/success|/done|/submitted</code>；单 session 累计自动翻页 ≤ 5 次。三条规则串行，全过才点，任一不过就停下让我看。Watchdog 200 ms tick，在墙钟、tool 调用数、cost、no-progress 超时、stop 文件、浮窗 stop flag 之间任一触发就 SIGTERM claude。监控两路并发：tab 内一个浮窗 panel 用 <code>page.evaluate</code> 推事件绕开 ATS 站点的 CSP；joba UI 同源 SSE 拿到信息密度更高的时间线。</p>
+<div class="joba-mock joba-mock--monitor" aria-label="joba auto-apply 实时监控 mockup">
+  <div class="joba-mock__monitor-head">
+    <span class="joba-mock__monitor-title">Auto Apply · running</span>
+    <div class="joba-mock__monitor-stats">
+      <span>14 calls</span>
+      <span>02:31</span>
+      <span>$0.42</span>
+    </div>
+  </div>
+  <ul class="joba-mock__timeline">
+    <li class="joba-mock__t-item"><code>list_form_fields</code> → 28 个字段</li>
+    <li class="joba-mock__t-item"><code>fill_text_field("first_name", "Chao")</code></li>
+    <li class="joba-mock__t-item"><code>fill_text_field("last_name", "Yao")</code></li>
+    <li class="joba-mock__t-item"><code>fill_text_field("email", "...")</code></li>
+    <li class="joba-mock__t-item"><code>upload_file("resume", active_resume_pdf)</code></li>
+    <li class="joba-mock__t-item"><code>click_radio("auth_to_work_us", true)</code></li>
+    <li class="joba-mock__t-item"><code>click_checkbox("contact_consent", true)</code></li>
+    <li class="joba-mock__t-item"><code>fill_text_field("years_experience", "5")</code></li>
+    <li class="joba-mock__t-item"><code>fill_text_field("cover_letter", &lt;1.4kB&gt;)</code></li>
+    <li class="joba-mock__t-item joba-mock__t-item--running"><code>select_combobox("country", "United States")</code> ...</li>
+  </ul>
+</div>
+
+<p><em>FIG.05：joba UI 端的实时监控。同一份事件流也通过 <code>page.evaluate</code> 推进 patchright tab 里一个 320 像素宽的浮窗（因为 ATS 站的 CSP 会 ban 掉 SSE 到 localhost）。Stop 按钮写 stop 文件，watchdog 在 200 ms 内 SIGTERM claude。</em></p>
+<p>后两段还没动。Phase 3 是非 Easy Apply 的外部 ATS（Workday、Greenhouse、Lever），计划用 Skyvern attach 已经登录的 Chrome；触发条件是 candidates ≥ 10 加上看清主流 ATS 之后再做。Phase 4 是 reach out 半自动：定位 hiring manager，起草 connect 请求和 DM，丢进本地审查队列。DM 永远不自动发，这条是永久决策。Phase 5 是编排守门：launchd 9:30 启动、Stop hook、<code>audit.jsonl</code>、桌面通知、每日 digest，一条 <code>joba run-daily</code> 跑全流程。</p>
+<p><code>[VERIFY: 单条端到端 Phase 2B agent loop 实测耗时和 cost]</code>。<code>[VERIFY: 这一季用 joba 投出去的 application 数和回应率]</code>。「全自动」对我的意义不是按一个按钮把 200 封简历发出去，而是这条管子没有任何一段在偷偷把一小时还给我。今天它在「外部 ATS、reach out、调度」三处漏。下面三个 Phase 是去把这三处堵掉。</p>
