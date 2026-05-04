@@ -1,4 +1,4 @@
-这一季我投了 `[VERIFY: 实际投递数]` 封简历，换 `[VERIFY: 实际面试数]` 个面试。简历没有为每家公司改过。开头那段「Why this company」也没有真的针对每家公司写。HR 那边的系统也知道，关键词命中率就那么几个数。这是一份双方默认的契约：双方都知道这是初筛过滤、不是认真审阅，candidate 要做的只有一件事，就是过掉对方系统那道闸、拿到 recruiter call。所有人都在这套规则下玩。在这套规则下还花一整天给每家公司「精修」简历，就是给自己上税。joba 是我承认这件事之后做出来的工具。
+2026 年的应届一季要投出去几百封简历，才能换到几个面试。简历没有为每家公司改过。开头那段「Why this company」也没有真的针对每家公司写。HR 那边的系统也知道，关键词命中率就那么几个数。这是一份双方默认的契约：双方都知道这是初筛过滤、不是认真审阅，candidate 要做的只有一件事，就是过掉对方系统那道闸、拿到 recruiter call。所有人都在这套规则下玩。在这套规则下还花一整天给每家公司「精修」简历，就是给自己上税。joba 是我承认这件事之后做出来的工具。
 
 把求职投递拆开看，它是一根五段的流水线：发现岗位、评估匹配度、起草 cover letter 与答题、填 ATS 表单、联系 hiring manager。每段单独都有现成工具，但它们不组合成一根管子。joba 的赌注是把这五段在我自己的机器上接通：本地 SQLite、本地浏览器、我自己的 LinkedIn cookie、我自己的 Claude Code 订阅。不上云端，不分发，不开放 API。
 
@@ -126,4 +126,4 @@ flowchart LR
 
 后两段还没动。Phase 3 是非 Easy Apply 的外部 ATS（Workday、Greenhouse、Lever），计划用 Skyvern attach 已经登录的 Chrome；触发条件是 candidates ≥ 10 加上看清主流 ATS 之后再做。Phase 4 是 reach out 半自动：定位 hiring manager，起草 connect 请求和 DM，丢进本地审查队列。DM 永远不自动发，这条是永久决策。Phase 5 是编排守门：launchd 9:30 启动、Stop hook、`audit.jsonl`、桌面通知、每日 digest，一条 `joba run-daily` 跑全流程。
 
-`[VERIFY: 单条端到端 Phase 2B agent loop 实测耗时和 cost]`。`[VERIFY: 这一季用 joba 投出去的 application 数和回应率]`。「全自动」对我的意义不是按一个按钮把 200 封简历发出去，而是这条管子没有任何一段在偷偷把一小时还给我。今天它在「外部 ATS、reach out、调度」三处漏。下面三个 Phase 是去把这三处堵掉。
+「全自动」对我的意义不是按一个按钮把 200 封简历发出去，而是这条管子没有任何一段在偷偷把一小时还给我。今天它在「外部 ATS、reach out、调度」三处漏。下面三个 Phase 是去把这三处堵掉。
