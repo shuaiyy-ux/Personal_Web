@@ -6,16 +6,17 @@ If you take the funnel apart, job application is a five-segment pipeline: discov
 flowchart LR
   Discover[Phase 1<br/>discover + LLM judge] --> Helper[Phase 2A<br/>cover letter + answer drafts]
   Helper --> Agent[Phase 2B / 2B-2<br/>agent loop fills ATS form]
-  Agent -.-> ExtAts[Phase 3<br/>external ATS auto-fill]
-  ExtAts -.-> Reach[Phase 4<br/>reach out half-auto]
-  Reach -.-> Orch[Phase 5<br/>orchestration + gates]
+  Agent --> Reach[Phase 3<br/>LinkedIn reach out half-auto]
+  Reach -.-> Future[Phase 4<br/>TBD]
   classDef done fill:#1e3a5f,stroke:#3b82f6,color:#fff
+  classDef wip fill:#3a2e1e,stroke:#fcd34d,color:#fff
   classDef todo fill:#1e1e1e,stroke:#525252,color:#888,stroke-dasharray:3 3
   class Discover,Helper,Agent done
-  class ExtAts,Reach,Orch todo
+  class Reach wip
+  class Future todo
 ```
 
-*FIG.01: five segments of the application pipeline. The first three (solid) are wired through. The last three (dashed) unlock in order, each gated on three to five manual verifications of the previous segment running clean.*
+*FIG.01: pipeline as of 2026-05-04. Phase 1 + Phase 2 (2A, 2B, 2B-2) shipped; Phase 3 (LinkedIn reach out half-auto) is in progress. The original Phase 3 (auto-detect submit then auto-mark applied) was descoped after I drew a hard line at "joba never auto-clicks my own Applied button"; reach-out moved up. Phase 4 stays unassigned until Phase 3 has a clean week behind it.*
 
 Segment one is discover plus judge. patchright launches a headed browser, reuses my logged-in cookie, walks the LinkedIn recommended pool at `/jobs/collections/recommended/`, scrapes a batch of cards, then enters each detail page and slices `main` inner text by three text anchors: "About the job", "About the company", "More jobs from". Each row gets a fingerprint of `(company, title, city)` for dedup. Anything new is fed to a `claude` CLI subprocess (opus 4.7, `--json-schema` enforcing six output fields): verdict, full English jd_summary, verbatim English requirements, English company_summary, Chinese reasons, Chinese signals. The one opinionated bit: jd_summary stays as a full English paragraph, never condensed. I want the entire context in front of me before I decide whether to override the model's verdict.
 
@@ -124,6 +125,12 @@ Pagination runs through a separate gate. sonnet proposes a candidate "next page"
 
 *FIG.05: the joba UI live monitor for one in-flight Phase 2B run. Same data also pushes through `page.evaluate` into a 320 px floating panel inside the patchright tab, because the ATS site's CSP would otherwise block an SSE stream to localhost. Stop button writes a stop file; watchdog SIGTERMs claude within 200 ms.*
 
-The back two segments are not started. Phase 3 is non-Easy-Apply external ATS (Workday, Greenhouse, Lever), planned via Skyvern attaching to my already-logged-in Chrome; the gate to start is candidates ≥10 plus enough data to know which ATS dominates. Phase 4 is reach out half-auto: locate likely hiring managers, draft connect requests and DMs into a local review queue. DMs never auto-send, which is a permanent decision. Phase 5 is the orchestrator: launchd at 9:30, Stop hook, `audit.jsonl`, desktop notification, daily digest, one `joba run-daily` command for the whole pipe.
+Phase 3 is reach out half-auto, in progress. From an applied job card I click "find people to reach out to"; joba calls `stickerdaniel/linkedin-mcp-server` to surface three senior or manager candidates at the same company and city, sonnet drafts a ≤200-character connect note that quotes a specific line from each candidate's experience, and the Outreach tab groups drafts by job. One click runs them serially in a headed patchright tab that opens each profile, clicks Connect, and pastes the note. patchright pauses there for me to actually click Send; joba never auto-clicks the final Send button. Daily connect ≥5 stops the loop and notifies. Phase 4 is unassigned; the original "external ATS auto-fill" plan got descoped because most of my candidate roles are not Easy-Apply but the cost-vs-volume math no longer pencils out, and the cron orchestrator sits in the same TBD bucket.
 
-"Full automation" to me is not pressing a button to fire 200 applications. It is the pipeline never quietly handing back an hour at any segment. Today it leaks at external ATS, reach out, and orchestration. The next three phases plug those leaks.
+The first hard rule that came out of running Phase 3 is single session: at any moment, only one patchright process talks to LinkedIn. LinkedIn's risk-scoring stacks signals across cookie, browser fingerprint, and concurrent request patterns; two simultaneous patchrights look like two devices both automating, regardless of which cookies they hold. A `data/.linkedin_lock` file plus `flock` makes every entry point (discover, auto-apply, outreach, the linkedin-mcp subprocess) acquire before spawning, and the UI greys out every "starts patchright" button against the lock. The original `≤120 actions/day` counter I wrote in v0 turned out to be the wrong frame: LinkedIn watches patterns and signal stacking, not request totals. Mutex serialization plus "one warning email pauses the pipeline for seven days" replaces the budget.
+
+The second methodology came from cleaning up Phase 2B bugs: backend is the source of truth, frontend is a projection. The rule I now apply: backend owns anything that survives a refresh, spans tabs, or is produced by a backend subprocess; the frontend only owns input drafts and UI-local interaction. Anything backend-owned has to be re-derivable from a status API (pull) or an SSE stream that supports `Last-Event-ID` for replay-on-reconnect. Optimistic UI is allowed only as a lead-time bridge that the next reconcile overwrites; never as standalone state. Half my Phase 2B bugs turned out to be violations of this: `useState` tracking in-flight subprocesses, dialogs that lost progress on close, SSE streams that re-sent every event on remount.
+
+Browser automation against a primary LinkedIn account is not a problem you fully solve, and the article should say so. My honest internal estimate for not getting banned: about 95% week one, 85 to 90% month one, 70 to 80% month three, 50 to 65% month six. The decay is not request-rate; it is pattern accumulation, which only stabilises over weeks. Any precision tighter than this is dishonest. The hard mitigations (mutex, ≤5 connects per day, instant stop on `/checkpoint|/captcha|/uas/|/authwall`, zero retry, zero auto-Send) keep the curve from collapsing, but the only real safety is reading the warning email when LinkedIn sends it and pausing for seven days.
+
+"Full automation" to me is not pressing a button to fire 200 applications. It is the pipeline never quietly handing back an hour at any segment. Today the pipe runs end-to-end through Phase 3 in dry-run, daily reach-out capped at five, every entry point gated by the same lock. Whatever Phase 4 ends up being will get picked once Phase 3 has a clean week behind it.

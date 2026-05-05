@@ -6,16 +6,17 @@
 flowchart LR
   Discover[Phase 1<br/>发现 + LLM 评估] --> Helper[Phase 2A<br/>cover letter + 答题草稿]
   Helper --> Agent[Phase 2B / 2B-2<br/>agent loop 填 ATS 表]
-  Agent -.-> ExtAts[Phase 3<br/>外部 ATS 全自动]
-  ExtAts -.-> Reach[Phase 4<br/>Reach Out 半自动]
-  Reach -.-> Orch[Phase 5<br/>编排 + 守门]
+  Agent --> Reach[Phase 3<br/>LinkedIn reach out 半自动]
+  Reach -.-> Future[Phase 4<br/>待定]
   classDef done fill:#1e3a5f,stroke:#3b82f6,color:#fff
+  classDef wip fill:#3a2e1e,stroke:#fcd34d,color:#fff
   classDef todo fill:#1e1e1e,stroke:#525252,color:#888,stroke-dasharray:3 3
   class Discover,Helper,Agent done
-  class ExtAts,Reach,Orch todo
+  class Reach wip
+  class Future todo
 ```
 
-*FIG.01：求职流水线五段。前三段（实线）已经接通；后三段（虚线）按顺序解锁，每一段要前一段连续手动验证 3 到 5 次无异常之后才动。*
+*FIG.01：流水线截至 2026-05-04 的状态。Phase 1 加 Phase 2（2A / 2B / 2B-2）全部上线；Phase 3（LinkedIn 联络半自动）进行中。原本的 Phase 3（auto-detect submit 后 auto-mark applied）因为我划下了「joba 永不自动点我自己的『已申请』按钮」这条红线，被剔除，reach out 顺延上来。Phase 4 留空，等 Phase 3 跑稳一周再选。*
 
 第一段是发现加评估。patchright 起一个有头浏览器，复用我登录后的 cookie，访问 LinkedIn 推荐池 `/jobs/collections/recommended/`，抓出一组岗位卡片，再逐条进详情页拉 `main` inner_text 加 「About the job / About the company / More jobs from」三个文本 anchor 切片。每条用 `(company, title, city)` 算 fingerprint 去重，没见过的喂给 `claude` CLI 子进程（opus 4.7，`--json-schema` 强制结构化输出），返回六个字段：verdict、完整英文 jd_summary、原文英文 requirements、英文 company_summary、中文 reasons、中文 signals。设计上唯一的执拗：jd_summary 故意保留整段英文原文不浓缩。我要先看完整 context，再决定要不要反转 LLM 的 verdict。
 
@@ -124,6 +125,12 @@ flowchart LR
 
 *FIG.05：joba UI 端的实时监控。同一份事件流也通过 `page.evaluate` 推进 patchright tab 里一个 320 像素宽的浮窗（因为 ATS 站的 CSP 会 ban 掉 SSE 到 localhost）。Stop 按钮写 stop 文件，watchdog 在 200 ms 内 SIGTERM claude。*
 
-后两段还没动。Phase 3 是非 Easy Apply 的外部 ATS（Workday、Greenhouse、Lever），计划用 Skyvern attach 已经登录的 Chrome；触发条件是 candidates ≥ 10 加上看清主流 ATS 之后再做。Phase 4 是 reach out 半自动：定位 hiring manager，起草 connect 请求和 DM，丢进本地审查队列。DM 永远不自动发，这条是永久决策。Phase 5 是编排守门：launchd 9:30 启动、Stop hook、`audit.jsonl`、桌面通知、每日 digest，一条 `joba run-daily` 跑全流程。
+Phase 3 是 reach out 半自动，进行中。从 applied 卡片点「找人 reach out」，joba 调 `stickerdaniel/linkedin-mcp-server` 在同公司同地点找出三位 senior 或 manager，sonnet 起草一条 ≤200 字符、引用候选人具体经历的 connect note，「联络」tab 按 job 把草稿分组。点一次发送就在一个有头 patchright 串行处理：自动开 profile、点 Connect、paste note，**停下让我自己点 Send**，joba 永远不自动点对话框最终的 Send 按钮。当日 connect ≥ 5 强制停 + 通知。Phase 4 暂时不排：原本的「外部 ATS 全自动填表」因为大多数候选岗位虽然不是 Easy Apply 但成本对体量不划算，被降级；编排守门也丢进同一个 TBD 桶里。
 
-「全自动」对我的意义不是按一个按钮把 200 封简历发出去，而是这条管子没有任何一段在偷偷把一小时还给我。今天它在「外部 ATS、reach out、调度」三处漏。下面三个 Phase 是去把这三处堵掉。
+Phase 3 跑出来的第一条硬规则是 single session：任意时刻只让一个 patchright 进程跟 LinkedIn 通信。LinkedIn 风控把 cookie、浏览器指纹、并发请求模式三层信号叠加打分；两个并发的 patchright 在它眼里就是「两台设备同时在自动化」，跟它们各自拿什么 cookie 无关。`data/.linkedin_lock` 文件加 `flock` 让所有入口（discover、auto-apply、outreach、linkedin-mcp 子进程）启动前先 acquire；前端把所有「会启 patchright」的按钮按 lock 状态置灰。我 v0 写的「每天 ≤120 动作」counter 被证明是错的 frame：LinkedIn 看的是模式和信号叠加，不是请求总量。Mutex 串行 + 「收到一封警告邮件就停七天」取代了那条预算。
+
+第二条方法论是从清 Phase 2B 的 bug 清出来的：**backend 是真相，frontend 只是投影**。规则：跨刷新、跨 tab、由 backend 子进程产生的状态归 backend；前端只 own 输入草稿和 UI-local 交互态。任何 backend-owned 状态都要能从 status API（pull）或 SSE 流（必须支持 `Last-Event-ID` 重连重放）重新派生。Optimistic UI 只能作为下一次 reconcile 之前的"反应桥"，不能脱离 reconcile 单独存在。我 Phase 2B 的 bug 一半是这个原则的违例：`useState` 跟踪在跑的子进程、Dialog 一关就丢进度、SSE 每次 mount 重发全部事件。
+
+针对主号 LinkedIn 的浏览器自动化不是一个能彻底解决的问题，文章里也得这么写。我自己内部对「不被封」的诚实估计：第一周约 95%、第一个月约 85–90%、三个月约 70–80%、六个月约 50–65%。衰减不是请求频率，是模式累积，要几周尺度才稳。任何比这更精确的数字都是骗人的。硬缓解（mutex / ≤5 connect 每天 / URL 命中 `/checkpoint|/captcha|/uas/|/authwall` 立刻停 / 零重试 / 零自动 Send）能让曲线不崩，但真正的安全只有一种：LinkedIn 给警告邮件时认真读 + 立刻停七天。
+
+「全自动」对我的意义不是按一个按钮把 200 封简历发出去，而是这条管子没有任何一段在偷偷把一小时还给我。今天它端到端跑通到 Phase 3 的 dry-run、单日 reach-out 顶到五、每个入口都过同一把 lock。Phase 4 是什么，等 Phase 3 干净跑一周之后再选。
