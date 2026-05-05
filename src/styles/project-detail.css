@@ -259,6 +259,9 @@
 
 .project-detail__body {
   display: grid;
+  /* minmax(0, 1fr) keeps unbreakable inline children (long <code> tokens,
+     mermaid SVGs) from widening the entire grid track past its container. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-5);
   color: var(--color-fg);
   line-height: var(--line-height-relaxed);
@@ -360,6 +363,10 @@
   background: rgba(255, 255, 255, 0.06);
   border-radius: 3px;
   color: var(--color-fg);
+  /* Long unbreakable tokens (regex alternations, fully-qualified paths) get
+     to wrap instead of pushing the paragraph past the body width on mobile.
+     `<pre> code` is unaffected — code blocks scroll inside their own pre. */
+  overflow-wrap: anywhere;
 }
 
 /* -- Code block (Pygments via codehilite) -- */

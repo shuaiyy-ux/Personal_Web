@@ -33,6 +33,7 @@
   border: 1px solid var(--jb-border-strong);
   border-radius: 14px;
   box-shadow: 0 24px 48px -28px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
 }
 
 .joba-mock__head {
@@ -277,6 +278,8 @@
   display: flex;
   gap: 0.5rem;
   align-items: baseline;
+  flex-wrap: wrap;
+  min-width: 0;
   font-size: 11.5px;
   color: var(--jb-fg-dim);
   padding: 0.2rem 0;
@@ -302,6 +305,8 @@
   font-family: var(--jb-mono);
   color: var(--jb-fg);
   font-size: 11.5px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* ---------- mobile ---------- */
