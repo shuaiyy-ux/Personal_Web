@@ -36,4 +36,4 @@ The interactive loop is what makes the tool work as a tool. Pick a seed, get 20 
 
 The cluster training (triplet loss with a 2048→128 projection head over four hand-curated Rekordbox crates: Balie, HOUSE2, Hyperpop, and one carved out of my recent rotation) is a planned upgrade that learns my personal "fits next" function from the playlists I already saved. The unsupervised fusion is good enough that I have not needed it yet. Everything runs on disk on one machine. No upload, no API, no analytics: the music files are licensed and the embedding library is mine.
 
-`[VERIFY: actual track count in library_fusion.npz once I rerun build_fusion.py]`. `[VERIFY: how the trained projection head performs versus the raw fusion on a held-out 20 percent of each cluster]`. The qualitative claim that the tool works is solid. The numbers are the next thing on the list.
+The qualitative case is solid: pick a seed, build a usable 60-track set in five minutes, and the embedding catches adjacencies metadata never would. Whether a trained projection head over the four hand-curated crates beats raw fusion on held-out tracks is the next thing on the list.

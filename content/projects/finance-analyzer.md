@@ -50,4 +50,4 @@ Porting to the personal site was a deliberate downgrade in some directions and a
 
 What did not change is the algorithm: the document-level prompt, the per-company sentiment shape, the on-demand drilldown via embeddings + cosine top-k, the keyword extraction with a stop-word filter. The browser version uses the same chunk parameters (1600 / 220) so analysis on the same PDF produces the same chunks regardless of which version processed it.
 
-`[VERIFY: drift between local Next.js output and browser-port output on the same fixture, if any]`. `[VERIFY: how long the per-company drilldown takes on a typical 10-page transcript in the browser]`. `[VERIFY: real OpenAI cost per analyze + drill round when the user supplies their own key]`. The architecture is grounded in the real source on both sides; the numbers I will fill in once I have a stable sample.
+The architecture on both sides is grounded in the real source. What changed in the port is the trust boundary: server-side OpenAI key in the prototype, client-side bring-your-own-key in the static page; the algorithm parameters and the per-company sentiment shape are unchanged.

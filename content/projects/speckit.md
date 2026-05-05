@@ -26,4 +26,4 @@ For large features I slice into milestones where every milestone delivers a veri
 
 The full writeup is in the blog post: [Spec-Kit: Iteration, Planning, and TDD Notes](/blog/spec-kit/). It covers the change-request format I use in `spec.md`, the prompt templates I use to keep the agent on rails, the milestone slicing example for a signup feature, and the traceability rules that link each milestone back to its spec revision.
 
-`[VERIFY: how often the discipline catches the compress-red-green-loop failure mode in practice]`. `[VERIFY: any concrete metric on iteration time before vs. after the discipline]`. The qualitative argument is solid; the numbers I will fill in once I have a clean log of milestone runs.
+The qualitative argument is the one that matters here: every milestone I shipped under this discipline has a complete `spec.md → plan.md → tasks.md → tests → src` trail with the red phase explicitly captured, and that trail is what makes the next iteration cheap.

@@ -56,7 +56,7 @@ Segment one is discover plus judge. patchright launches a headed browser, reuses
   </ul>
 </div>
 
-*FIG.02: discover plus judge output. Each card carries the verdict chip, fingerprint, and the `claude` subprocess's reason in its own language (English for international shops, Chinese signals on the right). The verdict only sets the default; I can flip any card and `user_overridden=1` keeps the model from undoing me on the next sync.*
+*FIG.02: discover plus judge output. Each card carries the verdict chip, the `(company, title, city)` fingerprint, and a one-line Chinese reason from the `claude` subprocess (the full English jd_summary lives at the bottom of the same card, off-screen here). The verdict only sets the default; I can flip any card and `user_overridden=1` keeps the model from undoing me on the next sync.*
 
 Segment two is the draft surface. On an apply candidate I click "Apply Helper" and a Dialog opens with a cover letter (sonnet, generated against this specific job, cached on the fingerprint), seven fixed standard-answer templates (visa, YOE, salary, start date, work mode, personal info, cover letter bullets), plus the JD requirements and company summary side by side. This segment is not "fill the form for me". It is "put everything I need to copy-paste on one screen so the form fill below collapses to a clipboard exercise".
 

@@ -50,4 +50,4 @@ export function chunkText(text: string, options: ChunkOptions = {}): Chunk[] {
 
 没动的部分是算法：文档级 prompt、按公司情绪的形状、按需通过嵌入加余弦 top-k 做下钻、带停用词过滤的关键词抽取。浏览器版用同一组切块参数（1600 / 220），所以同一份 PDF 在两版上分块结果一致。
 
-`[VERIFY: 同一份 fixture 在本地 Next.js 输出和浏览器移植输出之间的偏差（如有）]`。`[VERIFY: 浏览器里对一份典型十页转录稿做按公司下钻的耗时]`。`[VERIFY: 用户自带 key 时，一次 analyze + drill 在 OpenAI 那边的真实成本]`。两边架构都基于真实代码，等我有一份稳定样本再把数字填上。
+两边架构都基于真实代码。移植时真正变的是信任边界：原型里 OpenAI key 在服务端，静态页里改成用户自带 key；切块参数和按公司情绪的形状没动。

@@ -310,6 +310,6 @@ cost / cycle       $0.1199   $0.0677    -44%
 
 合并那条路径背后挂了三道护栏。spawn 用 `--system-prompt` 完全替换 Claude Code 的默认 prompt，绝不用 `--append-system-prompt`，因为 append 会把默认那段「coding assistant」前导留在严格 JSON schema 之前，把它稀释（`daily-digest.ts:282` 行就有一条针对这个失败模式的注释）。parser 对每个顶层 key（`classifications`、`jobs`、`briefings`）独立处理：拿到的 key 写下来、缺的 key 留给下一次 prefetch 重试，因为触发条件（`needsLLM`、`maybe_work` 队列、stale briefing）依然成立。当合并 prompt 的用户内容超过 100K 字符（约 25K token）时，流水线 fallback 回原本的三 spawn 路径；`classifyEmailsWithLLM`、`drainMaybeWorkQueue`、`refreshStaleBriefings` 留着既是为这条 fallback，也是为那些 caller 触发的流，比如 `forceClassifyAsJob`（在某条会话上右键强制归到求职）和 Ask AI（这条故意保留一个真正的 `--resume` 聊天会话，因为它本质上就是对话式的）。
 
-在真邮箱上跑了三周，每天总开销稳在 15 分钟左右：早上读 3 分钟、中午 3 分钟、晚上 3 分钟，外加每段 2 分钟用来发和回。每周 80 到 140 条会话过分类器；我手工纠正其中 0.7%。日历视图把「那条 deadline 是什么时候」变成一次点击；求职板把求职邮箱从一条流变成一条被跟踪的管线。`[VERIFY: AI 草稿采纳率，目前没有干净的「原样发出」与「编辑后发出」的埋点]`。`[VERIFY: 每周抽到的日历事件数，以及在日期短语上的误报率]`。`[VERIFY: 看板自动阶段切换的正确率与覆写率]`。
+在真邮箱上跑了三周，每天总开销稳在 15 分钟左右：早上读 3 分钟、中午 3 分钟、晚上 3 分钟，外加每段 2 分钟用来发和回。每周 80 到 140 条会话过分类器；我手工纠正其中 0.7%。日历视图把「那条 deadline 是什么时候」变成一次点击；求职板把求职邮箱从一条流变成一条被跟踪的管线。
 
 部署 URL 是私有的，仅限我自己账户。如果想看演示，问我。

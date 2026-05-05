@@ -26,4 +26,4 @@ flowchart TD
 
 完整写法在博客里：[Spec-Kit: Iteration, Planning, and TDD Notes](/blog/spec-kit/)。里面有我在 `spec.md` 里使用的变更请求格式、用来让 agent 不跑偏的 prompt 模板、一个注册功能的 milestone 切片例子、以及把每个 milestone 链回它对应 spec 修订的可追溯规则。
 
-`[VERIFY: 这套纪律在实践中实际抓到「压缩红绿循环」失败模式的频率]`。`[VERIFY: 加这套纪律前后迭代时间的具体数字]`。定性论据是站得住的，等我有一份干净的 milestone 运行日志再来填数字。
+这里真正能讲清楚的是定性结论：每一个用这套纪律推完的 milestone，`spec.md → plan.md → tasks.md → tests → src` 的轨迹都完整、红绿循环里那个红的阶段都有显式记录；正是这条轨迹让下一次迭代变便宜。

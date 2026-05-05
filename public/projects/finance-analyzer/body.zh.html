@@ -38,4 +38,4 @@ flowchart LR
 <p><em>FIG.03：切块器契约。<code>chunking.test.ts</code> 里的覆盖率，是让我相信默认参数的依据。</em></p>
 <p>移植到个人站，几个方向是降级、几个方向是升级，都是刻意的。这个站是一个挂在 Vercel 上的静态 MPA，旁边没有服务端运行时。一个 Next.js API 路由意味着要么单独再部一份后端、要么我自己付所有人的 OpenAI 账单，两者都不符合「公开作品集工具」这个目标。所以移植把三件事推进了浏览器：PDF 抽取（把 <code>pdf-parse</code> 换成 <code>pdfjs-dist</code> 加 worker）、OpenAI 客户端（现在直接从页面跟 OpenAI 通信）、API key（存在 <code>sessionStorage</code> 里，关 tab 就清）。<code>zod</code> schema 变成手写的类型守卫，因为静态页里不打包校验器。两个路由处理函数变成一个 TS 入口里的两次函数调用，挂在 <code>/tools/finance-analyzer/</code>。</p>
 <p>没动的部分是算法：文档级 prompt、按公司情绪的形状、按需通过嵌入加余弦 top-k 做下钻、带停用词过滤的关键词抽取。浏览器版用同一组切块参数（1600 / 220），所以同一份 PDF 在两版上分块结果一致。</p>
-<p><code>[VERIFY: 同一份 fixture 在本地 Next.js 输出和浏览器移植输出之间的偏差（如有）]</code>。<code>[VERIFY: 浏览器里对一份典型十页转录稿做按公司下钻的耗时]</code>。<code>[VERIFY: 用户自带 key 时，一次 analyze + drill 在 OpenAI 那边的真实成本]</code>。两边架构都基于真实代码，等我有一份稳定样本再把数字填上。</p>
+<p>两边架构都基于真实代码。移植时真正变的是信任边界：原型里 OpenAI key 在服务端，静态页里改成用户自带 key；切块参数和按公司情绪的形状没动。</p>
