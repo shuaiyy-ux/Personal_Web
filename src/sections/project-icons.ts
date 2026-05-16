@@ -143,6 +143,23 @@ const iconJoba = `
   </svg>
 `;
 
+const iconHcaFleetAllocation = `
+  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M5 25 L7 21 Q8 19 10 19 L16 19 Q18 19 19 21 L21 25 Z" />
+    <circle cx="9" cy="27" r="2" />
+    <circle cx="17" cy="27" r="2" />
+    <circle cx="40" cy="10" r="3" />
+    <circle cx="40" cy="10" r="1" fill="currentColor" stroke="none" />
+    <circle cx="40" cy="24" r="3" />
+    <circle cx="40" cy="24" r="1" fill="currentColor" stroke="none" />
+    <circle cx="40" cy="38" r="3" />
+    <circle cx="40" cy="38" r="1" fill="currentColor" stroke="none" />
+    <path d="M22 23 Q30 16 37 11" opacity="0.65" />
+    <path d="M22 24 Q30 24 37 24" />
+    <path d="M22 25 Q30 32 37 37" opacity="0.65" />
+  </svg>
+`;
+
 const ICONS: Record<string, string> = {
   'sync-docs': iconSyncDocs,
   'flow-canvas': iconFlowCanvas,
@@ -154,6 +171,7 @@ const ICONS: Record<string, string> = {
   wakeup: iconWakeUp,
   'dj-selector': iconDjSelector,
   'social-platforms': iconSocialPlatforms,
+  'hca-fleet-allocation': iconHcaFleetAllocation,
 };
 
 export function projectIcon(id: string): string {
