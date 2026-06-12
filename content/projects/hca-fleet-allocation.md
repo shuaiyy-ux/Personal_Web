@@ -1,140 +1,223 @@
-A three month capstone for Hyundai Capital America's Fleet-as-a-Service (FaaS) program. I built a full stack vehicle redistribution system: a two stage Integer Linear Program over 650 grounded vehicles and 30 FaaS dealers, a four tab dashboard for the executive, operations, and analyst roles, an MCP-driven Claude chat agent, and a deployment kit that HCA can install themselves. The brief, redistribute grounded vehicles to maximize program rent against carrier and tax cost, would normally be closed out in dollars per car per month and dollars per mile. HCA never shared those two figures during the engagement. The product had to be honest about that gap and still ship.
+## TL;DL
 
-The decisions worth writing down are the ones that came out of the gap. Removing a synthetic revenue term once the operations lead flagged it had never been agreed with the business. Restructuring the score after a multiplicative scaling attempt failed. Overriding one optimization-derived weight when domain cost dominated by five to seven times. Designing the KPI surface so an executive could never misread a placeholder number as dollars.
+I was the project manager and technical lead for a three-month UCI capstone with Hyundai Capital America. We built FaaS AI, a working vehicle allocation tool for HCA's Fleet-as-a-Service team. The product helps operators choose where grounded vehicles should move next, compares nearest-dealer routing against optimized allocation, lets a human override the recommendation, and uses an agent to explain tradeoffs or propose reroutes.
 
-The data gap is the whole story. Every architectural choice came back to it: how the scoring formula was shaped, what the dashboard showed, how the handoff was packaged, what the methodology document was honest about. The objective HCA wanted was straightforward in concept (send each car to the dealer that maximizes long run profit). The objective I could compute was different, because revenue per car per month and carrier cost per mile were never disclosed. The product had to hold up against both versions of the objective: useful today against natural unit signals, ready to collapse to dollar profit the moment HCA shares the two figures.
+The outcome was concrete. We presented a live demo to HCA, won Best Capstone for the year in our program, and handed over a deployable package with data specs, scoring notes, benchmark evidence, and installation docs. Because this was a client-sponsored project, I generalize exact batch sizes, model parameters, and dollar assumptions for confidentiality; the page keeps the validation structure, baseline comparison, and directional business impact. Thank you to UCI for the capstone structure, and to Hyundai Capital America, especially the business, mobility, data science, and operations stakeholders who gave us the problem, feedback, and presentation time.
 
-## TL;DR
+<section class="hca-viz hca-impact" aria-label="HCA project impact summary">
+  <div class="hca-impact__item hca-impact__item--lead">
+    <span class="hca-impact__label">Recognition</span>
+    <strong>Best Capstone</strong>
+  </div>
+  <div class="hca-impact__item">
+    <span class="hca-impact__label">My role</span>
+    <strong>PM + Tech Lead</strong>
+  </div>
+  <div class="hca-impact__item">
+    <span class="hca-impact__label">Team</span>
+    <strong>5 people</strong>
+  </div>
+  <div class="hca-impact__item">
+    <span class="hca-impact__label">Validation data</span>
+    <strong>HCA synthetic replay</strong>
+  </div>
+  <div class="hca-impact__item">
+    <span class="hca-impact__label">Routing result</span>
+    <strong>Better-ranked route mix</strong>
+  </div>
+  <div class="hca-impact__item">
+    <span class="hca-impact__label">Annual tax estimate</span>
+    <strong>~$300K/year lower</strong>
+  </div>
+</section>
 
-1. **Context.** 650 grounded vehicles, 30 FaaS dealers, two stage ILP scored on utilization, demand, distance, and tax. No dollar inputs were ever delivered.
-2. **Stakeholders.** Four user roles, four tabs, chat agent disabled on the executive view by design.
-3. **Three product decisions.** Removed a synthetic revenue term (Apr 17). Restructured score from multiplicative to additive (Apr 21). Overrode one weight against the optimization output because real carrier cost dominated tax by five to seven times (Apr 24).
-4. **KPI surface.** Switched from raw allocation score to rank based metrics so the dashboard could not be misread as dollars.
-5. **Dependency management.** Treated the missing dollar inputs as explicit scaffolding with named collapse paths.
-6. **Delivery.** Handoff tarball, idempotent installer, 60 test contract suite, CSV schema spec that doubles as the data contract.
+*FIG.01: Award, role, validation source, and business impact. The benchmark figures use HCA-sponsored synthetic data; operating assumptions are generalized.*
 
-| Section | Topic |
-|---|---|
-| 1 | Four users, four tabs |
-| 2 | Three product decisions worth writing down |
-| 3 | Why the dashboard shows Rank, not Score |
-| 4 | Designing the system to absorb data it does not yet have |
-| 5 | Three month cadence at the commit level |
-| 6 | Packaging the capstone as a client deliverable |
-| 7 | Retrospective: three judgment calls, one open question |
+## The Problem
 
-## 1. Four users, four tabs
+HCA needs to decide where grounded vehicles should go across a dealer network. The simple answer is "send the car to the closest dealer." That is easy to explain, but it ignores utilization, rented demand, dealer capacity, distance, and property tax. A farther dealer can be the better destination if it has stronger demand or lower tax exposure. A dealer at capacity should block manual assignment unless a future waitlist signal justifies seeding inventory.
 
-```mermaid
-flowchart LR
-    EXEC[Executive sponsors] --> HOME[Home tab<br/>weekly savings vs Greedy<br/>8 week sparklines]
-    OPS[Operations lead] --> WEEKLY[Weekly Allocation tab<br/>per vehicle table<br/>Rank 1/2/3 + override]
-    ANA[Analyst] --> BATCH[Batch Overview tab<br/>ILP vs Greedy<br/>route map]
-    ENG[HCA engineering] --> SPEC[DATA_SOURCE_SPEC.md<br/>CSV contract]
-    HOME -.chat panel hidden.-> READONLY[read only by design]
-```
+The business goal was clear. The available data was not perfect. HCA did not provide two inputs that would close a true dollar-profit formula: rental revenue per car per month and carrier cost per mile. I treated that as a product constraint, not a footnote. The page and dashboard avoid fake-dollar KPIs and use rank, comparison, and method-level evidence instead.
 
-*FIG.01: Each user role maps to exactly one surface. The chat agent is removed from the executive view because a tool that can answer anything will eventually be asked something it cannot honestly answer.*
+## What We Built
 
-The Home tab is the executive view. The chat panel, a Claude driven agent that answers freeform questions about the fleet, is visible on the three working tabs and hidden on Home. Removing the affordance on that page is a deliberate scope decision: the read only surface protects the executive from a tool that has not earned that level of trust yet.
+<section class="hca-viz hca-agent-loop" aria-label="Agentic allocation decision loop">
+  <div class="hca-loop__center">
+    <span class="hca-loop__kicker">Agentic AI</span>
+    <strong>Human-in-the-loop allocation agent</strong>
+    <span>Reads allocation state, proposes reroutes, waits for operator approval.</span>
+  </div>
+  <ol class="hca-loop__steps">
+    <li>
+      <span>01</span>
+      <strong>Allocation state</strong>
+      <small>Selected vehicles, dealer capacity, solver output, manual overrides.</small>
+    </li>
+    <li>
+      <span>02</span>
+      <strong>Context check</strong>
+      <small>Constraint request, affected vehicles, current method, dealer status.</small>
+    </li>
+    <li>
+      <span>03</span>
+      <strong>Reroute proposal</strong>
+      <small>Alternate dealers with tradeoff reason and capacity warning.</small>
+    </li>
+    <li>
+      <span>04</span>
+      <strong>Human approval</strong>
+      <small>Apply suggestion, reject it, or keep the solver recommendation.</small>
+    </li>
+  </ol>
+</section>
 
-A second guardrail: chat is rate limited to three messages per session. Not because API calls cost much, but because the deployment uses a shared key, and a curious stakeholder clicking through the demo would otherwise charge the program for everyone else.
+*FIG.02: Allocation state moves from solver output to agent recommendation to operator approval. The agent can suggest reroutes, but approval stays with the user.*
 
-## 2. Three product decisions worth writing down
+<section class="hca-viz hca-workflow" aria-label="Four screen product workflow">
+  <article>
+    <span>Home</span>
+    <strong>Executive summary</strong>
+    <i></i><i></i><i></i>
+  </article>
+  <article>
+    <span>Fleet Inventory</span>
+    <strong>Select grounded vehicles</strong>
+    <i></i><i></i><i></i>
+  </article>
+  <article class="hca-workflow__focus">
+    <span>Weekly Allocation</span>
+    <strong>Compare methods and override</strong>
+    <i></i><i></i><i></i>
+  </article>
+  <article>
+    <span>Batch Overview</span>
+    <strong>Confirm routes and load</strong>
+    <i></i><i></i><i></i>
+  </article>
+</section>
 
-### Removing the synthetic revenue term (2026-04-17)
+*FIG.03: Product scope across dashboard review, weekly allocation, agent reroute, and handoff materials.*
 
-The V1 score had a revenue term: dealer utilization multiplied by an assumed per car monthly rental figure, generating a dollar denominated objective. The figure was synthetic, derived from public comparables, never confirmed by HCA.
+<section class="hca-viz hca-ui hca-ui-results" aria-label="Reconstructed allocation result UI">
+  <div class="hca-ui__chrome">
+    <span></span><span></span><span></span>
+    <strong>Weekly Allocation</strong>
+  </div>
+  <div class="hca-ui__toolbar">
+    <div>
+      <span class="hca-ui__label">Algorithm</span>
+      <span class="hca-ui__pill hca-ui__pill--active">Bucket ILP</span>
+      <span class="hca-ui__pill">Additive ILP</span>
+      <span class="hca-ui__pill">Nearest dealer</span>
+    </div>
+    <span class="hca-ui__pill hca-ui__pill--warn">Synthetic batch</span>
+  </div>
+  <div class="hca-ui__kpis">
+    <div><span>Assigned</span><strong>All selected</strong></div>
+    <div><span>Rank-1</span><strong>Majority</strong></div>
+    <div><span>Distance</span><strong>Controlled tradeoff</strong></div>
+    <div><span>Tax exposure</span><strong>Lower estimate</strong></div>
+  </div>
+  <div class="hca-ui__table">
+    <div class="hca-ui__row hca-ui__row--head">
+      <span>Vehicle group</span><span>Source</span><span>Recommendation</span><span>Choice</span>
+    </div>
+    <div class="hca-ui__row">
+      <span>Selected vehicles</span><span>Grounding area A</span><span>Dealer group B</span><span class="hca-rank">Rank 1</span>
+    </div>
+    <div class="hca-ui__row">
+      <span>Capacity-sensitive group</span><span>Grounding area C</span><span>Dealer group D</span><span class="hca-rank hca-rank--alt">Rank 2</span>
+    </div>
+    <div class="hca-ui__row hca-ui__row--note">
+      <span>Capacity warning</span><span>One dealer is near its slot limit; operator review required before confirmation.</span>
+    </div>
+  </div>
+</section>
 
-The operations lead said in a review that the synthetic number had never been agreed with the business and should not appear in any output. Two options: keep it with a footnote (ranking is preserved either way), or remove it.
+*FIG.04: Recreated allocation result table with algorithm modes, ranked dealer choices, and capacity notes. Values are synthetic and labels are generalized.*
 
-I removed it the same day. A dollar value an executive will quote in their next meeting cannot rely on a disclaimer to be safe. The replacement was a natural unit additive score, which eventually became the basis of the final model.
+<section class="hca-viz hca-ui hca-ui-agent" aria-label="Reconstructed agentic dialog UI">
+  <div class="hca-ui__chrome">
+    <span></span><span></span><span></span>
+    <strong>Allocation Agent</strong>
+  </div>
+  <div class="hca-chat">
+    <div class="hca-chat__bubble hca-chat__bubble--user">
+      Avoid a restricted destination state for this batch.
+    </div>
+    <div class="hca-chat__bubble hca-chat__bubble--agent">
+      I found affected vehicles in the current allocation state. Two recommendations should be rerouted before confirmation.
+    </div>
+    <div class="hca-agent-card">
+      <span class="hca-ui__label">Suggested action</span>
+      <strong>Apply alternate dealer group</strong>
+      <small>Reason: preserves capacity guardrail while keeping the assignment within the optimized candidate set.</small>
+    </div>
+    <div class="hca-chat__actions">
+      <span>Apply suggestion</span>
+      <span>Keep current route</span>
+    </div>
+  </div>
+</section>
 
-### Restructuring from multiplicative to additive (2026-04-21)
+*FIG.05: Recreated agent panel for a restricted-destination reroute. Vehicle and dealer labels are generalized.*
 
-The utilization signal needed to express two facts at once. High utilization rate is a good signal. A dealer with more cars actively earning is a stronger destination than a small dealer at the same rate. A three car dealer at 69 percent utilization has two cars earning. A 114 car dealer at 22 percent has 25. The latter is the better destination by any business reading of the data.
+The agent had context from the allocation state: selected vehicles, current method, latest solver output, manual overrides, and dealer status. In the live demo I asked it to avoid a restricted destination state. It identified affected cars, proposed alternate destinations, and let me apply those suggestions instead of manually editing each row.
 
-The first restructured form was multiplicative: `UTIL^β × (IN_SERVICE / median)^γ`. A 2,048 point Sobol sweep over `(β, γ)` collapsed γ to zero, which read as "size does not matter." Two defects explained the result. `IN_SERVICE` measures delivery state, not demand. And median normalization made every dealer's score depend on the rest of the data, breaking absolute comparisons.
+## Decisions I Owned
 
-The replacement was additive: `w_util × UTIL_RATE + w_rented × RENTED`. `RENTED` enters without normalization, so absolute demand survives any change in dealer mix. The four weights came from an 81,920 simulation 4-D Pareto knee sweep, geometrically closest point to a utopia corner in normalized outcome space. No weight was hand picked.
+I spent most of my time turning a technical optimizer into a product that business users could trust. The largest product decision was keeping the baseline visible. The nearest-dealer baseline gave HCA a familiar reference point, while ILP and bucket mode made the tradeoff more explicit. I also kept chat off the Home page because an executive summary should not invite open-ended questions before the agent earns trust.
 
-### Overriding the optimization output (2026-04-24)
+<section class="hca-viz hca-tradeoff" aria-label="Allocation method tradeoff matrix">
+  <div class="hca-tradeoff__header"></div>
+  <div class="hca-tradeoff__header">Nearest dealer</div>
+  <div class="hca-tradeoff__header">ILP</div>
+  <div class="hca-tradeoff__header">Agent</div>
+  <div class="hca-tradeoff__header">Human override</div>
 
-The Pareto sweep returned `w_dist = 3.827`. Real per mile carrier cost was 560 to 840 dollars per vehicle. Real annual property tax was around 115 dollars per vehicle. The sweep had given distance and tax equal weight by construction (defensible in natural units, wrong once mapped back to business cost).
+  <div class="hca-tradeoff__axis">Distance</div>
+  <div class="hca-dot hca-dot--strong"></div>
+  <div class="hca-dot hca-dot--strong"></div>
+  <div class="hca-dot hca-dot--medium"></div>
+  <div class="hca-dot hca-dot--medium"></div>
 
-I overrode `w_dist` to 15.0, recorded the override date, the original Pareto output, and the business reasoning. The override sits in the code next to the original value as a comment. The methodology document explains the override before it explains the sweep. A derivation that is not wrong is not the same as a derivation that is right.
+  <div class="hca-tradeoff__axis">Demand</div>
+  <div class="hca-dot hca-dot--weak"></div>
+  <div class="hca-dot hca-dot--strong"></div>
+  <div class="hca-dot hca-dot--medium"></div>
+  <div class="hca-dot hca-dot--weak"></div>
 
-## 3. Why the dashboard shows Rank, not Score
+  <div class="hca-tradeoff__axis">Utilization</div>
+  <div class="hca-dot hca-dot--weak"></div>
+  <div class="hca-dot hca-dot--strong"></div>
+  <div class="hca-dot hca-dot--medium"></div>
+  <div class="hca-dot hca-dot--weak"></div>
 
-The allocation score is a real number computed per `(vehicle, dealer)` pair, used inside the solver to rank candidates. It is not a dollar value. It is not comparable across vehicles. A Los Angeles car scoring 2.1 is not better placed than a Miami car scoring 1.4: Los Angeles has a denser set of busy dealers in range, so any Miami car will score lower. Miami's 1.4 may already be the best Miami can offer.
+  <div class="hca-tradeoff__axis">Capacity</div>
+  <div class="hca-dot hca-dot--weak"></div>
+  <div class="hca-dot hca-dot--strong"></div>
+  <div class="hca-dot hca-dot--strong"></div>
+  <div class="hca-dot hca-dot--strong"></div>
 
-The dashboard never shows raw score in a KPI position. Weekly Allocation surfaces two metrics: `% at Rank 1` (share of vehicles assigned to their top candidate) and `Avg Rank` (mean assigned rank across the batch). Both are interpretable without reading methodology. "Twelve of seventeen cars got their first choice" is a sentence anyone can read.
+  <div class="hca-tradeoff__axis">Tax exposure</div>
+  <div class="hca-dot hca-dot--weak"></div>
+  <div class="hca-dot hca-dot--strong"></div>
+  <div class="hca-dot hca-dot--medium"></div>
+  <div class="hca-dot hca-dot--weak"></div>
 
-Raw score appears as a small gray subtitle for auditability. Several stakeholders initially preferred a dollar denominated KPI, on the reasoning that finance speaks dollars. The counter argument was that a fake dollar number is worse than a real rank number, and the moment HCA shares real revenue and carrier rate, the score collapses to dollar profit per vehicle and the KPI conversion is a one line change.
+  <div class="hca-tradeoff__axis">Business constraint</div>
+  <div class="hca-dot hca-dot--none"></div>
+  <div class="hca-dot hca-dot--medium"></div>
+  <div class="hca-dot hca-dot--strong"></div>
+  <div class="hca-dot hca-dot--strong"></div>
+</section>
 
-## 4. Designing the system to absorb data it does not yet have
+*FIG.06: Decision responsibility by method. Nearest dealer covers proximity, ILP handles optimization signals, the agent handles exception reroutes, and the operator approves.*
 
-The two missing inputs are `$/car/month` rental revenue and `$/mile` carrier cost. The system was designed so that the moment either arrives, a small set of named coefficients are replaced and nothing else changes.
+The score surface also had to be honest. Raw score is not dollars and cannot be compared across vehicles. A Los Angeles car and a Miami car face different dealer networks, so I used rank and method comparison instead of pretending every score was a finance KPI. HCA engineering also needed a data contract, so the handoff named the synthetic inputs and the path for replacing them with real operational data.
 
-| Today's placeholder | What it becomes |
-|---|---|
-| `w_util` and `w_rented` weights | One revenue term: `$ per car per month` |
-| `DISTANCE_NORM` scaffolding | One cost term: `$ per mile × distance` |
-| `TAX_NORM` scaffolding | The existing dollar denominated tax term |
+## Evidence and Handoff
 
-*FIG.02: Every placeholder names the dollar input that retires it. The methodology document points at the exact code locations.*
+The final benchmark used HCA-sponsored synthetic data across repeated batch tests. Compared with the nearest-dealer baseline, optimized allocation produced a double-digit improvement in the benchmark objective and lowered estimated tax exposure. The annualized tax-exposure reduction was in the six-figure range in the synthetic tests. I keep the exact batch sizes, model weights, and dollar assumptions generalized because the project was client-sponsored; the important evidence is the validation structure, baseline comparison, and directional business impact.
 
-The naming is the contract. `w_util` is not "the utility weight," it is the placeholder that disappears when `$/car/month` arrives. The same posture shows up in the data interface. The engine reads nine CSVs from `data_csv/`. `DATA_SOURCE_SPEC.md` specifies filenames, columns, types, conventions (ZIP zero padded, utilization on 0 to 100 not 0 to 1, dealer codes prefixed `FD`). The spec is the data contract. HCA engineering rewrites the source CSVs against this contract and the system runs. `scripts/data_migration.py validate <dir>` reports schema drift before the engine starts.
-
-## 5. Three month cadence at the commit level
-
-| Period | Phase |
-|---|---|
-| 2026-02-26 to 2026-03-13 | Data exploration, schema design, ILP vs Greedy baseline |
-| 2026-03-20 | Full stack MVP (FastAPI backend, vanilla JS UI, agent chat) |
-| 2026-03-23 | Streaming SSE rebuild, dashboard fixes, drivable miles distance matrix |
-| 2026-04-10 to 2026-04-14 | V2 engine refactor, tax column, audit pass |
-| 2026-04-17 | Synthetic revenue term removed after operations review |
-| 2026-04-21 | Multiplicative scoring retired, additive form adopted, 4-D Pareto sweep |
-| 2026-04-24 | `w_dist` override applied |
-| 2026-04-28 | Watchlist anomaly module |
-| 2026-05-13 to 2026-05-16 | Deployment kit packaged, handoff tarball built |
-
-*FIG.03: 61 commits across the engagement. The largest design changes were a single week (April 17 to 24). Momentum returned because the surrounding system was stable enough to keep working while the engine was being replaced.*
-
-## 6. Packaging the capstone as a client deliverable
-
-```bash
-$ ./start.sh
-[install] venv created at .venv
-[install] 47 packages installed from app/requirements.txt
-[server] port 8000 free
-[server] FastAPI started on http://localhost:8000
-[server] MCP endpoint mounted at /mcp (14 tools)
-[browser] opened http://localhost:8000
-
-$ .venv/bin/python -m pytest app/tests/ -q
-.......................................................... 60 passed in 41.2s
-```
-
-*FIG.04: One command brings up the full stack on macOS, Linux, or Windows. 60 contract tests verify the install before HCA touches a button.*
-
-The handoff layer:
-
-1. `start.sh` and `bootstrap.py` are one command launchers. Both create the virtual environment if missing, install dependencies, free port 8000, and start the server. `bootstrap.py` runs on Windows too.
-2. `deploy/` contains a 323 line installation guide, a systemd unit file, an idempotent installer, and a packer that produces a 532 KB tarball without development cruft.
-3. `app/tests/` contains 60 pytest contract tests covering engine, REST endpoints, SSE chat, and MCP server. Suite runs in under a minute.
-4. `DATA_SOURCE_SPEC.md` is the data contract. The validation script fails fast on schema drift.
-5. `Reset` is a UI button. Fleet inventory CSV restores from a checked in baseline, so the demo is repeatable.
-
-## 7. Retrospective: three judgment calls, one open question
-
-Three calls I will reuse on the next engagement:
-
-1. **Cut the synthetic revenue term the same day the operations lead flagged it.** A dollar number an executive will quote is load bearing. A footnote is not a fix.
-2. **Choose Rank over Score for the executive facing KPI.** The cost was internal disagreement. The benefit is a dashboard that cannot be misread, and a one line conversion to dollars when HCA delivers the real inputs.
-3. **Treat the missing dollar inputs as scaffolding with documented collapse paths.** The model is honest about what it does not know. The system is structured to absorb the answers when they arrive.
-
-The open question: the additive form cannot answer "plus ten percent utilization is worth how many miles" without HCA's dollar inputs. The next iteration replaces the continuous utilization signal with a four tier bucket classification, so the question becomes "Tier 1 versus Tier 2 is worth how many miles." Categorical, business actionable, defensible without dollar inputs. The trade off is loss of intra tier discrimination and possible worsening of dealer concentration. Whether the trade is worth taking does not get decided on a whiteboard. It gets decided after a sweep across the same 80 fleet scenarios that calibrated the current model.
-
-The capstone closes here. The data contract, the test suite, and the scaffolding around the missing inputs are what let the next iteration start from a known position rather than from scratch.
+The handoff package mattered as much as the demo. We delivered a deployable app, documentation, scoring notes, a data source spec, validation CSVs, and setup scripts. HCA stakeholders immediately discussed extensions into waitlists, real-time utilization, remarketing, pricing, insurance, title, registration, and other OEM-approved use cases. That was the strongest signal that the product was framed correctly: the conversation moved from "does this work" to "what should we plug in next."

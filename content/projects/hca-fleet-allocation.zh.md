@@ -1,140 +1,223 @@
-为 Hyundai Capital America 的 Fleet-as-a-Service（FaaS）项目做的三个月 capstone。我搭了一套完整的车辆重新分配系统：一个对 650 辆停场车与 30 家 FaaS 经销商求解的两阶段整数线性规划、一个面向执行层与运营、分析三类角色的四 tab dashboard、一个由 MCP 驱动的 Claude chat agent，以及一份 HCA 自己能装上的部署包。这道题在概念上很清楚：把停场车重新分配，最大化项目租金，扣除承运成本与州属性税。常规做法会用每车每月美元租金和每英里美元承运费率把目标函数算清楚。HCA 整个 engagement 期间没有交付这两个数字。产品必须对这个缺口诚实，并且仍然交付。
+## TL;DL
 
-值得写下来的几个决策都来自这个缺口。运营负责人指出合成的收入项从来没和业务对过当天，我把它移除。第一次乘性归一化失败之后，把评分公式改成加性结构。当优化算法给出的距离权重与真实承运成本量级差五到七倍时，我手工覆盖了那一项。KPI 表层从一开始就设计成 executive 不会把占位数字误读为美元。
+这是我在 UCI capstone 里为 Hyundai Capital America 做的三个月项目。我担任 project manager 和 technical lead。我们做了 FaaS AI，一个面向 HCA Fleet-as-a-Service 团队的车辆分配工具。它帮助运营人员判断停场车辆下一步应该流向哪里，对比最近经销商路线和优化分配结果，允许人手工覆盖建议，并用 agent 解释 tradeoff 或提出 reroute。
 
-数据缺口是整个故事。所有架构选择最后都回到这一点：评分公式怎么搭、dashboard 显示什么、handoff 怎么打包、方法学文档对哪些事情态度诚实。HCA 想要的目标在概念上很清楚（把每辆车送到长期利润最大化的经销商）。我实际能算的目标和这个不一样，因为每车每月的租金和每英里的承运费率没有交付。产品需要对两版目标函数同时成立：今天在自然单位下能用；HCA 一旦交付两个美元数字，整个评分就能 collapse 成每车的美元利润。
+结果是可验证的。我们向 HCA 做了 live demo，拿到本专业年度 Best Capstone，并交付了一套可以部署的包，包括 data spec、scoring notes、benchmark evidence 和 installation docs。因为这是 client-sponsored project，我在这里对 exact batch size、model parameter 和 dollar assumption 做脱敏处理；页面保留 validation structure、baseline comparison 和 directional business impact。感谢 UCI 提供 capstone 机制，也感谢 Hyundai Capital America 的 business、mobility、data science、operations stakeholder 给出问题、反馈和最终展示机会。
 
-## TL;DR
+<section class="hca-viz hca-impact" aria-label="HCA project impact summary">
+  <div class="hca-impact__item hca-impact__item--lead">
+    <span class="hca-impact__label">Recognition</span>
+    <strong>Best Capstone</strong>
+  </div>
+  <div class="hca-impact__item">
+    <span class="hca-impact__label">My role</span>
+    <strong>PM + Tech Lead</strong>
+  </div>
+  <div class="hca-impact__item">
+    <span class="hca-impact__label">Team</span>
+    <strong>5 people</strong>
+  </div>
+  <div class="hca-impact__item">
+    <span class="hca-impact__label">Validation data</span>
+    <strong>HCA synthetic replay</strong>
+  </div>
+  <div class="hca-impact__item">
+    <span class="hca-impact__label">Routing result</span>
+    <strong>Better-ranked route mix</strong>
+  </div>
+  <div class="hca-impact__item">
+    <span class="hca-impact__label">Annual tax estimate</span>
+    <strong>~$300K/year lower</strong>
+  </div>
+</section>
 
-1. **背景。** 650 辆停场车、30 家 FaaS 经销商，两阶段 ILP 评分项包括利用率、需求、距离、税。两个美元口径输入从未交付。
-2. **Stakeholder。** 四类用户角色对应四个 tab，executive 视图上故意把 chat agent 关掉。
-3. **三个产品决策。** 4 月 17 日移除合成的收入项；4 月 21 日把评分从乘性结构改成加性结构；4 月 24 日基于真实承运成本，手工覆盖优化算法给出的距离权重。
-4. **KPI 表层。** 从原始 score 切到基于 rank 的指标，让 dashboard 不会被读成美元。
-5. **依赖管理。** 把缺失的美元输入做成显式脚手架，每个占位权重都标注了 collapse 路径。
-6. **交付。** 一个 handoff tarball、一份幂等安装脚本、60 个用例的契约测试、一份既是 schema 又是数据契约的 CSV 规范。
+*FIG.01：奖项、角色、验证来源和业务影响。Benchmark figures 使用 HCA-sponsored synthetic data；operating assumptions 已泛化。*
 
-| 章节 | 主题 |
-|---|---|
-| 1 | 四类用户，四个 tab |
-| 2 | 三个值得写下来的产品决策 |
-| 3 | 为什么 dashboard 显示 Rank，不显示 Score |
-| 4 | 让系统能承载尚未到手的数据 |
-| 5 | 三个月节奏，按 commit 看 |
-| 6 | 把 capstone 包装成客户交付件 |
-| 7 | 复盘：三个判断和一个未决问题 |
+## 问题
 
-## 1. 四类用户，四个 tab
+HCA 需要决定停场车辆应该流向经销商网络里的哪个地点。最简单的答案是“送到最近的 dealer”。这个规则容易解释，但它忽略了 utilization、rented demand、dealer capacity、distance 和 property tax。更远的 dealer 可能因为需求更强或税务暴露更低而更合适。已经满容量的 dealer 应该阻止手工分配，除非未来 waitlist 信号证明它值得提前补车。
 
-```mermaid
-flowchart LR
-    EXEC[执行层 sponsor] --> HOME[Home tab<br/>每周节省 vs Greedy<br/>8 周 sparkline]
-    OPS[运营负责人] --> WEEKLY[Weekly Allocation tab<br/>逐车表格<br/>Rank 1/2/3 + 覆盖]
-    ANA[分析师] --> BATCH[Batch Overview tab<br/>ILP vs Greedy<br/>路线地图]
-    ENG[HCA 工程方] --> SPEC[DATA_SOURCE_SPEC.md<br/>CSV 契约]
-    HOME -.chat 面板隐藏.-> READONLY[默认只读]
-```
+业务目标很清楚，但可用数据并不完美。HCA 没有提供两个能闭合真实美元利润公式的输入：每车每月租金收入、每英里承运成本。我把这件事当成产品约束，而不是脚注。页面和 dashboard 都避免 fake-dollar KPI，改用 rank、method comparison 和 benchmark evidence。
 
-*FIG.01：每类用户角色对应一个界面。Home 上不放 chat agent，是因为一个能回答任意问题的工具，迟早会被问到它无法诚实回答的问题。*
+## 我们做了什么
 
-Home 是执行层的视图。Chat 面板是一个由 Claude 驱动的 agent，回答关于车队的自由问题，出现在三个工作 tab 上，在 Home 上被隐藏。在执行层视图把入口去掉是有意识的范围决策：只读界面在 agent 还没建立起足够信任之前先保护 executive。
+<section class="hca-viz hca-agent-loop" aria-label="Agentic allocation decision loop">
+  <div class="hca-loop__center">
+    <span class="hca-loop__kicker">Agentic AI</span>
+    <strong>Human-in-the-loop allocation agent</strong>
+    <span>读取 allocation state，提出 reroute，等待 operator approval。</span>
+  </div>
+  <ol class="hca-loop__steps">
+    <li>
+      <span>01</span>
+      <strong>Allocation state</strong>
+      <small>已选车辆、dealer capacity、solver output、manual overrides。</small>
+    </li>
+    <li>
+      <span>02</span>
+      <strong>Context check</strong>
+      <small>约束请求、受影响车辆、当前方法、dealer status。</small>
+    </li>
+    <li>
+      <span>03</span>
+      <strong>Reroute proposal</strong>
+      <small>替代 dealer、tradeoff reason、capacity warning。</small>
+    </li>
+    <li>
+      <span>04</span>
+      <strong>Human approval</strong>
+      <small>应用 suggestion，拒绝 suggestion，或保留 solver recommendation。</small>
+    </li>
+  </ol>
+</section>
 
-第二道护栏：chat 限速三条消息一个 session。原因不是 API 调用很贵，是部署用的是共享 API key，演示中一个好奇的 stakeholder 一直点下去，账单就由项目承担了。
+*FIG.02：Allocation state 从 solver output 进入 agent recommendation，再到 operator approval。Agent 可以建议 reroute，但 approval 留给用户。*
 
-## 2. 三个值得写下来的产品决策
+<section class="hca-viz hca-workflow" aria-label="Four screen product workflow">
+  <article>
+    <span>Home</span>
+    <strong>Executive summary</strong>
+    <i></i><i></i><i></i>
+  </article>
+  <article>
+    <span>Fleet Inventory</span>
+    <strong>Select grounded vehicles</strong>
+    <i></i><i></i><i></i>
+  </article>
+  <article class="hca-workflow__focus">
+    <span>Weekly Allocation</span>
+    <strong>Compare methods and override</strong>
+    <i></i><i></i><i></i>
+  </article>
+  <article>
+    <span>Batch Overview</span>
+    <strong>Confirm routes and load</strong>
+    <i></i><i></i><i></i>
+  </article>
+</section>
 
-### 移除合成的收入项（2026-04-17）
+*FIG.03：产品范围覆盖 dashboard review、weekly allocation、agent reroute 和 handoff materials。*
 
-V1 评分公式包含一个收入项：经销商利用率乘以一个假定的每车每月租金，得到一个美元口径的目标。这个数字是合成的，来自公开行业可比口径，HCA 从未确认。
+<section class="hca-viz hca-ui hca-ui-results" aria-label="Reconstructed allocation result UI">
+  <div class="hca-ui__chrome">
+    <span></span><span></span><span></span>
+    <strong>Weekly Allocation</strong>
+  </div>
+  <div class="hca-ui__toolbar">
+    <div>
+      <span class="hca-ui__label">Algorithm</span>
+      <span class="hca-ui__pill hca-ui__pill--active">Bucket ILP</span>
+      <span class="hca-ui__pill">Additive ILP</span>
+      <span class="hca-ui__pill">Nearest dealer</span>
+    </div>
+    <span class="hca-ui__pill hca-ui__pill--warn">Synthetic batch</span>
+  </div>
+  <div class="hca-ui__kpis">
+    <div><span>Assigned</span><strong>All selected</strong></div>
+    <div><span>Rank-1</span><strong>Majority</strong></div>
+    <div><span>Distance</span><strong>Controlled tradeoff</strong></div>
+    <div><span>Tax exposure</span><strong>Lower estimate</strong></div>
+  </div>
+  <div class="hca-ui__table">
+    <div class="hca-ui__row hca-ui__row--head">
+      <span>Vehicle group</span><span>Source</span><span>Recommendation</span><span>Choice</span>
+    </div>
+    <div class="hca-ui__row">
+      <span>Selected vehicles</span><span>Grounding area A</span><span>Dealer group B</span><span class="hca-rank">Rank 1</span>
+    </div>
+    <div class="hca-ui__row">
+      <span>Capacity-sensitive group</span><span>Grounding area C</span><span>Dealer group D</span><span class="hca-rank hca-rank--alt">Rank 2</span>
+    </div>
+    <div class="hca-ui__row hca-ui__row--note">
+      <span>Capacity warning</span><span>一个 dealer 接近 slot limit，需要 operator 在确认前复核。</span>
+    </div>
+  </div>
+</section>
 
-运营负责人在评审里指出，这个合成数字"我们从来没和业务侧对过"，不应该出现在任何输出里。两个选项：留下加脚注（无论留或不留，排序结果都成立），或者移除。
+*FIG.04：复现的 allocation result table，包含 algorithm modes、ranked dealer choices 和 capacity notes。Values 为 synthetic，labels 已泛化。*
 
-我当天移除了。一个 executive 会在下一个会议里引用的美元数字，不能依靠免责声明来保证安全。替换方案是自然单位下的加性 score，这个方案后来演化成了最终模型。
+<section class="hca-viz hca-ui hca-ui-agent" aria-label="Reconstructed agentic dialog UI">
+  <div class="hca-ui__chrome">
+    <span></span><span></span><span></span>
+    <strong>Allocation Agent</strong>
+  </div>
+  <div class="hca-chat">
+    <div class="hca-chat__bubble hca-chat__bubble--user">
+      Avoid a restricted destination state for this batch.
+    </div>
+    <div class="hca-chat__bubble hca-chat__bubble--agent">
+      I found affected vehicles in the current allocation state. Two recommendations should be rerouted before confirmation.
+    </div>
+    <div class="hca-agent-card">
+      <span class="hca-ui__label">Suggested action</span>
+      <strong>Apply alternate dealer group</strong>
+      <small>Reason: preserves capacity guardrail while keeping the assignment within the optimized candidate set.</small>
+    </div>
+    <div class="hca-chat__actions">
+      <span>Apply suggestion</span>
+      <span>Keep current route</span>
+    </div>
+  </div>
+</section>
 
-### 从乘性结构改造成加性结构（2026-04-21）
+*FIG.05：复现的 agent panel，展示 restricted-destination reroute。Vehicle 和 dealer labels 已泛化。*
 
-利用率信号需要同时表达两件事。高利用率是一个好信号；同样利用率下，绝对在租车辆数更多的经销商是更强的目的地。一家三车经销商 69% 利用率代表两辆在租。一家 114 车经销商 22% 利用率代表 25 辆在租。按业务理解，后者明显更值。
+Agent 拿到的是 allocation state：已选车辆、当前方法、最新 solver output、manual overrides、dealer status。Live demo 里我让它避开一个受限目的州。它找出受影响车辆，提出替代目的地，并允许我点击 suggestion 应用，而不是逐行手改。
 
-第一次改造用了乘性形式：`UTIL^β × (IN_SERVICE / median)^γ`。在 `(β, γ)` 上做一次 2,048 点的 Sobol 扫描，结果 γ 收敛到 0，读出来等于"规模无关"。两个缺陷解释了这个结果。`IN_SERVICE` 衡量的是交付状态，不是需求。按 median 归一化让每家经销商的得分依赖于其他经销商的数据，绝对量级的比较被破坏。
+## 我负责的关键决策
 
-替换方案是加性结构：`w_util × UTIL_RATE + w_rented × RENTED`。`RENTED` 不做归一化进入公式，所以无论经销商组合怎么变，绝对需求都被保留。四个权重来自一次 81,920 次仿真的 4-D Pareto knee 扫描，定义是在归一化结果空间里到 utopia 角的几何最近点。没有任何权重是手调的。
+我大部分时间花在把技术 optimizer 变成业务用户可以相信的产品。最重要的产品决策是保留 baseline。Nearest-dealer baseline 给 HCA 一个熟悉的对照点，ILP 和 bucket mode 则把 tradeoff 展开。我也没有把 chat 放在 Home 页面，因为 executive summary 不应该在 agent 建立信任前引导开放式提问。
 
-### 覆盖优化算法的输出（2026-04-24）
+<section class="hca-viz hca-tradeoff" aria-label="Allocation method tradeoff matrix">
+  <div class="hca-tradeoff__header"></div>
+  <div class="hca-tradeoff__header">Nearest dealer</div>
+  <div class="hca-tradeoff__header">ILP</div>
+  <div class="hca-tradeoff__header">Agent</div>
+  <div class="hca-tradeoff__header">Human override</div>
 
-Pareto 扫描给出 `w_dist = 3.827`。真实的每英里承运成本是每辆车 560 到 840 美元，真实的年属性税是每辆车约 115 美元。扫描在自然单位下默认给距离和税同等量级权重（在自然单位下合理，还原到真实业务成本时不成立）。
+  <div class="hca-tradeoff__axis">Distance</div>
+  <div class="hca-dot hca-dot--strong"></div>
+  <div class="hca-dot hca-dot--strong"></div>
+  <div class="hca-dot hca-dot--medium"></div>
+  <div class="hca-dot hca-dot--medium"></div>
 
-我把 `w_dist` 覆盖为 15.0，记录了覆盖日期、原始 Pareto 输出值、业务理由。代码里覆盖项旁边注释着原值。方法学文档先讲覆盖再讲扫描。一个推导没有错，不等于这个推导是对的。
+  <div class="hca-tradeoff__axis">Demand</div>
+  <div class="hca-dot hca-dot--weak"></div>
+  <div class="hca-dot hca-dot--strong"></div>
+  <div class="hca-dot hca-dot--medium"></div>
+  <div class="hca-dot hca-dot--weak"></div>
 
-## 3. 为什么 dashboard 显示 Rank，不显示 Score
+  <div class="hca-tradeoff__axis">Utilization</div>
+  <div class="hca-dot hca-dot--weak"></div>
+  <div class="hca-dot hca-dot--strong"></div>
+  <div class="hca-dot hca-dot--medium"></div>
+  <div class="hca-dot hca-dot--weak"></div>
 
-Allocation score 是一个实数，按 `(车, 经销商)` 对计算，用来在求解器内部对候选排序。它不是美元金额。它也不能跨车比较。一辆洛杉矶得分 2.1 的车并不比一辆迈阿密得分 1.4 的车安置得更好：洛杉矶在驾驶半径内有更多繁忙的经销商，任何迈阿密的车都会得分更低。迈阿密的 1.4 可能已经是迈阿密能给出的最优解。
+  <div class="hca-tradeoff__axis">Capacity</div>
+  <div class="hca-dot hca-dot--weak"></div>
+  <div class="hca-dot hca-dot--strong"></div>
+  <div class="hca-dot hca-dot--strong"></div>
+  <div class="hca-dot hca-dot--strong"></div>
 
-Dashboard 在任何 KPI 位置都不显示原始 score。Weekly Allocation 上的两个指标是 `% at Rank 1`（被分配到首选经销商的车辆比例）和 `Avg Rank`（一批中所有已分配车辆的平均 rank）。这两个数字不需要读方法学文档也能解读。"17 辆车里有 12 辆拿到了首选"是一句任何人都看得懂的话。
+  <div class="hca-tradeoff__axis">Tax exposure</div>
+  <div class="hca-dot hca-dot--weak"></div>
+  <div class="hca-dot hca-dot--strong"></div>
+  <div class="hca-dot hca-dot--medium"></div>
+  <div class="hca-dot hca-dot--weak"></div>
 
-原始 score 作为灰色小字 subtitle 出现，仅用于审计。内部有 stakeholder 倾向于美元口径 KPI，理由是财务的人讲美元。反方理由：一个假美元数字比一个真 rank 数字更糟；HCA 一旦交付真实 revenue 和承运费率，score 自动 collapse 成每车的美元利润，KPI 一行代码就能切换。
+  <div class="hca-tradeoff__axis">Business constraint</div>
+  <div class="hca-dot hca-dot--none"></div>
+  <div class="hca-dot hca-dot--medium"></div>
+  <div class="hca-dot hca-dot--strong"></div>
+  <div class="hca-dot hca-dot--strong"></div>
+</section>
 
-## 4. 让系统能承载尚未到手的数据
+*FIG.06：各方法的 decision responsibility。Nearest dealer 负责 proximity，ILP 处理 optimization signals，agent 处理 exception reroutes，operator 负责 approval。*
 
-缺失的两个输入是每车每月 `$/car/month` 的租金收入和每英里 `$/mile` 的承运成本。系统的设计目标是：这两个输入任意一个到手时，只需要替换少量被命名的系数，其他什么都不需要改。
+Score 表层也必须诚实。Raw score 不是美元，也不能跨车辆比较。Los Angeles 的车和 Miami 的车面对的是不同 dealer network，所以我使用 rank 和 method comparison，而不是把每个 score 包装成 finance KPI。HCA 工程团队也需要 data contract，因此 handoff 明确标出 synthetic input，以及将来用真实运营数据替换它们的路径。
 
-| 当前的占位符 | 收到真实数据后变成什么 |
-|---|---|
-| `w_util` 和 `w_rented` 权重 | 一个收入项：`$ per car per month` |
-| `DISTANCE_NORM` 脚手架 | 一个成本项：`$ per mile × distance` |
-| `TAX_NORM` 脚手架 | 现有的美元口径税项 |
+## 证据和交付
 
-*FIG.02：每个占位符的命名直接指向能让它退役的那个美元输入。方法学文档列出了将要改动的精确代码位置。*
+最终 benchmark 使用 HCA-sponsored synthetic data，覆盖 repeated batch tests。和 nearest-dealer baseline 相比，optimized allocation 让 benchmark objective 出现 double-digit improvement，并降低 estimated tax exposure。Synthetic tests 里的 annualized tax-exposure reduction 是 six-figure range。我在这里对 exact batch size、model weight 和 dollar assumption 做脱敏处理，因为项目由 client sponsor；真正重要的 evidence 是 validation structure、baseline comparison 和 directional business impact。
 
-命名就是契约。`w_util` 不是"效用权重"，它是 `$/car/month` 到手时会消失的占位符。同样的设计姿态体现在数据接口上。引擎从 `data_csv/` 读取九份 CSV。`DATA_SOURCE_SPEC.md` 规定文件名、列名、类型、约定（ZIP 必须前导补零、利用率按 0 到 100 不是 0 到 1、FaaS 经销商代码以 `FD` 开头）。这份 spec 就是数据契约。HCA 工程方按这份契约重写来源 CSV，系统直接运行。`scripts/data_migration.py validate <dir>` 在引擎开始执行之前报告 schema 漂移。
-
-## 5. 三个月节奏，按 commit 看
-
-| 时段 | 阶段 |
-|---|---|
-| 2026-02-26 至 2026-03-13 | 数据探索、schema 设计、ILP 与 Greedy baseline |
-| 2026-03-20 | 全栈 MVP（FastAPI 后端、原生 JS UI、agent chat） |
-| 2026-03-23 | 流式 SSE 重写、dashboard 修复、距离矩阵改为可驾驶英里 |
-| 2026-04-10 至 2026-04-14 | V2 引擎重构、税列接入、审计走查 |
-| 2026-04-17 | 运营负责人评审后移除合成的收入项 |
-| 2026-04-21 | 乘性评分淘汰，改为加性结构，运行 4-D Pareto 扫描 |
-| 2026-04-24 | `w_dist` 覆盖落地 |
-| 2026-04-28 | Watchlist 异常检测模块接入 |
-| 2026-05-13 至 2026-05-16 | 部署包打包，handoff tarball 装载 |
-
-*FIG.03：engagement 期间共 61 次 commit。最大的设计变更集中在一周内（4 月 17 至 24 日）。节奏能回来，是因为外围系统稳定到引擎被替换时仍然独立运行。*
-
-## 6. 把 capstone 包装成客户交付件
-
-```bash
-$ ./start.sh
-[install] venv created at .venv
-[install] 47 packages installed from app/requirements.txt
-[server] port 8000 free
-[server] FastAPI started on http://localhost:8000
-[server] MCP endpoint mounted at /mcp (14 tools)
-[browser] opened http://localhost:8000
-
-$ .venv/bin/python -m pytest app/tests/ -q
-.......................................................... 60 passed in 41.2s
-```
-
-*FIG.04：一条命令在 macOS、Linux 或 Windows 上启动全栈。60 个契约测试在 HCA 触碰按钮之前先验证安装。*
-
-交付层包括：
-
-1. `start.sh` 与 `bootstrap.py` 是一行命令的启动器。两个脚本都会在缺失时建虚拟环境、装依赖、释放 8000 端口、启动服务。`bootstrap.py` 也在 Windows 上独立运行。
-2. `deploy/` 目录包含 323 行的部署指南、systemd unit、幂等安装脚本、以及一个把应用打成 532 KB tarball 的打包器，不含开发周边。
-3. `app/tests/` 包含 60 个 pytest 契约测试，覆盖引擎、REST 端点、SSE chat、MCP 服务器。完整套件一分钟内执行完毕。
-4. `DATA_SOURCE_SPEC.md` 是数据契约。校验脚本在 schema 漂移时尽早失败。
-5. `Reset` 是 UI 上的一个按钮。Fleet 库存 CSV 从签入的 baseline 恢复，演示可重复执行。
-
-## 7. 复盘：三个判断和一个未决问题
-
-下一个 engagement 我会复用的三个判断：
-
-1. **运营负责人指出问题的当天就把合成收入项切掉。** 一个 executive 会引用的美元数字是产品里承载性最强的元素。脚注不是修复。
-2. **选 Rank 而不是 Score 作为面向 executive 的 KPI。** 代价是内部分歧。收益是 dashboard 不会被读错，并且 HCA 交付真实输入时 KPI 切换只需要一行代码。
-3. **把缺失的美元输入当作有 collapse 路径的脚手架。** 模型对自己不知道的事情态度诚实，系统结构允许真实数据到来时直接承载。
-
-未决的问题：加性结构在没有真实美元输入时回答不了"+10% 利用率值多少英里"。下一轮迭代用四档分桶分类来替换连续利用率信号，问题就变成"Tier 1 比 Tier 2 值多少英里"。问题转成离散类别后，业务上可执行，没有美元数据也能辩护。代价是 tier 内部失去区分度，并且可能让经销商集中度变差。这个权衡值不值得，不会在白板上决定，会在和当前模型同样的 80 个 fleet 场景扫描结果上决定。
-
-Capstone 在这里收尾。数据契约、测试套件、围绕缺失输入搭起的脚手架，让下一轮迭代能从一个已知位置起步，而不是从零开始。
+Handoff 和 demo 一样重要。我们交付了可部署 app、documentation、scoring notes、data source spec、validation CSVs 和 setup scripts。HCA stakeholder 立刻开始讨论 waitlist、real-time utilization、remarketing、pricing、insurance、title、registration、更多 OEM-approved use case。这是最强的信号：对话已经从“它能不能工作”变成“下一步该接入什么参数”。

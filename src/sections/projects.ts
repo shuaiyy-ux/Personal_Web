@@ -167,6 +167,18 @@ function renderProjectCard(item: ProjectItem, displayIndex: number): string {
   const liveBadge = item.liveUrl
     ? `<span class="project-card__live" aria-label="${t('projects.live')}">${t('projects.live')}</span>`
     : '';
+  const awardBadge = item.id === 'hca-fleet-allocation'
+    ? `<span class="project-card__award" aria-label="Best Capstone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M8 4h8l-.6 6.2C15.1 13.1 13.7 15 12 15s-3.1-1.9-3.4-4.8L8 4Z" />
+          <path d="M8.2 6H5.5c-.6 0-.9.4-.8 1 .2 2.5 1.5 4.2 4.1 4.7" />
+          <path d="M15.8 6h2.7c.6 0 .9.4.8 1-.2 2.5-1.5 4.2-4.1 4.7" />
+          <path d="M12 15v3" />
+          <path d="M9 20h6" />
+        </svg>
+        Best Capstone
+      </span>`
+    : '';
 
   return `
     <li class="projects__cell projects__cell--project${item.featured ? ' projects__cell--featured' : ''}" style="--card-index: ${displayIndex};">
@@ -175,6 +187,7 @@ function renderProjectCard(item: ProjectItem, displayIndex: number): string {
         href="${href}"
         data-project-id="${item.id}"
       >
+        ${awardBadge}
         <div class="project-card__head">
           ${statusBadge}
           <span class="project-card__icon" aria-hidden="true">${projectIcon(item.id)}</span>

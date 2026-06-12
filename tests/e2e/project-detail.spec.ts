@@ -40,8 +40,8 @@ test.describe('Project Detail Page', () => {
   });
 
   test('foot navigation links to adjacent projects', async ({ page }) => {
-    // finance-analyzer is the 2nd entry in projects.json, so both prev and next exist
-    await page.goto('/projects/finance-analyzer/');
+    // speckit is an interior entry in projects.json, so both prev and next exist
+    await page.goto('/projects/speckit/');
 
     const prev = page.locator('.project-detail__nav--prev');
     const next = page.locator('.project-detail__nav--next');
