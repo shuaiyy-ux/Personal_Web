@@ -60,8 +60,8 @@ function render(): void {
 
       ${renderApiKeySection()}
       ${apiKey ? renderUploadSection() : ''}
-      ${statusMessage ? `<div class="finance-status">${statusMessage}</div>` : ''}
-      ${errorMessage ? `<div class="finance-status finance-status--error">${errorMessage}</div>` : ''}
+      ${statusMessage ? `<div class="finance-status">${escapeHtml(statusMessage)}</div>` : ''}
+      ${errorMessage ? `<div class="finance-status finance-status--error">${escapeHtml(errorMessage)}</div>` : ''}
       ${analysis ? renderResults() : ''}
     </main>
     ${renderFooter()}

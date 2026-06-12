@@ -1,7 +1,7 @@
-<body>
+
 <h1 id="ai-agent-architecture-deep-dive-building-a-tool-calling-assistant-with-claude-cli">AI Agent Architecture Deep Dive: Building a Tool-Calling Assistant with Claude CLI</h1>
 <p>This post documents how we built a streaming, multi-turn, tool-calling AI agent using Claude Code CLI and Python. We peel back every layer -- from process spawning and event streaming, through the tool-call loop, to context management -- and conclude with a concrete migration path from CLI to SDK.</p>
-<hr />
+<hr>
 <h2 id="1-what-is-the-agent">1. What Is the Agent?</h2>
 <p>In this architecture, the agent is not a standalone AI product. It is an <strong>intermediary program</strong> that bridges the user's browser and Claude. Its responsibilities are straightforward:</p>
 <ol>
@@ -25,13 +25,13 @@ flowchart LR
 </div>
 <h3 id="why-a-middleman">Why a Middleman?</h3>
 <p>Claude alone cannot execute code, query databases, or call external APIs. The agent provides those capabilities as <strong>tools</strong>, turning Claude from a text generator into an autonomous problem solver that can gather information, reason about it, and deliver grounded answers.</p>
-<hr />
+<hr>
 <h2 id="2-how-the-agent-launches-claude">2. How the Agent Launches Claude</h2>
 <h3 id="the-core-command">The Core Command</h3>
 <p>The agent spawns Claude CLI as a child process using Python's <code>subprocess.Popen</code>:</p>
 <pre class="highlight"><code class="language-python">proc = subprocess.Popen(
-    [&quot;claude&quot;, &quot;-p&quot;, &quot;--model&quot;, &quot;opus&quot;, &quot;--output-format&quot;, &quot;stream-json&quot;,
-     &quot;--verbose&quot;, &quot;--include-partial-messages&quot;, &quot;--no-session-persistence&quot;],
+    ["claude", "-p", "--model", "opus", "--output-format", "stream-json",
+     "--verbose", "--include-partial-messages", "--no-session-persistence"],
     stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     text=True, bufsize=1,
 )
@@ -98,15 +98,15 @@ flowchart LR
 <p>The command contains no API key or token. Claude CLI uses <strong>local OAuth</strong> -- the first time you run it, a browser window opens for Anthropic account login. Credentials are stored in <code>~/.claude/</code> and are never committed to the repository.</p>
 <p>Anyone who clones the repo must install Claude CLI and authenticate with their own account.</p>
 <h3 id="tool-access-in-pipe-mode">Tool Access in Pipe Mode</h3>
-<p>In pipe mode (<code>-p</code>), Claude's built-in tools (Read, Edit, Bash, etc.) are <strong>disabled</strong>. Claude can only use the custom tools we define in <code>tools.py</code>, which it invokes via <code>&lt;tool_call&gt;</code> XML tags in its text output.</p>
-<hr />
+<p>In pipe mode (<code>-p</code>), Claude's built-in tools (Read, Edit, Bash, etc.) are <strong>disabled</strong>. Claude can only use the custom tools we define in <code>tools.py</code>, which it invokes via <code><tool_call></code> XML tags in its text output.</p>
+<hr>
 <h2 id="3-streaming-fundamentals">3. Streaming Fundamentals</h2>
 <h3 id="the-problem-with-non-streaming-responses">The Problem with Non-Streaming Responses</h3>
 <p>Without streaming, the user submits a question and stares at a blank screen for several seconds until the complete response arrives in one shot. This creates a poor user experience, especially for long-form answers.</p>
 <h3 id="how-streaming-works">How Streaming Works</h3>
 <p>With streaming, tokens are emitted as they are generated -- the familiar "typewriter effect":</p>
-<pre class="highlight"><code>Non-streaming:  Request --&gt; wait 5s --&gt; &quot;The Dallas dealer received 3 cars, shipping $450&quot;
-Streaming:      Request --&gt; 0.3s --&gt; &quot;The&quot; --&gt; &quot;Dallas&quot; --&gt; &quot;dealer&quot; --&gt; ... --&gt; done
+<pre class="highlight"><code>Non-streaming:  Request --> wait 5s --> "The Dallas dealer received 3 cars, shipping $450"
+Streaming:      Request --> 0.3s --> "The" --> "Dallas" --> "dealer" --> ... --> done
 </code></pre>
 
 <h3 id="real-time-communication-protocols">Real-Time Communication Protocols</h3>
@@ -141,7 +141,7 @@ Streaming:      Request --&gt; 0.3s --&gt; &quot;The&quot; --&gt; &quot;Dallas&q
 </tbody>
 </table>
 <p>This project uses <strong>SSE</strong> because we only need to push tokens from the server to the browser. The frontend connects with the browser's native <code>EventSource</code> API:</p>
-<pre class="highlight"><code class="language-javascript">const es = new EventSource(&quot;/api/agent-stream?message=...&quot;);
+<pre class="highlight"><code class="language-javascript">const es = new EventSource("/api/agent-stream?message=...");
 es.onmessage = function(event) {
     const data = JSON.parse(event.data);
     // Append each token to the UI as it arrives
@@ -149,7 +149,7 @@ es.onmessage = function(event) {
 </code></pre>
 
 <p>Normal HTTP closes the connection after one response. SSE keeps it open, letting the server push events continuously until the response is complete.</p>
-<hr />
+<hr>
 <h2 id="4-claude-clis-stream-json-output-format">4. Claude CLI's stream-json Output Format</h2>
 <h3 id="without-stream-json">Without stream-json</h3>
 <p>Claude CLI outputs plain human-readable text to the terminal:</p>
@@ -158,10 +158,10 @@ es.onmessage = function(event) {
 
 <h3 id="with-stream-json">With stream-json</h3>
 <p>The same content becomes line-delimited JSON events:</p>
-<pre class="highlight"><code class="language-json">{&quot;type&quot;:&quot;stream_event&quot;,&quot;event&quot;:{&quot;type&quot;:&quot;content_block_delta&quot;,&quot;delta&quot;:{&quot;type&quot;:&quot;text_delta&quot;,&quot;text&quot;:&quot;The Dallas&quot;}}}
-{&quot;type&quot;:&quot;stream_event&quot;,&quot;event&quot;:{&quot;type&quot;:&quot;content_block_delta&quot;,&quot;delta&quot;:{&quot;type&quot;:&quot;text_delta&quot;,&quot;text&quot;:&quot; dealer received&quot;}}}
-{&quot;type&quot;:&quot;stream_event&quot;,&quot;event&quot;:{&quot;type&quot;:&quot;content_block_delta&quot;,&quot;delta&quot;:{&quot;type&quot;:&quot;text_delta&quot;,&quot;text&quot;:&quot; 3 cars, shipping $450.&quot;}}}
-{&quot;type&quot;:&quot;result&quot;,&quot;result&quot;:&quot;The Dallas dealer received 3 cars, shipping $450.&quot;,&quot;total_cost_usd&quot;:0.03}
+<pre class="highlight"><code class="language-json">{"type":"stream_event","event":{"type":"content_block_delta","delta":{"type":"text_delta","text":"The Dallas"}}}
+{"type":"stream_event","event":{"type":"content_block_delta","delta":{"type":"text_delta","text":" dealer received"}}}
+{"type":"stream_event","event":{"type":"content_block_delta","delta":{"type":"text_delta","text":" 3 cars, shipping $450."}}}
+{"type":"result","result":"The Dallas dealer received 3 cars, shipping $450.","total_cost_usd":0.03}
 </code></pre>
 
 <p>The JSON wrapping is performed by the CLI, <strong>not</strong> by the Claude model. The model generates the same number of tokens regardless of the output format.</p>
@@ -171,14 +171,14 @@ es.onmessage = function(event) {
 - How much the call cost (no <code>total_cost_usd</code>)
 - Where one logical event ends and another begins</p>
 <p>stream-json provides <strong>structured event boundaries and metadata</strong> -- the foundation for building a reliable SSE pipeline to the frontend.</p>
-<hr />
+<hr>
 <h2 id="5-the-streaming-event-system">5. The Streaming Event System</h2>
 <h3 id="message-structure">Message Structure</h3>
 <p>A single Claude response (message) can contain <strong>multiple content blocks</strong>, similar to an email with paragraphs and attachments:</p>
 <pre class="highlight"><code>Message
-+-- Content Block 0: text    &quot;Let me query the data...&quot;
-+-- Content Block 1: tool_use query_data(code=&quot;df.head()&quot;)
-+-- Content Block 2: text    &quot;Based on the results...&quot;
++-- Content Block 0: text    "Let me query the data..."
++-- Content Block 1: tool_use query_data(code="df.head()")
++-- Content Block 2: text    "Based on the results..."
 </code></pre>
 
 <h3 id="event-lifecycle">Event Lifecycle</h3>
@@ -257,7 +257,7 @@ flowchart TB
 </tr>
 </tbody>
 </table>
-<hr />
+<hr>
 <h2 id="6-the-two-layer-parsing-pipeline">6. The Two-Layer Parsing Pipeline</h2>
 <p>Raw CLI output is complex and verbose. We simplify it into three event types before passing upstream.</p>
 <h3 id="layer-1-_call_claude_stream-the-translation-layer">Layer 1: <code>_call_claude_stream()</code> -- The Translation Layer</h3>
@@ -268,32 +268,32 @@ flowchart TB
         break                           # Empty string = process ended
 
     event = json.loads(line)            # Parse JSON string to Python dict
-    etype = event.get(&quot;type&quot;, &quot;&quot;)
+    etype = event.get("type", "")
 
-    if etype == &quot;stream_event&quot;:
-        inner = event.get(&quot;event&quot;, {})
-        if inner.get(&quot;type&quot;) == &quot;content_block_delta&quot;:
-            delta = inner.get(&quot;delta&quot;, {})
-            if delta.get(&quot;type&quot;) == &quot;text_delta&quot;:
-                text = delta.get(&quot;text&quot;, &quot;&quot;)
+    if etype == "stream_event":
+        inner = event.get("event", {})
+        if inner.get("type") == "content_block_delta":
+            delta = inner.get("delta", {})
+            if delta.get("type") == "text_delta":
+                text = delta.get("text", "")
                 if text:
                     full_text += text
-                    yield {&quot;type&quot;: &quot;token&quot;, &quot;text&quot;: text}
+                    yield {"type": "token", "text": text}
 
-    elif etype == &quot;result&quot;:
-        cost = event.get(&quot;total_cost_usd&quot;, 0.0)
-        yield {&quot;type&quot;: &quot;done&quot;, &quot;text&quot;: full_text, &quot;cost&quot;: cost}
+    elif etype == "result":
+        cost = event.get("total_cost_usd", 0.0)
+        yield {"type": "done", "text": full_text, "cost": cost}
 </code></pre>
 
 <h3 id="layer-2-run_agent_stream-the-orchestration-loop">Layer 2: <code>run_agent_stream()</code> -- The Orchestration Loop</h3>
 <p>Consumes simplified events and drives the tool-call loop:</p>
 <pre class="highlight"><code class="language-python">for event in _call_claude_stream(messages, system_prompt):
-    if event[&quot;type&quot;] == &quot;token&quot;:
-        text += event[&quot;text&quot;]              # Concatenate + forward to SSE
-    elif event[&quot;type&quot;] == &quot;done&quot;:
-        total_cost += event.get(&quot;cost&quot;, 0.0)
-    elif event[&quot;type&quot;] == &quot;error&quot;:
-        stream_error = event[&quot;error&quot;]
+    if event["type"] == "token":
+        text += event["text"]              # Concatenate + forward to SSE
+    elif event["type"] == "done":
+        total_cost += event.get("cost", 0.0)
+    elif event["type"] == "error":
+        stream_error = event["error"]
 </code></pre>
 
 <h3 id="simplified-event-summary">Simplified Event Summary</h3>
@@ -322,7 +322,7 @@ flowchart LR
 <tbody>
 <tr>
 <td><code>token</code></td>
-<td><code>stream_event &gt; content_block_delta &gt; text_delta</code></td>
+<td><code>stream_event > content_block_delta > text_delta</code></td>
 <td>Forward text fragment to frontend</td>
 </tr>
 <tr>
@@ -337,29 +337,29 @@ flowchart LR
 </tr>
 </tbody>
 </table>
-<hr />
+<hr>
 <h2 id="7-the-tool-call-loop">7. The Tool-Call Loop</h2>
 <p>After Claude finishes streaming a response, the accumulated <code>full_text</code> falls into one of three categories:</p>
-<h3 id="case-1-answer-tag-present">Case 1: <code>&lt;answer&gt;</code> Tag Present</h3>
+<h3 id="case-1-answer-tag-present">Case 1: <code><answer></code> Tag Present</h3>
 <p>Claude has enough information to answer directly:</p>
-<pre class="highlight"><code>&lt;answer&gt;3 cars were allocated to the Dallas dealer, shipping cost $450&lt;/answer&gt;
+<pre class="highlight"><code><answer>3 cars were allocated to the Dallas dealer, shipping cost $450</answer>
 </code></pre>
 
 <p>The agent extracts the content with a regex and returns it to the user. <strong>Loop ends.</strong></p>
-<h3 id="case-2-tool_call-tag-present">Case 2: <code>&lt;tool_call&gt;</code> Tag Present</h3>
+<h3 id="case-2-tool_call-tag-present">Case 2: <code><tool_call></code> Tag Present</h3>
 <p>Claude needs external data:</p>
-<pre class="highlight"><code>&lt;tool_call&gt;{&quot;name&quot;: &quot;query_data&quot;, &quot;args&quot;: {&quot;code&quot;: &quot;df.head()&quot;}}&lt;/tool_call&gt;
+<pre class="highlight"><code><tool_call>{"name": "query_data", "args": {"code": "df.head()"}}</tool_call>
 </code></pre>
 
 <p>The agent parses the JSON, executes the tool, and feeds the result back:</p>
 <pre class="highlight"><code class="language-python">tool_call = _parse_tool_call(text)             # Regex extract + json.loads
-tool_name = tool_call.get(&quot;name&quot;, &quot;unknown&quot;)   # &quot;query_data&quot;
-tool_args = tool_call.get(&quot;args&quot;, {})          # {&quot;code&quot;: &quot;df.head()&quot;}
+tool_name = tool_call.get("name", "unknown")   # "query_data"
+tool_args = tool_call.get("args", {})          # {"code": "df.head()"}
 
 tool_result = run_tool(tool_name, tool_args)   # Execute in tools.py
 
-messages.append({&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: text})
-messages.append({&quot;role&quot;: &quot;tool_result&quot;, &quot;content&quot;: result_str})
+messages.append({"role": "assistant", "content": text})
+messages.append({"role": "tool_result", "content": result_str})
 # Continue loop -- call Claude again with updated messages
 </code></pre>
 
@@ -373,10 +373,10 @@ flowchart TB
     CALL --> STREAM["Stream response tokens\nConcatenate into full_text"]
     STREAM --> CHECK{"Inspect full_text"}
 
-    CHECK -->|"contains &lt;answer&gt;"| EXTRACT_ANS["Extract answer via regex"]
+    CHECK -->|"contains <answer>"| EXTRACT_ANS["Extract answer via regex"]
     EXTRACT_ANS --> RETURN(["Return to user via SSE"])
 
-    CHECK -->|"contains &lt;tool_call&gt;"| EXTRACT_TOOL["Extract tool name + args\nvia regex + json.loads"]
+    CHECK -->|"contains <tool_call>"| EXTRACT_TOOL["Extract tool name + args\nvia regex + json.loads"]
     EXTRACT_TOOL --> EXEC["Execute tool in tools.py"]
     EXEC --> APPEND["Append to messages:\n1. assistant message (full_text)\n2. tool_result (JSON)"]
     APPEND --> GUARD{"iteration < 6?"}
@@ -386,13 +386,13 @@ flowchart TB
     CHECK -->|"plain text"| RETURN
 </div>
 <h3 id="token-truncation-is-not-an-issue">Token Truncation Is Not an Issue</h3>
-<p>During streaming, <code>&lt;tool_call&gt;</code> arrives as fragments across many tokens:</p>
-<pre class="highlight"><code>token 1: &quot;&lt;tool&quot;
-token 2: &quot;_call&gt;&quot;
-token 3: &quot;{\&quot;name\&quot;:&quot;
-token 4: &quot;\&quot;query_data\&quot;&quot;
+<p>During streaming, <code><tool_call></code> arrives as fragments across many tokens:</p>
+<pre class="highlight"><code>token 1: "<tool"
+token 2: "_call>"
+token 3: "{\"name\":"
+token 4: "\"query_data\""
 ...
-token N: &quot;&lt;/tool_call&gt;&quot;
+token N: "</tool_call>"
 </code></pre>
 
 <p>This is harmless. The agent only concatenates text during streaming. Parsing happens <strong>after the stream ends</strong>, when <code>full_text</code> is guaranteed to be complete.</p>
@@ -409,7 +409,7 @@ sequenceDiagram
 
     Note over C: Round 1
     C-->>A: stream: "I need to query the data..."
-    C-->>A: &lt;tool_call&gt;query_data(code="...")&lt;/tool_call&gt;
+    C-->>A: <tool_call>query_data(code="...")</tool_call>
     A->>T: run_tool("query_data", {code: "..."})
     T-->>A: {"result": [{"vin":"V001","dealer":"Dallas"}, ...]}
     A->>A: Append assistant msg + tool result to messages
@@ -417,17 +417,17 @@ sequenceDiagram
     Note over C: Round 2
     A->>C: system prompt + full history
     C-->>A: stream: "Let me also check the constraints..."
-    C-->>A: &lt;tool_call&gt;list_constraints(...)&lt;/tool_call&gt;
+    C-->>A: <tool_call>list_constraints(...)</tool_call>
     A->>T: run_tool("list_constraints", {...})
     T-->>A: {"constraints": [...]}
     A->>A: Append to messages
 
     Note over C: Round 3
     A->>C: system prompt + full history
-    C-->>A: &lt;answer&gt;Dallas received 3 cars...&lt;/answer&gt;
+    C-->>A: <answer>Dallas received 3 cars...</answer>
     A->>U: Final answer delivered via SSE
 </div>
-<hr />
+<hr>
 <h2 id="8-context-management">8. Context Management</h2>
 <h3 id="the-stateless-challenge">The Stateless Challenge</h3>
 <p>Because we use <code>--no-session-persistence</code>, Claude has <strong>no memory</strong> between subprocess calls. Every invocation is a blank slate -- Claude does not know what happened in previous rounds.</p>
@@ -437,29 +437,29 @@ sequenceDiagram
 messages = []
 if history:                                         # Frontend chat history
     for h in history:
-        messages.append({&quot;role&quot;: h[&quot;role&quot;], &quot;content&quot;: h[&quot;content&quot;]})
-messages.append({&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: message})  # Current question
+        messages.append({"role": h["role"], "content": h["content"]})
+messages.append({"role": "user", "content": message})  # Current question
 
 # After each tool round, append:
-messages.append({&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: text})
-messages.append({&quot;role&quot;: &quot;tool_result&quot;, &quot;content&quot;: result_str})
+messages.append({"role": "assistant", "content": text})
+messages.append({"role": "tool_result", "content": result_str})
 </code></pre>
 
 <h3 id="building-the-input-text">Building the Input Text</h3>
 <p>The <code>_build_input()</code> function serializes the entire messages list into a single plain-text string:</p>
 <pre class="highlight"><code class="language-python">def _build_input(messages, system_prompt):
-    parts = [system_prompt, &quot;&quot;]
+    parts = [system_prompt, ""]
     for msg in messages:
-        role = msg[&quot;role&quot;]
-        content = msg[&quot;content&quot;]
-        if role == &quot;user&quot;:
-            parts.append(f&quot;Human: {content}&quot;)
-        elif role == &quot;assistant&quot;:
-            parts.append(f&quot;Assistant: {content}&quot;)
-        elif role == &quot;tool_result&quot;:
-            parts.append(f&quot;Human: Tool result:\n{content}&quot;)
-    parts.append(&quot;Assistant:&quot;)
-    return &quot;\n\n&quot;.join(parts)
+        role = msg["role"]
+        content = msg["content"]
+        if role == "user":
+            parts.append(f"Human: {content}")
+        elif role == "assistant":
+            parts.append(f"Assistant: {content}")
+        elif role == "tool_result":
+            parts.append(f"Human: Tool result:\n{content}")
+    parts.append("Assistant:")
+    return "\n\n".join(parts)
 </code></pre>
 
 <h3 id="the-token-cost-trade-off">The Token Cost Trade-Off</h3>
@@ -471,20 +471,20 @@ flowchart LR
     R3 --> R4["Round N\n~2,000 x N tokens"]
 </div>
 <p>This is a structural limitation of the CLI subprocess approach. The SDK alternative (discussed in Section 10) avoids this duplication by sending only incremental messages.</p>
-<hr />
+<hr>
 <h2 id="9-how-claude-discovers-tools">9. How Claude Discovers Tools</h2>
 <h3 id="there-is-no-magic">There Is No Magic</h3>
 <p>Claude does not have any built-in mechanism to "discover" tools at runtime. It simply reads a text description that we inject into the system prompt.</p>
 <h3 id="tool-specification">Tool Specification</h3>
 <p>Each tool is defined as a Python dictionary in <code>tools.py</code>:</p>
 <pre class="highlight"><code class="language-python">QUERY_DATA_SPEC = {
-    &quot;name&quot;: &quot;query_data&quot;,
-    &quot;description&quot;: &quot;Execute a pandas expression against the loaded dataset...&quot;,
-    &quot;parameters&quot;: {
-        &quot;code&quot;: {
-            &quot;type&quot;: &quot;string&quot;,
-            &quot;description&quot;: &quot;Python/pandas code to execute.&quot;,
-            &quot;required&quot;: True,
+    "name": "query_data",
+    "description": "Execute a pandas expression against the loaded dataset...",
+    "parameters": {
+        "code": {
+            "type": "string",
+            "description": "Python/pandas code to execute.",
+            "required": True,
         }
     },
 }
@@ -510,10 +510,10 @@ flowchart LR
     SPEC["tools.py\nSPEC dictionaries"] --> BUILD["_build_tool_descriptions()"]
     BUILD --> INJECT["System prompt\n{tool_descriptions} placeholder"]
     INJECT --> CLAUDE["Claude reads\nunderstands capabilities"]
-    CLAUDE --> CALL["Responds with\n&lt;tool_call&gt;...&lt;/tool_call&gt;"]
+    CLAUDE --> CALL["Responds with\n<tool_call>...</tool_call>"]
     CALL --> PARSE["Agent parses\nand executes"]
 </div>
-<hr />
+<hr>
 <h2 id="10-end-to-end-data-flow">10. End-to-End Data Flow</h2>
 <p>The complete transformation chain from Claude's output back to Claude's input:</p>
 <div class="mermaid">
@@ -526,8 +526,8 @@ flowchart TB
     F -->|"_build_input()"| G["Complete plain text\nfed to Claude CLI stdin"]
     G -->|"next iteration"| A
 </div>
-<p><strong>The full chain:</strong> JSON string from stdout --&gt; Python dict (unpack text fragments) --&gt; plain string (full response) --&gt; Python dict (parse tool call) --&gt; execute tool --&gt; Python dict (tool result) --&gt; JSON string --&gt; append to messages --&gt; concatenate into plain text --&gt; feed back to Claude via stdin.</p>
-<hr />
+<p><strong>The full chain:</strong> JSON string from stdout --> Python dict (unpack text fragments) --> plain string (full response) --> Python dict (parse tool call) --> execute tool --> Python dict (tool result) --> JSON string --> append to messages --> concatenate into plain text --> feed back to Claude via stdin.</p>
+<hr>
 <h2 id="11-cli-vs-sdk-architecture-comparison">11. CLI vs SDK: Architecture Comparison</h2>
 <h3 id="current-architecture-cli-text-parsing">Current Architecture (CLI + Text Parsing)</h3>
 <div class="mermaid">
@@ -574,7 +574,7 @@ flowchart LR
 </tr>
 <tr>
 <td><strong>Tool invocation</strong></td>
-<td><code>&lt;tool_call&gt;</code> XML tags in text output</td>
+<td><code><tool_call></code> XML tags in text output</td>
 <td><code>tool_use</code> content block (structured)</td>
 </tr>
 <tr>
@@ -667,7 +667,7 @@ flowchart LR
     ASDK <--> T3["tools.py"]
 </div>
 <p>The Agent SDK eliminates the manual <code>while</code> loop, iteration guards, and tool-call parsing. However, it is still maturing. Migrating to the standard SDK first is the safer, more predictable intermediate step.</p>
-<hr />
+<hr>
 <h2 id="summary">Summary</h2>
 <p>This architecture demonstrates a practical pattern for building AI agents: use an LLM as the reasoning core, extend its capabilities with custom tools, and orchestrate the interaction through a streaming middleware layer. The CLI-based approach is simple and effective for prototyping, while a clear migration path to the SDK exists for production workloads that demand reliability and cost efficiency.</p>
-</body>
+

@@ -83,15 +83,15 @@
 </div>
 
 <p><em>FIG.01：会话仪表盘。每张卡是 Vigil 通过扫描 <code>~/.claude/sessions/</code> 并对照 Zellij pane 检测到的一个 Claude Code 会话。状态是四个值之一；chip 颜色取自 dossier 调色板，让面板读起来像状态板，而不是日志 UI。</em></p>
-<p>状态模型故意做小。每个会话刚好是 <code>running</code>、<code>idle</code>、<code>waiting</code>、<code>blocked</code> 中的一个。<code>running</code> 表示 JSONL 在 60 秒内有一个 <code>tool_use</code> 边界或活动。<code>idle</code> 表示一个 <code>end_turn</code> 边界，或者 60 秒静默。<code>waiting</code> 是 <code>screen_check.py</code> 在 <code>dump-screen</code> 看到 pane 上有权限提示或确认对话框时报上来的。<code>blocked</code> 是连续三次工具失败、或在 <code>tool_use</code> 里卡了 30 分钟以上。优先级是 <code>blocked &gt; waiting &gt; idle/running</code>，所以一个有麻烦的会话不会看起来健康。模式是另一条独立的轴，两个值：<code>monitored</code> 是默认，只读；<code>managed</code> 让 Vigil 自动放权限提示，并在会话 idle 时戳一下 Orchestrator。</p>
+<p>状态模型故意做小。每个会话刚好是 <code>running</code>、<code>idle</code>、<code>waiting</code>、<code>blocked</code> 中的一个。<code>running</code> 表示 JSONL 在 60 秒内有一个 <code>tool_use</code> 边界或活动。<code>idle</code> 表示一个 <code>end_turn</code> 边界，或者 60 秒静默。<code>waiting</code> 是 <code>screen_check.py</code> 在 <code>dump-screen</code> 看到 pane 上有权限提示或确认对话框时报上来的。<code>blocked</code> 是连续三次工具失败、或在 <code>tool_use</code> 里卡了 30 分钟以上。优先级是 <code>blocked > waiting > idle/running</code>，所以一个有麻烦的会话不会看起来健康。模式是另一条独立的轴，两个值：<code>monitored</code> 是默认，只读；<code>managed</code> 让 Vigil 自动放权限提示，并在会话 idle 时戳一下 Orchestrator。</p>
 <div class="mermaid">
 flowchart LR
-  Hooks[Claude Code hooks<br/>SessionStart, Stop, Permission] -->|<1s| Server[Vigil server :7777]
-  Watch[watchdog Observer<br/>JSONL 文件改动] -->|ms 级| Server
-  Scan[scheduler sys:scan<br/>每 60s] -->|全量扫一次| Server
-  Patrol[scheduler sys:patrol<br/>每 600s] -->|orchestrate| Server
+  Hooks[Claude Code hooks<br>SessionStart, Stop, Permission] -->|<1s| Server[Vigil server :7777]
+  Watch[watchdog Observer<br>JSONL 文件改动] -->|ms 级| Server
+  Scan[scheduler sys:scan<br>每 60s] -->|全量扫一次| Server
+  Patrol[scheduler sys:patrol<br>每 600s] -->|orchestrate| Server
   Server --> WS[WebSocket /ws]
-  Server --> Disp[dispatch.py<br/>Zellij CLI]
+  Server --> Disp[dispatch.py<br>Zellij CLI]
   Disp --> Orch[Orchestrator pane]
   WS --> UI[Dossier UI]
 </div>

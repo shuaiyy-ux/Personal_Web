@@ -2,10 +2,10 @@
 <p>把求职投递拆开看，它是一根五段的流水线：发现岗位、评估匹配度、起草 cover letter 与答题、填 ATS 表单、联系 hiring manager。每段单独都有现成工具，但它们不组合成一根管子。joba 的赌注是把这五段在我自己的机器上接通：本地 SQLite、本地浏览器、我自己的 LinkedIn cookie、我自己的 Claude Code 订阅。不上云端，不分发，不开放 API。</p>
 <div class="mermaid">
 flowchart LR
-  Discover[Phase 1<br/>发现 + LLM 评估] --> Helper[Phase 2A<br/>cover letter + 答题草稿]
-  Helper --> Agent[Phase 2B / 2B-2<br/>agent loop 填 ATS 表]
-  Agent --> Reach[Phase 3<br/>LinkedIn reach out 半自动]
-  Reach -.-> Future[Phase 4<br/>待定]
+  Discover[Phase 1<br>发现 + LLM 评估] --> Helper[Phase 2A<br>cover letter + 答题草稿]
+  Helper --> Agent[Phase 2B / 2B-2<br>agent loop 填 ATS 表]
+  Agent --> Reach[Phase 3<br>LinkedIn reach out 半自动]
+  Reach -.-> Future[Phase 4<br>待定]
   classDef done fill:#1e3a5f,stroke:#3b82f6,color:#fff
   classDef wip fill:#3a2e1e,stroke:#fcd34d,color:#fff
   classDef todo fill:#1e1e1e,stroke:#525252,color:#888,stroke-dasharray:3 3
@@ -106,7 +106,7 @@ flowchart LR
     <li class="joba-mock__t-item"><code>click_radio("auth_to_work_us", true)</code></li>
     <li class="joba-mock__t-item"><code>click_checkbox("contact_consent", true)</code></li>
     <li class="joba-mock__t-item"><code>fill_text_field("years_experience", "5")</code></li>
-    <li class="joba-mock__t-item"><code>fill_text_field("cover_letter", &lt;1.4kB&gt;)</code></li>
+    <li class="joba-mock__t-item"><code>fill_text_field("cover_letter", <1.4kB>)</code></li>
     <li class="joba-mock__t-item joba-mock__t-item--running"><code>select_combobox("country", "United States")</code> ...</li>
   </ul>
 </div>

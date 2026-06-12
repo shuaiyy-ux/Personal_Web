@@ -1,23 +1,23 @@
 <p>大多数早起闹钟都在同一步翻车。用户在床上，贪睡按钮一指可达，早上 6:30 的意志力不是 app 能依赖的资产。WakeUp 的设计绕开了这场谈判：闹钟只在相机看到目标物品时才停，没看到就一直响。产品假设就一句话：「逼用户离床、走到一个具体的物品前、举起相机」。其他一切都是为这条假设服务的实现。</p>
 <div class="product-screens">
   <figure>
-    <img src="/projects/wakeup/screens/01-onboarding.jpeg" alt="WakeUp 引导页：渐变闹钟图标和「一个让你必须起床的闹钟」标语" />
+    <img src="/projects/wakeup/screens/01-onboarding.jpeg" alt="WakeUp 引导页：渐变闹钟图标和「一个让你必须起床的闹钟」标语">
     <figcaption>引导页 · 起床承诺</figcaption>
   </figure>
   <figure>
-    <img src="/projects/wakeup/screens/02-list-empty.jpeg" alt="空闹钟列表，带渐变 + 按钮" />
+    <img src="/projects/wakeup/screens/02-list-empty.jpeg" alt="空闹钟列表，带渐变 + 按钮">
     <figcaption>闹钟列表 · 空状态</figcaption>
   </figure>
   <figure>
-    <img src="/projects/wakeup/screens/03-alarm-edit.jpeg" alt="新建闹钟面板：时间选择、重复日、标签、铃声、贪睡开关" />
+    <img src="/projects/wakeup/screens/03-alarm-edit.jpeg" alt="新建闹钟面板：时间选择、重复日、标签、铃声、贪睡开关">
     <figcaption>新建闹钟 · 时间 / 重复 / 标签 / 铃声</figcaption>
   </figure>
   <figure>
-    <img src="/projects/wakeup/screens/04-camera.jpeg" alt="相机取景框，顶部「拍摄 马桶」标签显示这次随机抽到的目标" />
+    <img src="/projects/wakeup/screens/04-camera.jpeg" alt="相机取景框，顶部「拍摄 马桶」标签显示这次随机抽到的目标">
     <figcaption>拍摄目标 · 这次抽到马桶</figcaption>
   </figure>
   <figure>
-    <img src="/projects/wakeup/screens/05-failure.jpeg" alt="拍摄失败遮罩：在一只星巴克杯上覆盖红叉和「未识别到目标物品」文字，提示用户重试" />
+    <img src="/projects/wakeup/screens/05-failure.jpeg" alt="拍摄失败遮罩：在一只星巴克杯上覆盖红叉和「未识别到目标物品」文字，提示用户重试">
     <figcaption>未命中 · 再试一次</figcaption>
   </figure>
 </div>
@@ -36,5 +36,5 @@
 <p><em>FIG.02：明确写在 spec 里的 out-of-scope 清单。这里每一条都是「让 app 更好用」的功能请求会建议的东西，每一条都会击垮核心假设。</em></p>
 <p>隐私保证是从同一架构里推出来的。图像捕获到内存、交给 Apple 本机的 <code>VNClassifyImageRequest</code> 分类、然后释放。app 里没有网络层。没有分析 SDK。分类器对一份手工挑选的接受标识列表（<code>toilet_seat</code>、<code>frying_pan</code>、<code>water_bottle</code> 等）返回一个置信分数，照片就没了。产品文案写的是 <code>图像只在本机识别，不上传、不保存</code>，代码层面强制如此。</p>
 <p>在真机上跑了三周，每天早上闭环都成立。系统提醒永远会触发（专注、静音键、勿扰全部绕过）。分类器对抽到的目标第一次命中率大约九成，失败模式是光线不好、物体只露半边的角度。「在床上醒过来按掉」这种失败模式没有了，被替换成「真的走到厨房，把相机对准水壶」，结果证明这是比任何意志力设计都更可靠的一条「让我离床」原语。</p>
-<hr />
+<hr>
 <p><strong>App Store 资源</strong>：<a href="/projects/wakeup/privacy/" target="_blank" rel="noopener" lang="en">Privacy Policy</a> · <a href="/projects/wakeup/privacy/" target="_blank" rel="noopener">隐私政策</a></p>

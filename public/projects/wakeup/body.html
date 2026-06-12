@@ -1,23 +1,23 @@
 <p>Most early-rise alarms fail at the same step. The user is in bed, the snooze button is one tap away, and willpower at 6:30 a.m. is not the asset the app can depend on. WakeUp is built around a single rule that takes the negotiation off the table: the alarm only stops when your camera sees a target object, and the system keeps ringing until you point it at one. The product hypothesis is "force the user out of bed, to a specific object, and have them aim a camera." Everything else is implementation in service of that.</p>
 <div class="product-screens">
   <figure>
-    <img src="/projects/wakeup/screens/01-onboarding.jpeg" alt="WakeUp onboarding screen with the gradient alarm icon and the Chinese tagline 一个让你必须起床的闹钟" />
+    <img src="/projects/wakeup/screens/01-onboarding.jpeg" alt="WakeUp onboarding screen with the gradient alarm icon and the Chinese tagline 一个让你必须起床的闹钟">
     <figcaption>Onboarding · the wake-up contract</figcaption>
   </figure>
   <figure>
-    <img src="/projects/wakeup/screens/02-list-empty.jpeg" alt="Empty alarm list with a gradient + button" />
+    <img src="/projects/wakeup/screens/02-list-empty.jpeg" alt="Empty alarm list with a gradient + button">
     <figcaption>Alarm list · empty state</figcaption>
   </figure>
   <figure>
-    <img src="/projects/wakeup/screens/03-alarm-edit.jpeg" alt="New alarm sheet with time picker, repeat days, label, ringtone, snooze toggle" />
+    <img src="/projects/wakeup/screens/03-alarm-edit.jpeg" alt="New alarm sheet with time picker, repeat days, label, ringtone, snooze toggle">
     <figcaption>New alarm · time / repeat / label / ringtone</figcaption>
   </figure>
   <figure>
-    <img src="/projects/wakeup/screens/04-camera.jpeg" alt="Camera viewfinder with a 拍摄 马桶 pill at the top showing the random target for this ring" />
+    <img src="/projects/wakeup/screens/04-camera.jpeg" alt="Camera viewfinder with a 拍摄 马桶 pill at the top showing the random target for this ring">
     <figcaption>Camera target · today's draw is the toilet</figcaption>
   </figure>
   <figure>
-    <img src="/projects/wakeup/screens/05-failure.jpeg" alt="Camera failure overlay: a red X with text 未识别到目标物品 over a Starbucks cup, prompting the user to try again" />
+    <img src="/projects/wakeup/screens/05-failure.jpeg" alt="Camera failure overlay: a red X with text 未识别到目标物品 over a Starbucks cup, prompting the user to try again">
     <figcaption>Miss · try again</figcaption>
   </figure>
 </div>
@@ -36,5 +36,5 @@
 <p><em>FIG.02: the explicit out-of-scope list, lifted from the project's spec doc. Every item here is something a "make this app more useful" feature request would suggest, and every item would defeat the core hypothesis.</em></p>
 <p>The privacy guarantee follows from the same architecture. The image is captured into memory, classified by Apple's on-device <code>VNClassifyImageRequest</code>, and released. There is no network layer in the app. There is no analytics SDK. The classifier returns a confidence score against a hand-curated list of accepted identifiers (<code>toilet_seat</code>, <code>frying_pan</code>, <code>water_bottle</code>, etc.) and the photo is gone. The product copy reads <code>图像只在本机识别，不上传、不保存</code> (images are classified on-device, not uploaded, not stored), and the codebase enforces it.</p>
 <p>After three weeks of running this on a real iPhone the loop has held every morning. The system alert always fires (Focus, silent switch, do-not-disturb all bypassed). The classifier hits the drawn target on the first try roughly nine times out of ten, with the failure mode being poorly-lit angles where only an edge of the object is in the frame. The "wake up in bed and dismiss" failure mode is gone, and replacing it with "physically walk to the kitchen and aim a camera at the kettle" turned out to be a more reliable getting-out-of-bed primitive than any willpower-based design I had tried before.</p>
-<hr />
+<hr>
 <p><strong>App Store resources</strong>: <a href="/projects/wakeup/privacy/" target="_blank" rel="noopener">Privacy Policy</a> · <a href="/projects/wakeup/privacy/" target="_blank" rel="noopener" lang="zh">隐私政策</a></p>

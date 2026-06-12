@@ -16,6 +16,7 @@ import { renderFooter } from './sections/footer';
 import { ProjectItem, projectStatus, renderStatusBadge } from './sections/projects';
 import initShiftBackground from './backgrounds/shift';
 import { t, getLocale } from './i18n';
+import { sanitizeHtmlFragment, sanitizeHref } from './lib/html-safety';
 
 const app = document.getElementById('app');
 
@@ -23,8 +24,9 @@ async function render(): Promise<void> {
   if (!app) return;
 
   const slug = getSlugFromPath();
-  const project = findProject(slug);
+  const project = isProjectSlugAllowed(slug) ? findProject(slug) : null;
   const body = project ? await fetchBodyContent(slug) : null;
+  const safeBody = body ? sanitizeHtmlFragment(body) : null;
   const neighbors = project ? findNeighbors(project.id) : { prev: null, next: null };
 
   app.innerHTML = `
@@ -32,7 +34,7 @@ async function render(): Promise<void> {
     <a href="#main-content" class="visually-hidden">${t('post.skip')}</a>
     ${renderHeader()}
     <main id="main-content" class="container project-detail-page">
-      ${project ? renderArticle(project, body, neighbors) : renderNotFound(slug)}
+      ${project ? renderArticle(project, safeBody, neighbors) : renderNotFound(slug)}
     </main>
     ${renderFooter()}
   `;
@@ -44,7 +46,17 @@ async function render(): Promise<void> {
 
 function getSlugFromPath(): string {
   const segments = window.location.pathname.split('/').filter(Boolean);
-  return segments[1] ?? '';
+  const raw = segments[1] ?? '';
+  try {
+    const slug = decodeURIComponent(raw);
+    return isProjectSlugAllowed(slug) ? slug : '';
+  } catch {
+    return '';
+  }
+}
+
+function isProjectSlugAllowed(slug: string): boolean {
+  return (projectsData as ProjectItem[]).some((item) => item.id === slug);
 }
 
 async function initMermaid(): Promise<void> {
@@ -54,7 +66,7 @@ async function initMermaid(): Promise<void> {
   const mermaid = await import('mermaid');
   mermaid.default.initialize({
     startOnLoad: false,
-    securityLevel: 'loose',
+    securityLevel: 'strict',
     theme: 'dark',
     themeVariables: {
       background: 'transparent',
@@ -129,19 +141,21 @@ function renderArticle(project: ProjectItem, bodyHtml: string | null, neighbors:
     ? `<span class="project-detail__live">${t('projects.live')}</span>`
     : '';
 
-  const isExternalLive = project.liveUrl ? /^https?:\/\//.test(project.liveUrl) : false;
-  const launchCta = project.liveUrl
-    ? `<a class="project-detail__launch" href="${project.liveUrl}"${isExternalLive ? ' target="_blank" rel="noopener noreferrer"' : ''}>
+  const safeLiveUrl = sanitizeHref(project.liveUrl ?? '');
+  const isExternalLive = safeLiveUrl ? /^https?:\/\//.test(safeLiveUrl) : false;
+  const launchCta = safeLiveUrl
+    ? `<a class="project-detail__launch" href="${safeLiveUrl}"${isExternalLive ? ' target="_blank" rel="noopener noreferrer"' : ''}>
          <span class="project-detail__launch-label">${t('projects.detail.launch')}</span>
          <span class="project-detail__launch-arrow" aria-hidden="true">${isExternalLive ? '↗' : '→'}</span>
        </a>`
     : '';
 
-  const repoLink = project.githubUrl && !project.repoPrivate
-    ? `<a class="project-detail__meta-link" href="${project.githubUrl}" target="_blank" rel="noopener noreferrer">${t('projects.detail.repo')} ↗</a>`
+  const safeRepoUrl = sanitizeHref(project.githubUrl ?? '');
+  const repoLink = safeRepoUrl && !project.repoPrivate
+    ? `<a class="project-detail__meta-link" href="${safeRepoUrl}" target="_blank" rel="noopener noreferrer">${t('projects.detail.repo')} ↗</a>`
     : '';
-  const liveLink = project.liveUrl
-    ? `<a class="project-detail__meta-link" href="${project.liveUrl}"${isExternalLive ? ' target="_blank" rel="noopener noreferrer"' : ''}>${t('projects.detail.live')} ${isExternalLive ? '↗' : '→'}</a>`
+  const liveLink = safeLiveUrl
+    ? `<a class="project-detail__meta-link" href="${safeLiveUrl}"${isExternalLive ? ' target="_blank" rel="noopener noreferrer"' : ''}>${t('projects.detail.live')} ${isExternalLive ? '↗' : '→'}</a>`
     : '';
   const hasLinks = Boolean(repoLink || liveLink);
 

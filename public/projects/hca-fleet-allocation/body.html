@@ -51,10 +51,10 @@
 <h2 id="1-four-users-four-tabs">1. Four users, four tabs</h2>
 <div class="mermaid">
 flowchart LR
-    EXEC[Executive sponsors] --> HOME[Home tab<br/>weekly savings vs Greedy<br/>8 week sparklines]
-    OPS[Operations lead] --> WEEKLY[Weekly Allocation tab<br/>per vehicle table<br/>Rank 1/2/3 + override]
-    ANA[Analyst] --> BATCH[Batch Overview tab<br/>ILP vs Greedy<br/>route map]
-    ENG[HCA engineering] --> SPEC[DATA_SOURCE_SPEC.md<br/>CSV contract]
+    EXEC[Executive sponsors] --> HOME[Home tab<br>weekly savings vs Greedy<br>8 week sparklines]
+    OPS[Operations lead] --> WEEKLY[Weekly Allocation tab<br>per vehicle table<br>Rank 1/2/3 + override]
+    ANA[Analyst] --> BATCH[Batch Overview tab<br>ILP vs Greedy<br>route map]
+    ENG[HCA engineering] --> SPEC[DATA_SOURCE_SPEC.md<br>CSV contract]
     HOME -.chat panel hidden.-> READONLY[read only by design]
 </div>
 <p><em>FIG.01: Each user role maps to exactly one surface. The chat agent is removed from the executive view because a tool that can answer anything will eventually be asked something it cannot honestly answer.</em></p>
@@ -101,7 +101,7 @@ flowchart LR
 </tbody>
 </table>
 <p><em>FIG.02: Every placeholder names the dollar input that retires it. The methodology document points at the exact code locations.</em></p>
-<p>The naming is the contract. <code>w_util</code> is not "the utility weight," it is the placeholder that disappears when <code>$/car/month</code> arrives. The same posture shows up in the data interface. The engine reads nine CSVs from <code>data_csv/</code>. <code>DATA_SOURCE_SPEC.md</code> specifies filenames, columns, types, conventions (ZIP zero padded, utilization on 0 to 100 not 0 to 1, dealer codes prefixed <code>FD</code>). The spec is the data contract. HCA engineering rewrites the source CSVs against this contract and the system runs. <code>scripts/data_migration.py validate &lt;dir&gt;</code> reports schema drift before the engine starts.</p>
+<p>The naming is the contract. <code>w_util</code> is not "the utility weight," it is the placeholder that disappears when <code>$/car/month</code> arrives. The same posture shows up in the data interface. The engine reads nine CSVs from <code>data_csv/</code>. <code>DATA_SOURCE_SPEC.md</code> specifies filenames, columns, types, conventions (ZIP zero padded, utilization on 0 to 100 not 0 to 1, dealer codes prefixed <code>FD</code>). The spec is the data contract. HCA engineering rewrites the source CSVs against this contract and the system runs. <code>scripts/data_migration.py validate <dir></code> reports schema drift before the engine starts.</p>
 <h2 id="5-three-month-cadence-at-the-commit-level">5. Three month cadence at the commit level</h2>
 <table>
 <thead>

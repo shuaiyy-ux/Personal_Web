@@ -12,36 +12,36 @@
     <span class="fc-mock__head-meta">5 nodes · 6 edges</span>
   </div>
   <div class="fc-mock__canvas">
-    <svg class="fc-mock__edges" viewBox="0 0 600 280" preserveAspectRatio="none">
-      <defs>
-        <marker id="fc-arrow-zh" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-          <path d="M0,0 L10,5 L0,10 z" />
-        </marker>
-      </defs>
-      <path d="M 145 96 C 200 70, 200 70, 252 56" marker-end="url(#fc-arrow-zh)" />
-      <path d="M 145 110 C 200 150, 200 170, 252 184" marker-end="url(#fc-arrow-zh)" />
-      <path d="M 358 56 C 380 90, 380 130, 358 184" marker-end="url(#fc-arrow-zh)" />
-      <path d="M 358 184 C 410 170, 430 140, 458 110" marker-end="url(#fc-arrow-zh)" />
-      <path d="M 358 198 C 410 220, 430 220, 458 224" marker-end="url(#fc-arrow-zh)" />
-      <path class="dashed" d="M 458 130 C 405 200, 380 215, 360 200" marker-end="url(#fc-arrow-zh)" />
-    </svg>
-    <div class="fc-mock__node fc-mock__node--input" style="left:20px;top:88px;">
+    
+      
+        
+          
+        
+      
+      
+      
+      
+      
+      
+      
+    
+    <div class="fc-mock__node fc-mock__node--input">
       <span class="fc-mock__node-type">user_input</span>
       用户进入应用
     </div>
-    <div class="fc-mock__node fc-mock__node--logic" style="left:252px;top:36px;">
+    <div class="fc-mock__node fc-mock__node--logic">
       <span class="fc-mock__node-type">logic</span>
       Onboarding（首次）
     </div>
-    <div class="fc-mock__node fc-mock__node--state" style="left:252px;top:170px;">
+    <div class="fc-mock__node fc-mock__node--state">
       <span class="fc-mock__node-type">state</span>
       主页
     </div>
-    <div class="fc-mock__node fc-mock__node--action fc-mock__node--has-subflow" style="left:458px;top:88px;">
+    <div class="fc-mock__node fc-mock__node--action fc-mock__node--has-subflow">
       <span class="fc-mock__node-type">action</span>
       闹钟功能
     </div>
-    <div class="fc-mock__node fc-mock__node--action" style="left:458px;top:210px;">
+    <div class="fc-mock__node fc-mock__node--action">
       <span class="fc-mock__node-type">action</span>
       设置
     </div>
@@ -51,7 +51,7 @@
 <p><em>FIG.01：一份 overview 画布。五种节点类型（<code>user_input</code>、<code>logic</code>、<code>state</code>、<code>action</code>、<code>decision</code>）各自有独立的左边色条。带 <code>↓</code> 的节点挂着 <code>subflow</code>，双击可以钻进 <code>alarm.flow.json</code>。底部那条虚线是 <code>style: "back"</code>，给取消、回退、回到上一步用的回边。</em></p>
 <div class="mermaid">
 flowchart LR
-  Json[".flows/*.flow.json<br/>.inbox.jsonl<br/>state.json"] -->|chokidar 监听| Watcher[FlowWatcher<br/>SHA1 dedup]
+  Json[".flows/*.flow.json<br>.inbox.jsonl<br>state.json"] -->|chokidar 监听| Watcher[FlowWatcher<br>SHA1 dedup]
   Watcher -->|broadcast| Hono[Hono server :7779]
   Hono -->|WebSocket| UI[React Flow UI]
   UI -->|REST PUT/POST/DELETE| Hono
@@ -62,10 +62,10 @@ flowchart LR
 <p><em>FIG.02：双向同步是文件 ↔ UI 实时；Claude session ↔ 文件是异步、Claude 主动拉。chokidar 监听 <code>.flows/</code>；UI 写文件时 server 先把待写入内容算 SHA1 喂给 watcher 的 suppress 表，自己引发的 change 事件就不会广播回 UI。</em></p>
 <p>文件 ↔ UI 这条双向同步看起来基本，做对的细节不少。chokidar 配 <code>awaitWriteFinish: { stabilityThreshold: 80, pollInterval: 30 }</code>，让外部编辑器写入稳定后再发事件。每次 server 因 UI save 写文件之前，先把内容算 SHA1 喂给 watcher 的 suppress 表；watcher 收到自己引发的 change 事件时哈希命中，直接 skip，不广播回 UI。Claude 直接 <code>Edit</code> 文件不走这条路径，watcher 老老实实当外部改动处理。</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// server/index.ts (UI 写入路径)</span>
-<span class="kd">const</span><span class="w"> </span><span class="nx">json</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">parsed</span><span class="p">.</span><span class="nx">data</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39;\n&#39;</span><span class="p">;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">json</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">parsed</span><span class="p">.</span><span class="nx">data</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">'\n'</span><span class="p">;</span>
 <span class="nx">watcher</span><span class="p">.</span><span class="nx">suppress</span><span class="p">(</span><span class="nx">filePath</span><span class="p">,</span><span class="w"> </span><span class="nx">json</span><span class="p">);</span><span class="w">  </span><span class="c1">// 先记哈希，避免回环</span>
-<span class="k">await</span><span class="w"> </span><span class="nx">fs</span><span class="p">.</span><span class="nx">writeFile</span><span class="p">(</span><span class="nx">filePath</span><span class="p">,</span><span class="w"> </span><span class="nx">json</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;utf8&#39;</span><span class="p">);</span>
-<span class="k">await</span><span class="w"> </span><span class="nx">recordLastEdit</span><span class="p">(</span><span class="nx">name</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">FLOW_SUFFIX</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ui-save&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">summary</span><span class="p">);</span>
+<span class="k">await</span><span class="w"> </span><span class="nx">fs</span><span class="p">.</span><span class="nx">writeFile</span><span class="p">(</span><span class="nx">filePath</span><span class="p">,</span><span class="w"> </span><span class="nx">json</span><span class="p">,</span><span class="w"> </span><span class="s1">'utf8'</span><span class="p">);</span>
+<span class="k">await</span><span class="w"> </span><span class="nx">recordLastEdit</span><span class="p">(</span><span class="nx">name</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">FLOW_SUFFIX</span><span class="p">,</span><span class="w"> </span><span class="s1">'ui-save'</span><span class="p">,</span><span class="w"> </span><span class="nx">summary</span><span class="p">);</span>
 </code></pre></div>
 
 <p><em>FIG.03：UI 写入路径里的 suppress 调用。watcher 的 lastHash 表已经知道该文件即将变成这个哈希，自身触发的 change 事件就被静默掉。这是单进程里「我的写入不触发我的事件」的标准做法。</em></p>

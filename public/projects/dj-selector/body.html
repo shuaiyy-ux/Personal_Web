@@ -2,14 +2,14 @@
 <p>The reason metadata lists fall short is that they correlate with sonic fit but do not equal it. A working DJ knows this in the hands and has to learn it for each library separately: which two unrelated artists actually layer well, which tracks read as a transition even when the BPMs are off by 20 percent. Modeling the library as a vector space is interesting because it captures the "sounds like" relation directly, with no genre tags required.</p>
 <div class="mermaid">
 flowchart LR
-  Lib[Music folders<br/>~600 tracks] --> MERT[MERT-v1-95M<br/>texture and timbre]
-  Lib --> Disc[Discogs EffNet<br/>genre and style]
-  MERT --> Fuse[Concatenate<br/>0.3 MERT + 0.7 Discogs]
+  Lib[Music folders<br>~600 tracks] --> MERT[MERT-v1-95M<br>texture and timbre]
+  Lib --> Disc[Discogs EffNet<br>genre and style]
+  MERT --> Fuse[Concatenate<br>0.3 MERT + 0.7 Discogs]
   Disc --> Fuse
-  Fuse --> Idx[library_fusion.npz<br/>2176-dim per track]
+  Fuse --> Idx[library_fusion.npz<br>2176-dim per track]
   Bpm[librosa BPM and energy] --> Idx
-  Idx --> Search[seed track to top-20<br/>cosine similarity]
-  Search --> Web[FastAPI plus HTML<br/>localhost:7778]
+  Idx --> Search[seed track to top-20<br>cosine similarity]
+  Search --> Web[FastAPI plus HTML<br>localhost:7778]
 </div>
 <p><em>FIG.01: the index pipeline. MERT is a deep music transformer that captures texture and timbre. Discogs EffNet is trained on a much larger genre-labelled corpus and brings genre fluency. Fusing them at α=0.3 lets the genre half anchor the recommendations while MERT pulls in the secondary "and these two specifically sound alike" signal.</em></p>
 <p>The fusion weight is the load-bearing decision. MERT alone clusters by mood and instrumentation but is genre-agnostic in a way that punishes a DJ playlist (it will surface a beatless ambient track because it shares timbre with the seed's pad). Discogs alone is genre-rigid (only deep house when the seed is deep house, even when the next slot wants a transition track that crosses into something else). Concatenating the two L2-normalized vectors with 0.3 weight on MERT and 0.7 on Discogs lets Discogs decide the rough neighborhood, then MERT does the fine-grained sort inside it. I tried 0.5 and 0.7 first and both bled the genre boundary too much.</p>

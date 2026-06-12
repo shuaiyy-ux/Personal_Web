@@ -16,9 +16,9 @@ flowchart LR
 <p><em>FIG.01: same pipeline both versions run. Drilldown is on demand because embeddings cost money and most documents do not get every company drilled.</em></p>
 <p>The piece I designed before writing any LLM call was the document-level prompt. Classify into <code>financial_report</code>, <code>news</code>, or <code>discussion</code>. Extract only companies the text actually names. Score sentiment <strong>per company</strong>, not the document overall, because an earnings article that praises one firm and pans another should produce two opposite scores. Return JSON only, with <code>evidenceSnippets</code> short and verbatim. The system prompt enforces all of that:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nx">role</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;system&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">role</span><span class="o">:</span><span class="w"> </span><span class="s2">"system"</span><span class="p">,</span>
 <span class="w">  </span><span class="nx">content</span><span class="o">:</span>
-<span class="w">    </span><span class="s2">&quot;You are a finance document analyst. Return JSON only. Classify the uploaded text as financial_report, news, or discussion. Extract only companies explicitly mentioned. For each company, assign a company-specific sentiment label and score from -1 to 1 based on what the text says about that specific firm, not the overall article. Keep evidence snippets short and verbatim. Keep keywords concise.&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">"You are a finance document analyst. Return JSON only. Classify the uploaded text as financial_report, news, or discussion. Extract only companies explicitly mentioned. For each company, assign a company-specific sentiment label and score from -1 to 1 based on what the text says about that specific firm, not the overall article. Keep evidence snippets short and verbatim. Keep keywords concise."</span><span class="p">,</span>
 <span class="p">}</span>
 </code></pre></div>
 

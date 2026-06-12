@@ -51,10 +51,10 @@
 <h2 id="1-tab">1. 四类用户，四个 tab</h2>
 <div class="mermaid">
 flowchart LR
-    EXEC[执行层 sponsor] --> HOME[Home tab<br/>每周节省 vs Greedy<br/>8 周 sparkline]
-    OPS[运营负责人] --> WEEKLY[Weekly Allocation tab<br/>逐车表格<br/>Rank 1/2/3 + 覆盖]
-    ANA[分析师] --> BATCH[Batch Overview tab<br/>ILP vs Greedy<br/>路线地图]
-    ENG[HCA 工程方] --> SPEC[DATA_SOURCE_SPEC.md<br/>CSV 契约]
+    EXEC[执行层 sponsor] --> HOME[Home tab<br>每周节省 vs Greedy<br>8 周 sparkline]
+    OPS[运营负责人] --> WEEKLY[Weekly Allocation tab<br>逐车表格<br>Rank 1/2/3 + 覆盖]
+    ANA[分析师] --> BATCH[Batch Overview tab<br>ILP vs Greedy<br>路线地图]
+    ENG[HCA 工程方] --> SPEC[DATA_SOURCE_SPEC.md<br>CSV 契约]
     HOME -.chat 面板隐藏.-> READONLY[默认只读]
 </div>
 <p><em>FIG.01：每类用户角色对应一个界面。Home 上不放 chat agent，是因为一个能回答任意问题的工具，迟早会被问到它无法诚实回答的问题。</em></p>
@@ -101,7 +101,7 @@ flowchart LR
 </tbody>
 </table>
 <p><em>FIG.02：每个占位符的命名直接指向能让它退役的那个美元输入。方法学文档列出了将要改动的精确代码位置。</em></p>
-<p>命名就是契约。<code>w_util</code> 不是"效用权重"，它是 <code>$/car/month</code> 到手时会消失的占位符。同样的设计姿态体现在数据接口上。引擎从 <code>data_csv/</code> 读取九份 CSV。<code>DATA_SOURCE_SPEC.md</code> 规定文件名、列名、类型、约定（ZIP 必须前导补零、利用率按 0 到 100 不是 0 到 1、FaaS 经销商代码以 <code>FD</code> 开头）。这份 spec 就是数据契约。HCA 工程方按这份契约重写来源 CSV，系统直接运行。<code>scripts/data_migration.py validate &lt;dir&gt;</code> 在引擎开始执行之前报告 schema 漂移。</p>
+<p>命名就是契约。<code>w_util</code> 不是"效用权重"，它是 <code>$/car/month</code> 到手时会消失的占位符。同样的设计姿态体现在数据接口上。引擎从 <code>data_csv/</code> 读取九份 CSV。<code>DATA_SOURCE_SPEC.md</code> 规定文件名、列名、类型、约定（ZIP 必须前导补零、利用率按 0 到 100 不是 0 到 1、FaaS 经销商代码以 <code>FD</code> 开头）。这份 spec 就是数据契约。HCA 工程方按这份契约重写来源 CSV，系统直接运行。<code>scripts/data_migration.py validate <dir></code> 在引擎开始执行之前报告 schema 漂移。</p>
 <h2 id="5-commit">5. 三个月节奏，按 commit 看</h2>
 <table>
 <thead>

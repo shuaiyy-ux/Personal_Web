@@ -2,29 +2,29 @@
 <p>现成的同类工具有两种走法都不对：一种自动点发布（一个错别字三平台同步打脸），另一种让你手动盯着每个 tab 一个一个发。我要的是中间状态：系统替我把表填好，最后那一下发布留给人。整套架构基本是被这一条决定推出来的。</p>
 <div class="mermaid">
 flowchart LR
-  Up[一份视频<br/>一份文案] --> Adapt[各平台<br/>字数检查]
-  Adapt -->|超限| Claude[Claude haiku<br/>按字数重写]
+  Up[一份视频<br>一份文案] --> Adapt[各平台<br>字数检查]
+  Adapt -->|超限| Claude[Claude haiku<br>按字数重写]
   Adapt -->|未超限| Pass[原样透传]
-  Claude --> Plan[分发任务<br/>一行 job 加<br/>N 行 platform_task]
+  Claude --> Plan[分发任务<br>一行 job 加<br>N 行 platform_task]
   Pass --> Plan
-  Plan --> DY[抖音 filler<br/>patchright 窗口]
-  Plan --> XHS[小红书 filler<br/>patchright 窗口]
-  Plan --> IG[Instagram filler<br/>patchright 窗口]
-  DY --> Watch[WebSocket<br/>填表 -> 等发布<br/>-> 成功/超时]
+  Plan --> DY[抖音 filler<br>patchright 窗口]
+  Plan --> XHS[小红书 filler<br>patchright 窗口]
+  Plan --> IG[Instagram filler<br>patchright 窗口]
+  DY --> Watch[WebSocket<br>填表 -> 等发布<br>-> 成功/超时]
   XHS --> Watch
   IG --> Watch
 </div>
 <p><em>FIG.01：SQLite 里一行 job 拥有 N 行 platform_task，每行由一个独立 patchright filler 推进。前端只订阅一次 WebSocket，状态变化实时回放。</em></p>
 <p>内容适配是整套 AI 里最简单的一块，也是用户最直接感受到的一块。规则就一条：文案不超平台 <code>title_limit</code>，原样透传；超了，就调 Claude haiku，one-shot prompt 写成「把这个标题缩到 N 个汉字以内，保留钩子，别加 hashtag」。没有 API key 时，降级成硬截断到 limit。把 AI 当作一个套在确定性内核外的可选层，是真实做的选择，意味着凌晨三点没网这工具也能跑，也意味着以后想换更强的模型不用重写调度。</p>
-<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">adapt_title</span><span class="p">(</span><span class="n">raw</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">limit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">limit</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">adapt_title</span><span class="p">(</span><span class="n">raw</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-></span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">limit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span> <span class="o"><=</span> <span class="n">limit</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">raw</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">settings</span><span class="o">.</span><span class="n">anthropic_api_key</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">raw</span><span class="p">[:</span><span class="n">limit</span><span class="p">]</span>
     <span class="n">msg</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-        <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-haiku-4-5-20251001&quot;</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="s2">"claude-haiku-4-5-20251001"</span><span class="p">,</span>
         <span class="n">max_tokens</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
-        <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">REWRITE_PROMPT</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="n">REWRITE_PROMPT</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">raw</span><span class="o">=</span><span class="n">raw</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span>
         <span class="p">)}],</span>
     <span class="p">)</span>
@@ -38,13 +38,13 @@ flowchart LR
 [09:42:11] douyin       fill_started
 [09:42:11] xiaohongshu  fill_started
 [09:42:11] instagram    fill_started
-[09:42:18] douyin       title_overflowed -&gt; claude_rewrite -&gt; 28 chars
+[09:42:18] douyin       title_overflowed -> claude_rewrite -> 28 chars
 [09:42:31] xiaohongshu  filled, awaiting human publish
 [09:43:02] douyin       filled, awaiting human publish
 [09:43:14] instagram    filled, awaiting human publish
-[09:46:55] xiaohongshu  url_match /publish/success -&gt; published
-[09:47:22] douyin       url_match /content/manage    -&gt; published
-[09:48:01] instagram    dom_match &quot;已分享&quot;            -&gt; published
+[09:46:55] xiaohongshu  url_match /publish/success -> published
+[09:47:22] douyin       url_match /content/manage    -> published
+[09:48:01] instagram    dom_match "已分享"            -> published
 [09:48:01] job 7c3a     completed (3/3)
 </code></pre></div>
 

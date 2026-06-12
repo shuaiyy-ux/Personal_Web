@@ -16,9 +16,9 @@ flowchart LR
 <p><em>FIG.01：两版跑的是同一条流水线。下钻是按需触发的，因为嵌入要花钱，大多数文档里也并不是每家公司都会被钻一次。</em></p>
 <p>在写任何一行 LLM 调用之前我先设计的是文档级 prompt。把文档分成 <code>financial_report</code>、<code>news</code>、<code>discussion</code> 三类。只抽出文本里真正提到的公司。情绪分<strong>按公司打</strong>，不是按整篇文档打，因为一篇财报新闻里夸一家、贬一家，应该出两个相反的分数。只返回 JSON，<code>evidenceSnippets</code> 要短、要逐字。系统 prompt 把这些都写死了：</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nx">role</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;system&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">role</span><span class="o">:</span><span class="w"> </span><span class="s2">"system"</span><span class="p">,</span>
 <span class="w">  </span><span class="nx">content</span><span class="o">:</span>
-<span class="w">    </span><span class="s2">&quot;You are a finance document analyst. Return JSON only. Classify the uploaded text as financial_report, news, or discussion. Extract only companies explicitly mentioned. For each company, assign a company-specific sentiment label and score from -1 to 1 based on what the text says about that specific firm, not the overall article. Keep evidence snippets short and verbatim. Keep keywords concise.&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">"You are a finance document analyst. Return JSON only. Classify the uploaded text as financial_report, news, or discussion. Extract only companies explicitly mentioned. For each company, assign a company-specific sentiment label and score from -1 to 1 based on what the text says about that specific firm, not the overall article. Keep evidence snippets short and verbatim. Keep keywords concise."</span><span class="p">,</span>
 <span class="p">}</span>
 </code></pre></div>
 

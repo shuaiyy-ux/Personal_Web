@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from md_to_body import sanitize_html
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_FILE = ROOT / "src/data/writing.json"
@@ -56,17 +57,25 @@ def ensure_rollup_input(slug: str):
   print(f"[vite.config] added blog-{slug}")
 
 def upsert_writing(post, data):
+  old = next((item for item in data if item.get("id") == post["id"]), {})
   data = [item for item in data if item.get("id") != post["id"]]
-  entry = {
+  entry = dict(old)
+  entry.update({
     "id": post["id"],
     "title": post["title"],
     "summary": post["summary"],
-    "tags": post.get("tags", []),
-    "publishedAt": post.get("publishedAt", ""),
-    "url": f"/blog/{post['id']}/",
-    "external": False,
-    "status": post.get("status", "published"),
-  }
+    "tags": post.get("tags", old.get("tags", [])),
+    "publishedAt": post.get("publishedAt", old.get("publishedAt", "")),
+    "url": old.get("url", f"/blog/{post['id']}/"),
+    "external": old.get("external", False),
+    "status": post.get("status", old.get("status", "published")),
+  })
+  if post.get("title_zh") is not None:
+    entry["title_zh"] = post["title_zh"]
+  if post.get("summary_zh") is not None:
+    entry["summary_zh"] = post["summary_zh"]
+  if post.get("image") is not None:
+    entry["image"] = post["image"]
   data.append(entry)
   return sort_writing(data)
 
@@ -92,7 +101,7 @@ def write_body_and_index(post):
     print(f"[skip] body not found, skipped: {body_src}")
     return False
 
-  body_html = body_src.read_text(encoding="utf-8")
+  body_html = sanitize_html(body_src.read_text(encoding="utf-8"))
 
   page_dir = BLOG_DIR / slug
   page_dir.mkdir(parents=True, exist_ok=True)
@@ -107,6 +116,13 @@ def write_body_and_index(post):
     INDEX_TEMPLATE.format(title=post["title"], summary=post["summary"], slug=slug),
     encoding="utf-8",
   )
+
+  # Keep zh body copies aligned with sanitizer policy when stale files exist.
+  for zh_path in (page_dir / "body.zh.html", public_dir / "body.zh.html"):
+    if zh_path.exists():
+      safe_zh = sanitize_html(zh_path.read_text(encoding="utf-8"))
+      zh_path.write_text(safe_zh, encoding="utf-8")
+
   print(f"[page] /blog/{slug}/ generated")
   return True
 

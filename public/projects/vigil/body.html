@@ -83,15 +83,15 @@
 </div>
 
 <p><em>FIG.01: the session dashboard. Each card is one Claude Code session detected by scanning <code>~/.claude/sessions/</code> and matching against Zellij panes. Status is one of four values; the chip color comes from the dossier palette so the panel reads as a status board, not a logging UI.</em></p>
-<p>The state model is small on purpose. Every session is exactly one of <code>running</code>, <code>idle</code>, <code>waiting</code>, <code>blocked</code>. <code>running</code> means the JSONL has a recent <code>tool_use</code> boundary or activity inside sixty seconds. <code>idle</code> means an <code>end_turn</code> boundary or sixty seconds of silence. <code>waiting</code> is what <code>screen_check.py</code> reports when a <code>dump-screen</code> of the pane matches a permission prompt or a confirm dialog. <code>blocked</code> is three consecutive tool failures, or stuck in <code>tool_use</code> for more than thirty minutes. The priority is <code>blocked &gt; waiting &gt; idle/running</code> so a session in trouble can never look healthy. Mode is a separate axis with two values: <code>monitored</code> is the default and read-only; <code>managed</code> lets Vigil auto-approve permission prompts and ping the Orchestrator when the session goes idle.</p>
+<p>The state model is small on purpose. Every session is exactly one of <code>running</code>, <code>idle</code>, <code>waiting</code>, <code>blocked</code>. <code>running</code> means the JSONL has a recent <code>tool_use</code> boundary or activity inside sixty seconds. <code>idle</code> means an <code>end_turn</code> boundary or sixty seconds of silence. <code>waiting</code> is what <code>screen_check.py</code> reports when a <code>dump-screen</code> of the pane matches a permission prompt or a confirm dialog. <code>blocked</code> is three consecutive tool failures, or stuck in <code>tool_use</code> for more than thirty minutes. The priority is <code>blocked > waiting > idle/running</code> so a session in trouble can never look healthy. Mode is a separate axis with two values: <code>monitored</code> is the default and read-only; <code>managed</code> lets Vigil auto-approve permission prompts and ping the Orchestrator when the session goes idle.</p>
 <div class="mermaid">
 flowchart LR
-  Hooks[Claude Code hooks<br/>SessionStart, Stop, Permission] -->|<1s| Server[Vigil server :7777]
-  Watch[watchdog Observer<br/>JSONL file modifications] -->|ms| Server
-  Scan[scheduler sys:scan<br/>every 60s] -->|full sweep| Server
-  Patrol[scheduler sys:patrol<br/>every 600s] -->|orchestrate| Server
+  Hooks[Claude Code hooks<br>SessionStart, Stop, Permission] -->|<1s| Server[Vigil server :7777]
+  Watch[watchdog Observer<br>JSONL file modifications] -->|ms| Server
+  Scan[scheduler sys:scan<br>every 60s] -->|full sweep| Server
+  Patrol[scheduler sys:patrol<br>every 600s] -->|orchestrate| Server
   Server --> WS[WebSocket /ws]
-  Server --> Disp[dispatch.py<br/>Zellij CLI]
+  Server --> Disp[dispatch.py<br>Zellij CLI]
   Disp --> Orch[Orchestrator pane]
   WS --> UI[Dossier UI]
 </div>

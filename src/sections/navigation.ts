@@ -1,6 +1,7 @@
 import contactsData from '../data/contacts.json';
 import { ContactLink } from '../types';
 import { t } from '../i18n';
+import { sanitizeHref } from '../lib/html-safety';
 
 interface NavBlock {
   label: string;
@@ -51,7 +52,7 @@ export function renderNavigation(): string {
         label: contact.label,
         description: c.description,
         actionLabel: c.actionLabel,
-        href: contact.value,
+        href: sanitizeHref(contact.value) || '/#',
         external: contact.type !== 'email',
       };
     }),

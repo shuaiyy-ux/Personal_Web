@@ -2,29 +2,29 @@
 <p>The thing the existing tools get wrong is that they either auto-publish (which is how you end up with a typo on three platforms) or they make you babysit each tab manually. I wanted the middle path: the system fills the form for me, and the human (me) does the final read-and-publish. That single design decision drove most of the architecture below.</p>
 <div class="mermaid">
 flowchart LR
-  Up[Upload one video<br/>plus one caption] --> Adapt[Per-platform<br/>limit check]
-  Adapt -->|over limit| Claude[Claude haiku<br/>rewrite to fit]
+  Up[Upload one video<br>plus one caption] --> Adapt[Per-platform<br>limit check]
+  Adapt -->|over limit| Claude[Claude haiku<br>rewrite to fit]
   Adapt -->|under limit| Pass[pass through]
-  Claude --> Plan[Distribution job<br/>SQLite row plus<br/>per-platform task rows]
+  Claude --> Plan[Distribution job<br>SQLite row plus<br>per-platform task rows]
   Pass --> Plan
-  Plan --> DY[Douyin filler<br/>patchright window]
-  Plan --> XHS[Xiaohongshu filler<br/>patchright window]
-  Plan --> IG[Instagram filler<br/>patchright window]
-  DY --> Watch[WebSocket feed<br/>fill -> wait_publish<br/>-> success/timeout]
+  Plan --> DY[Douyin filler<br>patchright window]
+  Plan --> XHS[Xiaohongshu filler<br>patchright window]
+  Plan --> IG[Instagram filler<br>patchright window]
+  DY --> Watch[WebSocket feed<br>fill -> wait_publish<br>-> success/timeout]
   XHS --> Watch
   IG --> Watch
 </div>
 <p><em>FIG.01: One job row in SQLite owns N per-platform task rows, each driven by an isolated patchright filler. The frontend subscribes once over WebSocket and reads task transitions live.</em></p>
 <p>The content adapter is the simplest piece of AI in the whole stack and the one users notice most. The rule is: if the caption fits the platform's <code>title_limit</code>, pass it through verbatim. If not, send it to Claude haiku with a one-shot prompt that says "rewrite this title in N Chinese characters or fewer, preserve the hook, do not add hashtags." When the API key is missing, the adapter falls back to a hard truncate at the limit. Treating the AI as an optional layer over a deterministic core was a real choice. It means the system stays useful at 3am with no internet, and it means I can swap haiku for a stronger model later without rewriting the orchestrator.</p>
-<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">adapt_title</span><span class="p">(</span><span class="n">raw</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">limit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">limit</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">adapt_title</span><span class="p">(</span><span class="n">raw</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-></span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">limit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span> <span class="o"><=</span> <span class="n">limit</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">raw</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">settings</span><span class="o">.</span><span class="n">anthropic_api_key</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">raw</span><span class="p">[:</span><span class="n">limit</span><span class="p">]</span>
     <span class="n">msg</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-        <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-haiku-4-5-20251001&quot;</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="s2">"claude-haiku-4-5-20251001"</span><span class="p">,</span>
         <span class="n">max_tokens</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
-        <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">REWRITE_PROMPT</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="n">REWRITE_PROMPT</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">raw</span><span class="o">=</span><span class="n">raw</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span>
         <span class="p">)}],</span>
     <span class="p">)</span>
@@ -38,13 +38,13 @@ flowchart LR
 [09:42:11] douyin       fill_started
 [09:42:11] xiaohongshu  fill_started
 [09:42:11] instagram    fill_started
-[09:42:18] douyin       title_overflowed -&gt; claude_rewrite -&gt; 28 chars
+[09:42:18] douyin       title_overflowed -> claude_rewrite -> 28 chars
 [09:42:31] xiaohongshu  filled, awaiting human publish
 [09:43:02] douyin       filled, awaiting human publish
 [09:43:14] instagram    filled, awaiting human publish
-[09:46:55] xiaohongshu  url_match /publish/success -&gt; published
-[09:47:22] douyin       url_match /content/manage    -&gt; published
-[09:48:01] instagram    dom_match &quot;已分享&quot;            -&gt; published
+[09:46:55] xiaohongshu  url_match /publish/success -> published
+[09:47:22] douyin       url_match /content/manage    -> published
+[09:48:01] instagram    dom_match "已分享"            -> published
 [09:48:01] job 7c3a     completed (3/3)
 </code></pre></div>
 

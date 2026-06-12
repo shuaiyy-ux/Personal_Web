@@ -1,5 +1,6 @@
 import writingData from '../data/writing.json';
 import { t, getLocale, formatDateLocale } from '../i18n';
+import { sanitizeHref } from '../lib/html-safety';
 
 export interface WritingItem {
   id: string;
@@ -46,6 +47,7 @@ export function renderWritingList(items: WritingItem[]): string {
 }
 
 function renderWritingItem(item: WritingItem, isLatest: boolean): string {
+  const safeUrl = sanitizeHref(item.url) || '/';
   const badges: string[] = [];
 
   if (isLatest) {
@@ -55,7 +57,7 @@ function renderWritingItem(item: WritingItem, isLatest: boolean): string {
   return `
     <a
       class="writing-item"
-      href="${item.url}"
+      href="${safeUrl}"
       ${item.external ? 'target="_blank" rel="noopener noreferrer"' : ''}
     >
       <article>

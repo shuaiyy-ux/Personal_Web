@@ -2,10 +2,10 @@
 <p>If you take the funnel apart, job application is a five-segment pipeline: discover roles, judge fit, draft cover letter and standard answers, fill the ATS form, contact a hiring manager. Each segment has tools individually. They do not compose into one pipe. joba's bet is to wire all five together on my own machine: local SQLite, local browser, my LinkedIn cookie, my Claude Code subscription. No cloud, no distribution, no public API.</p>
 <div class="mermaid">
 flowchart LR
-  Discover[Phase 1<br/>discover + LLM judge] --> Helper[Phase 2A<br/>cover letter + answer drafts]
-  Helper --> Agent[Phase 2B / 2B-2<br/>agent loop fills ATS form]
-  Agent --> Reach[Phase 3<br/>LinkedIn reach out half-auto]
-  Reach -.-> Future[Phase 4<br/>TBD]
+  Discover[Phase 1<br>discover + LLM judge] --> Helper[Phase 2A<br>cover letter + answer drafts]
+  Helper --> Agent[Phase 2B / 2B-2<br>agent loop fills ATS form]
+  Agent --> Reach[Phase 3<br>LinkedIn reach out half-auto]
+  Reach -.-> Future[Phase 4<br>TBD]
   classDef done fill:#1e3a5f,stroke:#3b82f6,color:#fff
   classDef wip fill:#3a2e1e,stroke:#fcd34d,color:#fff
   classDef todo fill:#1e1e1e,stroke:#525252,color:#888,stroke-dasharray:3 3
@@ -106,7 +106,7 @@ flowchart LR
     <li class="joba-mock__t-item"><code>click_radio("auth_to_work_us", true)</code></li>
     <li class="joba-mock__t-item"><code>click_checkbox("contact_consent", true)</code></li>
     <li class="joba-mock__t-item"><code>fill_text_field("years_experience", "5")</code></li>
-    <li class="joba-mock__t-item"><code>fill_text_field("cover_letter", &lt;1.4kB&gt;)</code></li>
+    <li class="joba-mock__t-item"><code>fill_text_field("cover_letter", <1.4kB>)</code></li>
     <li class="joba-mock__t-item joba-mock__t-item--running"><code>select_combobox("country", "United States")</code> ...</li>
   </ul>
 </div>

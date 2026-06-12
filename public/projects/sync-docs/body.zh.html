@@ -2,16 +2,16 @@
 <p>不那么显然的设计决定是「什么算文件的身份」。v1 用路径做身份。我一开始重新整理目录（这种事我经常做，把项目从 <code>~/Downloads/foo</code> 挪到 <code>~/Downloads/archive/foo</code> 或者干脆挪到另一个 scan root），索引就把每一次移动当成「删 + 新增」处理，每个被挪的文件都要重新跑一次 LLM 读 takeaway。增量索引最值钱的那部分缓存（title 和 takeaway）每次重组目录就被扔掉一次。v2 把身份改成 MD5 哈希。路径只是会跟着移动而更新的标签。内容没改就是同一个身份，不重读。</p>
 <div class="highlight"><pre><span></span><code>对 previous hashes 里每条 (old_path, old_hash) 且 old_path 已不存在：
   candidates = 新文件列表里 hash 等于 old_hash 且不在 previous index 中的路径
-  如果 len == 1            -&gt; 唯一 move（文件名可以变，内容才是身份）
-  否则 len &gt; 1：
+  如果 len == 1            -> 唯一 move（文件名可以变，内容才是身份）
+  否则 len > 1：
     same_name = candidates 里 basename 等于 old_path basename 的子集
-    如果 len(same_name) == 1 -&gt; 标记移动到那一个（文件名作 tiebreaker）
-    否则                     -&gt; 模糊，记日志、当作删除
-  否则 len == 0              -&gt; 删除
+    如果 len(same_name) == 1 -> 标记移动到那一个（文件名作 tiebreaker）
+    否则                     -> 模糊，记日志、当作删除
+  否则 len == 0              -> 删除
 </code></pre></div>
 
 <p><em>FIG.01：move 检测算法。文件名不要求一致。<code>mv old/notes.md new/guide.md</code> 仍被识别为 move，因为哈希没变。文件名只在多个新路径共享同一哈希这种少见情况下作为 tiebreaker 介入。</em></p>
-<p>多 root 扫描是让基于内容的 move 在实际中能跑通的关键。如果只有 <code>~/Downloads</code> 在 scope，一个项目挪到了 <code>~/projects</code>，算法会看到旧路径消失而没有任何候选，于是回退到「删除」。要让 hash 命中触发，move 的两端必须都在 scope 里。默认四个 root 覆盖我实际放代码的四个地方；传参数可覆盖。每个条目带一个 <code>previous_paths</code> 字段记录移动链，限制最多 5 条，让 <code>~/Downloads/foo -&gt; ~/projects/foo -&gt; ~/projects/archive/foo</code> 这样的轨迹能在 <code>hashes.json</code> 里追溯。</p>
+<p>多 root 扫描是让基于内容的 move 在实际中能跑通的关键。如果只有 <code>~/Downloads</code> 在 scope，一个项目挪到了 <code>~/projects</code>，算法会看到旧路径消失而没有任何候选，于是回退到「删除」。要让 hash 命中触发，move 的两端必须都在 scope 里。默认四个 root 覆盖我实际放代码的四个地方；传参数可覆盖。每个条目带一个 <code>previous_paths</code> 字段记录移动链，限制最多 5 条，让 <code>~/Downloads/foo -> ~/projects/foo -> ~/projects/archive/foo</code> 这样的轨迹能在 <code>hashes.json</code> 里追溯。</p>
 <p>分类是两遍跑、刻意做得便宜。第一遍用文件名加路径组件规则。比如 Architecture 分类只有当路径里带 <code>/architecture/</code> 或 <code>/design/</code> 这样的真路径组件时才命中、不是只看文件名后缀。这一条规则消掉了 v1 时一类常见误报：任何文件名以 <code>-architecture.md</code> 结尾的都被归到 Architecture，不管它实际上是不是讲架构。第一遍落到 <code>Other</code> 的，再跑第二遍：把缓存里的 takeaway 小写后做子串匹配：<code>lesson|pitfall|gotcha|postmortem</code> 提升到 Engineering Lessons；<code>playbook|manifesto|methodology|规范|心得</code> 提升到 Personal Knowledge；以此类推。第二遍用的是已经缓存好的 takeaway，所以零额外 LLM 调用。</p>
 <div class="highlight"><pre><span></span><code>noise 排除（hash 之前就过滤掉）：
   .specify/  .cursor/  .github/  node_modules/  .venv/  .git/

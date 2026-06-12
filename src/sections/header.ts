@@ -1,6 +1,7 @@
 import contactsData from '../data/contacts.json';
 import { ContactLink } from '../types';
 import { t, getLocale, setLocale } from '../i18n';
+import { sanitizeHref } from '../lib/html-safety';
 
 export function renderHeader(): string {
   const contacts = contactsData as ContactLink[];
@@ -10,7 +11,7 @@ export function renderHeader(): string {
     { label: t('nav.blog'), href: '/blog/', external: false },
     ...requiredLinks.map((contact) => ({
       label: contact.label,
-      href: contact.value,
+      href: sanitizeHref(contact.value) || '/#',
       external: contact.type !== 'email',
     })),
   ];

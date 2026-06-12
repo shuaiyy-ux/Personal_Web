@@ -2,6 +2,7 @@ import metaData from '../data/meta.json';
 import contactsData from '../data/contacts.json';
 import { ContactLink } from '../types';
 import { t, formatDateLocale } from '../i18n';
+import { sanitizeHref } from '../lib/html-safety';
 
 interface SiteMeta {
   lastUpdated: string;
@@ -20,7 +21,7 @@ export function renderFooter(): string {
       (contact) => `
         <a
           class="footer__link"
-          href="${contact.value}"
+          href="${sanitizeHref(contact.value) || '/#'}"
           ${contact.type !== 'email' ? 'target="_blank" rel="noopener noreferrer"' : ''}
         >
           ${contact.label}
@@ -43,4 +44,3 @@ export function renderFooter(): string {
     </footer>
   `;
 }
-

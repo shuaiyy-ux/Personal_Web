@@ -11,6 +11,7 @@ import { renderFooter } from './sections/footer';
 import { WritingItem } from './sections/writing';
 import initShiftBackground from './backgrounds/shift';
 import { t, getLocale, formatDateLocale } from './i18n';
+import { sanitizeHtmlFragment } from './lib/html-safety';
 
 const app = document.getElementById('app');
 
@@ -20,13 +21,14 @@ async function render(): Promise<void> {
   const slug = getSlugFromPath();
   const post = findPost(slug);
   const body = post ? await fetchBodyContent(slug) : null;
+  const safeBody = body ? sanitizeHtmlFragment(body) : null;
 
   app.innerHTML = `
     <div class="background-canvas content--canvas" aria-hidden="true"></div>
     <a href="#main-content" class="visually-hidden">${t('post.skip')}</a>
     ${renderHeader()}
     <main id="main-content" class="container blog-post-page">
-      ${post ? renderArticle(post, body) : renderNotFound(slug)}
+      ${post ? renderArticle(post, safeBody) : renderNotFound(slug)}
     </main>
     ${renderFooter()}
   `;
@@ -38,8 +40,22 @@ async function render(): Promise<void> {
 
 function getSlugFromPath(): string {
   const segments = window.location.pathname.split('/').filter(Boolean);
-  const slug = segments[1] ?? '';
+  const raw = segments[1] ?? '';
+  const slug = safeDecodeSlug(raw);
+  if (!slug || !isBlogSlugAllowed(slug)) return '';
   return slug;
+}
+
+function safeDecodeSlug(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return '';
+  }
+}
+
+function isBlogSlugAllowed(slug: string): boolean {
+  return (writingData as WritingItem[]).some((item) => item.id === slug);
 }
 
 async function initMermaid(): Promise<void> {
@@ -49,7 +65,7 @@ async function initMermaid(): Promise<void> {
   const mermaid = await import('mermaid');
   mermaid.default.initialize({
     startOnLoad: false,
-    securityLevel: 'loose',
+    securityLevel: 'strict',
     theme: 'dark',
     themeVariables: {
       background: 'transparent',
