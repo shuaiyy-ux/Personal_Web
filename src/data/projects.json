@@ -140,7 +140,7 @@
   {
     "id": "hca-fleet-allocation",
     "code": "HC",
-    "title": "FaaS AI",
+    "title": "HCA FaaS Allocation",
     "tagline": "Best Capstone-winning allocator for HCA FaaS vehicles",
     "tagline_zh": "年度 Best Capstone，面向 HCA FaaS 车辆分配",
     "summary": "",

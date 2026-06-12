@@ -168,51 +168,47 @@ The agent had context from the allocation state: selected vehicles, current meth
 
 I spent most of my time turning a technical optimizer into a product that business users could trust. The largest product decision was keeping the baseline visible. The nearest-dealer baseline gave HCA a familiar reference point, while ILP and bucket mode made the tradeoff more explicit. I also kept chat off the Home page because an executive summary should not invite open-ended questions before the agent earns trust.
 
-<section class="hca-viz hca-tradeoff" aria-label="Allocation method tradeoff matrix">
-  <div class="hca-tradeoff__header"></div>
-  <div class="hca-tradeoff__header">Nearest dealer</div>
-  <div class="hca-tradeoff__header">ILP</div>
-  <div class="hca-tradeoff__header">Agent</div>
-  <div class="hca-tradeoff__header">Human override</div>
-
-  <div class="hca-tradeoff__axis">Distance</div>
-  <div class="hca-dot hca-dot--strong"></div>
-  <div class="hca-dot hca-dot--strong"></div>
-  <div class="hca-dot hca-dot--medium"></div>
-  <div class="hca-dot hca-dot--medium"></div>
-
-  <div class="hca-tradeoff__axis">Demand</div>
-  <div class="hca-dot hca-dot--weak"></div>
-  <div class="hca-dot hca-dot--strong"></div>
-  <div class="hca-dot hca-dot--medium"></div>
-  <div class="hca-dot hca-dot--weak"></div>
-
-  <div class="hca-tradeoff__axis">Utilization</div>
-  <div class="hca-dot hca-dot--weak"></div>
-  <div class="hca-dot hca-dot--strong"></div>
-  <div class="hca-dot hca-dot--medium"></div>
-  <div class="hca-dot hca-dot--weak"></div>
-
-  <div class="hca-tradeoff__axis">Capacity</div>
-  <div class="hca-dot hca-dot--weak"></div>
-  <div class="hca-dot hca-dot--strong"></div>
-  <div class="hca-dot hca-dot--strong"></div>
-  <div class="hca-dot hca-dot--strong"></div>
-
-  <div class="hca-tradeoff__axis">Tax exposure</div>
-  <div class="hca-dot hca-dot--weak"></div>
-  <div class="hca-dot hca-dot--strong"></div>
-  <div class="hca-dot hca-dot--medium"></div>
-  <div class="hca-dot hca-dot--weak"></div>
-
-  <div class="hca-tradeoff__axis">Business constraint</div>
-  <div class="hca-dot hca-dot--none"></div>
-  <div class="hca-dot hca-dot--medium"></div>
-  <div class="hca-dot hca-dot--strong"></div>
-  <div class="hca-dot hca-dot--strong"></div>
+<section class="hca-viz hca-tool-trace" aria-label="Agent tool-call trace for reroute approval">
+  <div class="hca-tool-trace__header">
+    <span>agent.run</span>
+    <strong>restricted_destination_reroute</strong>
+  </div>
+  <div class="hca-tool-trace__grid">
+    <article class="hca-tool-trace__node hca-tool-trace__node--intent">
+      <span>User intent</span>
+      <strong>avoid restricted state</strong>
+    </article>
+    <article class="hca-tool-trace__node hca-tool-trace__node--context">
+      <span>Context bundle</span>
+      <code>selected_vins</code>
+      <code>solver_result</code>
+      <code>dealer_capacity</code>
+      <code>current_allocations</code>
+    </article>
+    <article class="hca-tool-trace__runtime">
+      <span>Agent runtime</span>
+      <strong>tool-calling boundary</strong>
+      <small>read tools + planning tools + gated mutation</small>
+    </article>
+    <article class="hca-tool-trace__node hca-tool-trace__node--calls">
+      <span>Bounded tool calls</span>
+      <code>get_allocation_state()</code>
+      <code>check_destination_rules()</code>
+      <code>rank_reroute_candidates()</code>
+      <code>stage_allocation_patch()</code>
+    </article>
+    <article class="hca-tool-trace__node hca-tool-trace__node--gate">
+      <span>Approval gate</span>
+      <strong>operator reviews diff</strong>
+    </article>
+    <article class="hca-tool-trace__node hca-tool-trace__node--patch">
+      <span>Assignment patch</span>
+      <code>dealer_A -> dealer_B</code>
+    </article>
+  </div>
 </section>
 
-*FIG.06: Decision responsibility by method. Nearest dealer covers proximity, ILP handles optimization signals, the agent handles exception reroutes, and the operator approves.*
+*FIG.06: Agent tool-call trace for a restricted-destination reroute. The agent reads allocation context, calls bounded tools, stages an assignment patch, and requires operator approval before mutation.*
 
 The score surface also had to be honest. Raw score is not dollars and cannot be compared across vehicles. A Los Angeles car and a Miami car face different dealer networks, so I used rank and method comparison instead of pretending every score was a finance KPI. HCA engineering also needed a data contract, so the handoff named the synthetic inputs and the path for replacing them with real operational data.
 

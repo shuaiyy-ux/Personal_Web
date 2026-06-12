@@ -168,51 +168,47 @@ Agent 拿到的是 allocation state：已选车辆、当前方法、最新 solve
 
 我大部分时间花在把技术 optimizer 变成业务用户可以相信的产品。最重要的产品决策是保留 baseline。Nearest-dealer baseline 给 HCA 一个熟悉的对照点，ILP 和 bucket mode 则把 tradeoff 展开。我也没有把 chat 放在 Home 页面，因为 executive summary 不应该在 agent 建立信任前引导开放式提问。
 
-<section class="hca-viz hca-tradeoff" aria-label="Allocation method tradeoff matrix">
-  <div class="hca-tradeoff__header"></div>
-  <div class="hca-tradeoff__header">Nearest dealer</div>
-  <div class="hca-tradeoff__header">ILP</div>
-  <div class="hca-tradeoff__header">Agent</div>
-  <div class="hca-tradeoff__header">Human override</div>
-
-  <div class="hca-tradeoff__axis">Distance</div>
-  <div class="hca-dot hca-dot--strong"></div>
-  <div class="hca-dot hca-dot--strong"></div>
-  <div class="hca-dot hca-dot--medium"></div>
-  <div class="hca-dot hca-dot--medium"></div>
-
-  <div class="hca-tradeoff__axis">Demand</div>
-  <div class="hca-dot hca-dot--weak"></div>
-  <div class="hca-dot hca-dot--strong"></div>
-  <div class="hca-dot hca-dot--medium"></div>
-  <div class="hca-dot hca-dot--weak"></div>
-
-  <div class="hca-tradeoff__axis">Utilization</div>
-  <div class="hca-dot hca-dot--weak"></div>
-  <div class="hca-dot hca-dot--strong"></div>
-  <div class="hca-dot hca-dot--medium"></div>
-  <div class="hca-dot hca-dot--weak"></div>
-
-  <div class="hca-tradeoff__axis">Capacity</div>
-  <div class="hca-dot hca-dot--weak"></div>
-  <div class="hca-dot hca-dot--strong"></div>
-  <div class="hca-dot hca-dot--strong"></div>
-  <div class="hca-dot hca-dot--strong"></div>
-
-  <div class="hca-tradeoff__axis">Tax exposure</div>
-  <div class="hca-dot hca-dot--weak"></div>
-  <div class="hca-dot hca-dot--strong"></div>
-  <div class="hca-dot hca-dot--medium"></div>
-  <div class="hca-dot hca-dot--weak"></div>
-
-  <div class="hca-tradeoff__axis">Business constraint</div>
-  <div class="hca-dot hca-dot--none"></div>
-  <div class="hca-dot hca-dot--medium"></div>
-  <div class="hca-dot hca-dot--strong"></div>
-  <div class="hca-dot hca-dot--strong"></div>
+<section class="hca-viz hca-tool-trace" aria-label="Agent tool-call trace for reroute approval">
+  <div class="hca-tool-trace__header">
+    <span>agent.run</span>
+    <strong>restricted_destination_reroute</strong>
+  </div>
+  <div class="hca-tool-trace__grid">
+    <article class="hca-tool-trace__node hca-tool-trace__node--intent">
+      <span>User intent</span>
+      <strong>avoid restricted state</strong>
+    </article>
+    <article class="hca-tool-trace__node hca-tool-trace__node--context">
+      <span>Context bundle</span>
+      <code>selected_vins</code>
+      <code>solver_result</code>
+      <code>dealer_capacity</code>
+      <code>current_allocations</code>
+    </article>
+    <article class="hca-tool-trace__runtime">
+      <span>Agent runtime</span>
+      <strong>tool-calling boundary</strong>
+      <small>read tools + planning tools + gated mutation</small>
+    </article>
+    <article class="hca-tool-trace__node hca-tool-trace__node--calls">
+      <span>Bounded tool calls</span>
+      <code>get_allocation_state()</code>
+      <code>check_destination_rules()</code>
+      <code>rank_reroute_candidates()</code>
+      <code>stage_allocation_patch()</code>
+    </article>
+    <article class="hca-tool-trace__node hca-tool-trace__node--gate">
+      <span>Approval gate</span>
+      <strong>operator reviews diff</strong>
+    </article>
+    <article class="hca-tool-trace__node hca-tool-trace__node--patch">
+      <span>Assignment patch</span>
+      <code>dealer_A -> dealer_B</code>
+    </article>
+  </div>
 </section>
 
-*FIG.06：各方法的 decision responsibility。Nearest dealer 负责 proximity，ILP 处理 optimization signals，agent 处理 exception reroutes，operator 负责 approval。*
+*FIG.06：Restricted-destination reroute 的 agent tool-call trace。Agent 读取 allocation context，调用 bounded tools，stage assignment patch，并在 mutation 前要求 operator approval。*
 
 Score 表层也必须诚实。Raw score 不是美元，也不能跨车辆比较。Los Angeles 的车和 Miami 的车面对的是不同 dealer network，所以我使用 rank 和 method comparison，而不是把每个 score 包装成 finance KPI。HCA 工程团队也需要 data contract，因此 handoff 明确标出 synthetic input，以及将来用真实运营数据替换它们的路径。
 
