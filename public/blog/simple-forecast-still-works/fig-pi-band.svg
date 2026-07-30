@@ -1,12 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="920" height="380" viewBox="0 0 920 380" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
 <rect width="920" height="380" rx="8" fill="#1a1a1a"/>
 <text x="20" y="28" font-size="15" fill="#ffffff" text-anchor="start" font-weight="600">80% 区间的逐日兑现(74 天,命中 81%)</text>
-<line x1="56" y1="259.3" x2="896" y2="259.3" stroke="#2c2c2a" stroke-width="1"/>
-<text x="48" y="263.34286646101043" font-size="11" fill="#898781" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">10k</text>
-<line x1="56" y1="178.7" x2="896" y2="178.7" stroke="#2c2c2a" stroke-width="1"/>
-<text x="48" y="182.68573292202092" font-size="11" fill="#898781" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">20k</text>
-<line x1="56" y1="98.0" x2="896" y2="98.0" stroke="#2c2c2a" stroke-width="1"/>
-<text x="48" y="102.02859938303136" font-size="11" fill="#898781" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">30k</text>
+<text x="20" y="46" font-size="11" fill="#898781" text-anchor="start" font-weight="normal">纵轴为指数:周一均值 = 100,不代表绝对单量</text>
+<line x1="56" y1="241.5" x2="896" y2="241.5" stroke="#2c2c2a" stroke-width="1"/>
+<text x="48" y="245.52247937690612" font-size="11" fill="#898781" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">50</text>
+<line x1="56" y1="143.0" x2="896" y2="143.0" stroke="#2c2c2a" stroke-width="1"/>
+<text x="48" y="147.04495875381224" font-size="11" fill="#898781" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">100</text>
 <line x1="56" y1="340.0" x2="896" y2="340.0" stroke="#383835" stroke-width="1"/>
 <line x1="263.1" y1="340" x2="263.1" y2="344" stroke="#383835" stroke-width="1"/>
 <text x="263.1232876712329" y="358" font-size="11" fill="#898781" text-anchor="middle" font-weight="normal">6月1日</text>
