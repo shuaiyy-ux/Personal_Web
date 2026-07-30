@@ -1,4 +1,10 @@
-# It's 2026. Who Still Uses a Weighted Average?
+I am building the operations dashboard for a cross-border e-commerce sorting warehouse, covering the whole chain from data collection to floor-level decisions. A resident cloud collector pulls operational data from the upstream platform on a fixed cadence and writes it into a single-file SQLite database. Local environments track the cloud through a read-only whole-database mirror (consistent snapshots via the SQLite backup API, swapped in atomically by rsync, with a measured lag of about 10 seconds). FastAPI serves the API and the frontend is framework-free vanilla JS. Deploys run through GitHub Actions with zero downtime via gunicorn graceful reload, and migrations are constrained to be backward compatible because old and new workers share the same SQLite file during the overlap. The backend is currently about 7,000 lines of Python across collection, forecasting, labor settlement, quality checks, and reconciliation audits. The floor uses it every day, and the project is still under active iteration.
+
+The dashboard has one design rule: it is a supervision tool, and pure information display gets cut. Cumulative totals hide a gap of a few hundred parcels inside a base of tens of thousands, so primary metrics are expressed as rates (parcels per hour) and deviations against a baseline, with the most actionable outlier called out and pinned to the top automatically. Every panel has to answer the same question: what decision can a manager make from this? No answer, redo it.
+
+Many metrics on the board anchor to the day's target volume, and its accuracy decides how much the whole board can be trusted. How that number gets computed is the most fully written-up piece of engineering in the project. What follows is the forecasting module's complete write-up, also published separately [as a blog post](/blog/simple-forecast-still-works/).
+
+---
 
 ## Summary
 
@@ -138,7 +144,3 @@ The same year I did this project, nearly every industry conversation about forec
 This is not a claim that large models don't work. It is a claim that tools have to match problems. With 109 days of history, one overwhelming weekly cycle, and an external estimate already in hand, the work the problem actually demands is cleaning the data, using the cycle fully, and calibrating the outside information before trusting it, and a weighted average finishes all three. A bigger model has no increment to win here and pays its full costs anyway. Conversely, once a year of history accumulates and calendar events become the main contradiction, a stronger model earns its audition, and even then it has to beat these 30 lines in a backtest before it takes the job.
 
 The toolbox is deeper than it has ever been, but judgment has not gotten any cheaper. Seeing the structure of a problem, picking a tool that is exactly enough, and spending the saved effort on data and validation is not outdated in 2026. It is scarce. Simple methods have never needed to defend themselves. They only need someone to take them seriously.
-
----
-
-This forecast is one module of a larger warehouse operations dashboard. The system as a whole (collection, mirroring, zero-downtime deploys, board design) is covered on the [project page](/projects/warehouse-ops-dashboard/).

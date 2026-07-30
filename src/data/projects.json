@@ -7,7 +7,11 @@
     "tagline_zh": "公司级情绪打分加按需 RAG，从本地 Next.js 原型移植到浏览器版",
     "summary": "",
     "summary_zh": "",
-    "tags": ["Next.js", "RAG", "OpenAI"],
+    "tags": [
+      "Next.js",
+      "RAG",
+      "OpenAI"
+    ],
     "githubUrl": "https://github.com/cmyao/finance-analyzer",
     "repoPrivate": true,
     "liveUrl": "/tools/finance-analyzer/",
@@ -23,7 +27,11 @@
     "tagline_zh": "在开源 spec-kit 框架之上沉淀的迭代纪律",
     "summary": "Notes on running spec-kit projects without losing the spec-plan-tasks-tests thread, plus the rules I use to stop LLMs from compressing the red-green loop.",
     "summary_zh": "如何在 spec-kit 工作流中保住 spec、plan、tasks、tests 的对齐，加上我用来防止 LLM 压缩红绿循环的几条硬规则。",
-    "tags": ["Spec-Kit", "TDD", "Workflow"],
+    "tags": [
+      "Spec-Kit",
+      "TDD",
+      "Workflow"
+    ],
     "githubUrl": "https://github.com/github/spec-kit",
     "year": "2026",
     "status": "shipped"
@@ -36,7 +44,11 @@
     "tagline_zh": "盯着每一个 Claude Code 会话的四层监控总指挥",
     "summary": "",
     "summary_zh": "",
-    "tags": ["Python", "FastAPI", "WebSocket"],
+    "tags": [
+      "Python",
+      "FastAPI",
+      "WebSocket"
+    ],
     "githubUrl": "https://github.com/cmyao/vigil",
     "repoPrivate": true,
     "year": "2026",
@@ -50,7 +62,11 @@
     "tagline_zh": "AI 邮件客户端，自动分级、一键草稿、对话式查询",
     "summary": "",
     "summary_zh": "",
-    "tags": ["Next.js", "Claude Code", "Glassmorphism"],
+    "tags": [
+      "Next.js",
+      "Claude Code",
+      "Glassmorphism"
+    ],
     "githubUrl": "",
     "year": "2026",
     "status": "wip"
@@ -63,7 +79,11 @@
     "tagline_zh": "本地 DJ 曲库的声学相似推荐器，MERT 与 Discogs 嵌入融合，离线运行",
     "summary": "",
     "summary_zh": "",
-    "tags": ["Python", "MERT", "Embeddings"],
+    "tags": [
+      "Python",
+      "MERT",
+      "Embeddings"
+    ],
     "githubUrl": "",
     "year": "2026",
     "status": "shipped"
@@ -76,7 +96,11 @@
     "tagline_zh": "一条视频一份文案，自动分发到抖音、小红书、Instagram，超限时按各家字数让 Claude 重写。",
     "summary": "",
     "summary_zh": "",
-    "tags": ["FastAPI", "Patchright", "Claude API"],
+    "tags": [
+      "FastAPI",
+      "Patchright",
+      "Claude API"
+    ],
     "githubUrl": "",
     "repoPrivate": true,
     "year": "2026",
@@ -90,7 +114,11 @@
     "tagline_zh": "一个让你必须起床的闹钟。iOS 26 AlarmKit，相机识别随机目标才能关，全程本机不联网。",
     "summary": "",
     "summary_zh": "",
-    "tags": ["Swift", "AlarmKit", "Vision"],
+    "tags": [
+      "Swift",
+      "AlarmKit",
+      "Vision"
+    ],
     "githubUrl": "",
     "year": "2026",
     "status": "shipped"
@@ -103,7 +131,12 @@
     "tagline_zh": "跨项目 MD 索引器，文件身份用 MD5，输出直接注入 AI context",
     "summary": "",
     "summary_zh": "",
-    "tags": ["Claude Code", "Slash Command", "MD5", "Indexer"],
+    "tags": [
+      "Claude Code",
+      "Slash Command",
+      "MD5",
+      "Indexer"
+    ],
     "githubUrl": "",
     "repoPrivate": true,
     "year": "2026",
@@ -117,7 +150,12 @@
     "tagline_zh": "节点画布，Claude 和我共同编辑同一份 JSON 真相",
     "summary": "",
     "summary_zh": "",
-    "tags": ["TypeScript", "React Flow", "Hono", "Claude Code"],
+    "tags": [
+      "TypeScript",
+      "React Flow",
+      "Hono",
+      "Claude Code"
+    ],
     "githubUrl": "",
     "repoPrivate": true,
     "year": "2026",
@@ -131,7 +169,12 @@
     "tagline_zh": "全自动求职助手，自动投递加 LinkedIn reach out",
     "summary": "",
     "summary_zh": "",
-    "tags": ["FastAPI", "Patchright", "Claude Agent", "MCP"],
+    "tags": [
+      "FastAPI",
+      "Patchright",
+      "Claude Agent",
+      "MCP"
+    ],
     "githubUrl": "",
     "repoPrivate": true,
     "year": "2026",
@@ -145,11 +188,35 @@
     "tagline_zh": "年度 Best Capstone，面向 HCA FaaS 车辆分配",
     "summary": "",
     "summary_zh": "",
-    "tags": ["ILP", "FastAPI", "Claude Agent", "Capstone"],
+    "tags": [
+      "ILP",
+      "FastAPI",
+      "Claude Agent",
+      "Capstone"
+    ],
     "githubUrl": "https://github.com/cmyao/hca-fleet-allocation",
     "repoPrivate": true,
     "year": "2026",
     "featured": true,
     "status": "shipped"
+  },
+  {
+    "id": "warehouse-ops-dashboard",
+    "code": "WD",
+    "title": "Warehouse Ops Dashboard",
+    "tagline": "Production ops dashboard and daily-volume forecasting for a cross-border sorting warehouse",
+    "tagline_zh": "跨境电商分拣仓的运营看板与日单量预测,生产环境每日在用",
+    "summary": "",
+    "summary_zh": "",
+    "tags": [
+      "FastAPI",
+      "SQLite",
+      "Vanilla JS",
+      "Forecasting"
+    ],
+    "githubUrl": "",
+    "repoPrivate": true,
+    "year": "2026",
+    "status": "wip"
   }
 ]

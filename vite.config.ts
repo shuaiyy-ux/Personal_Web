@@ -13,6 +13,7 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
+        "project-warehouse-ops-dashboard": resolve(rootDir, "projects/warehouse-ops-dashboard/index.html"),
         "blog-simple-forecast-still-works": resolve(rootDir, "blog/simple-forecast-still-works/index.html"),
         "project-hca-fleet-allocation": resolve(rootDir, "projects/hca-fleet-allocation/index.html"),
         "project-sync-docs": resolve(rootDir, "projects/sync-docs/index.html"),

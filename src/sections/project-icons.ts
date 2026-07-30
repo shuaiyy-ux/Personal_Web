@@ -126,6 +126,21 @@ const iconFlowCanvas = `
   </svg>
 `;
 
+const iconWarehouseOpsDashboard = `
+  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="6" y="9" width="36" height="28" rx="2.5" />
+    <path d="M6 15.5 L42 15.5" opacity="0.45" />
+    <circle cx="9.5" cy="12.2" r="0.9" fill="currentColor" stroke="none" />
+    <circle cx="13" cy="12.2" r="0.9" fill="currentColor" stroke="none" opacity="0.6" />
+    <path d="M11 30.5 L17 25 L22 28 L29 20.5 L37 24.5" />
+    <circle cx="29" cy="20.5" r="1.6" fill="currentColor" stroke="none" />
+    <path d="M11 22 L20 22" opacity="0.35" stroke-dasharray="2 2" />
+    <path d="M25 33 L37 33" opacity="0.35" stroke-dasharray="2 2" />
+    <path d="M15 41.5 L33 41.5" opacity="0.5" />
+    <path d="M24 37 L24 41.5" opacity="0.5" />
+  </svg>
+`;
+
 const iconJoba = `
   <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <circle cx="6" cy="24" r="3" />
@@ -164,6 +179,7 @@ const ICONS: Record<string, string> = {
   'sync-docs': iconSyncDocs,
   'flow-canvas': iconFlowCanvas,
   joba: iconJoba,
+  'warehouse-ops-dashboard': iconWarehouseOpsDashboard,
   speckit: iconSpecKit,
   'finance-analyzer': iconFinanceAnalyzer,
   'email-digest': iconEmailDigest,
