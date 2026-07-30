@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="300" viewBox="0 0 720 300" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+<rect width="720" height="300" rx="8" fill="#1a1a1a"/>
+<text x="20" y="28" font-size="15" fill="#ffffff" text-anchor="start" font-weight="600">Error distribution across 79 backtest days</text>
+<text x="696" y="28" font-size="12" fill="#c3c2b7" text-anchor="end" font-weight="normal">37 days under 5%; median 5.7%</text>
+<line x1="56" y1="202.9" x2="696" y2="202.9" stroke="#2c2c2a" stroke-width="1"/>
+<text x="48" y="206.87661574618096" font-size="11" fill="#898781" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">10</text>
+<line x1="56" y1="157.8" x2="696" y2="157.8" stroke="#2c2c2a" stroke-width="1"/>
+<text x="48" y="161.75323149236192" font-size="11" fill="#898781" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">20</text>
+<line x1="56" y1="112.6" x2="696" y2="112.6" stroke="#2c2c2a" stroke-width="1"/>
+<text x="48" y="116.62984723854288" font-size="11" fill="#898781" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">30</text>
+<rect x="89.7" y="81.0" width="24" height="167.0" rx="4" fill="#3987e5"/>
+<text x="101.71428571428572" y="74.04347826086956" font-size="12" fill="#ffffff" text-anchor="middle" font-weight="600" font-variant-numeric="tabular-nums">37</text>
+<text x="101.71428571428572" y="266" font-size="11" fill="#c3c2b7" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">0–5%</text>
+<rect x="181.1" y="144.2" width="24" height="103.8" rx="4" fill="#3987e5"/>
+<text x="193.14285714285714" y="137.2162162162162" font-size="12" fill="#ffffff" text-anchor="middle" font-weight="600" font-variant-numeric="tabular-nums">23</text>
+<text x="193.14285714285714" y="266" font-size="11" fill="#c3c2b7" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">5–10%</text>
+<rect x="272.6" y="202.9" width="24" height="45.1" rx="4" fill="#3987e5"/>
+<text x="284.57142857142856" y="195.87661574618096" font-size="12" fill="#ffffff" text-anchor="middle" font-weight="600" font-variant-numeric="tabular-nums">10</text>
+<text x="284.57142857142856" y="266" font-size="11" fill="#c3c2b7" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">10–15%</text>
+<rect x="364.0" y="225.4" width="24" height="22.6" rx="4" fill="#3987e5"/>
+<text x="376.0" y="218.43830787309048" font-size="12" fill="#ffffff" text-anchor="middle" font-weight="600" font-variant-numeric="tabular-nums">5</text>
+<text x="376.0" y="266" font-size="11" fill="#c3c2b7" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">15–20%</text>
+<rect x="455.4" y="239.0" width="24" height="9.0" rx="4" fill="#3987e5"/>
+<text x="467.42857142857144" y="231.9753231492362" font-size="12" fill="#ffffff" text-anchor="middle" font-weight="600" font-variant-numeric="tabular-nums">2</text>
+<text x="467.42857142857144" y="266" font-size="11" fill="#c3c2b7" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">20–25%</text>
+<rect x="546.9" y="243.5" width="24" height="4.5" rx="4" fill="#3987e5"/>
+<text x="558.8571428571429" y="236.4876615746181" font-size="12" fill="#ffffff" text-anchor="middle" font-weight="600" font-variant-numeric="tabular-nums">1</text>
+<text x="558.8571428571429" y="266" font-size="11" fill="#c3c2b7" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">25–30%</text>
+<rect x="638.3" y="243.5" width="24" height="4.5" rx="4" fill="#3987e5"/>
+<text x="650.2857142857143" y="236.4876615746181" font-size="12" fill="#ffffff" text-anchor="middle" font-weight="600" font-variant-numeric="tabular-nums">1</text>
+<text x="650.2857142857143" y="266" font-size="11" fill="#c3c2b7" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">30%+</text>
+<line x1="56" y1="248" x2="696" y2="248" stroke="#383835" stroke-width="1"/>
+<text x="376.0" y="286" font-size="11" fill="#898781" text-anchor="middle" font-weight="normal">Daily error (|actual − forecast| ÷ actual)</text>
+<text x="48" y="46" font-size="11" fill="#898781" text-anchor="end" font-weight="normal">days</text>
+</svg>

@@ -1,9 +1,28 @@
 [
   {
+    "id": "simple-forecast-still-works",
+    "title": "It's 2026. Who Still Uses a Weighted Average?",
+    "title_zh": "都 2026 年了,谁还用加权平均?",
+    "summary": "I forecast daily volume for a cross-border e-commerce sorting warehouse with a 30-line EWMA plus day-of-week bias calibration. It beat every baseline (7.5% vs 12.3% MAPE) and keeps finish-time estimates within half an hour. A case for matching the tool to the problem in the LLM era.",
+    "summary_zh": "我给一个跨境电商分拣仓做日单量预测:30 行 EWMA 加按星期几的偏差校准,跑赢所有对照(MAPE 7.5% 对 12.3%),收工时间预估误差半小时以内。写给大模型时代的一个反方向案例:工具要配问题。",
+    "tags": [
+      "forecasting",
+      "python",
+      "operations"
+    ],
+    "publishedAt": "2026-07-29",
+    "status": "published",
+    "bodyHtmlFile": "content/bodies/simple-forecast-still-works.html"
+  },
+  {
     "id": "sync-docs-knowledge-base",
     "title": "Designing /sync-docs: A Cross-Project Knowledge Base for Claude Code",
     "summary": "A Claude Code slash command I designed to turn 311 scattered markdowns across 30+ projects into one cross-session memory file. The design decisions: what to deduplicate, how to pick a canonical copy, why context.md is capped at 2000 lines, why staleness is 90 days.",
-    "tags": ["tooling", "claude-code", "knowledge-base"],
+    "tags": [
+      "tooling",
+      "claude-code",
+      "knowledge-base"
+    ],
     "publishedAt": "2026-04-16",
     "status": "published",
     "bodyHtmlFile": "content/bodies/sync-docs-knowledge-base.html"
@@ -12,7 +31,11 @@
     "id": "agent-architecture",
     "title": "AI Agent Architecture Deep Dive",
     "summary": "How to build a tool-calling AI agent with Claude CLI: streaming, tool loops, context management, and SDK migration paths.",
-    "tags": ["AI", "agents", "architecture"],
+    "tags": [
+      "AI",
+      "agents",
+      "architecture"
+    ],
     "publishedAt": "2026-04-10",
     "status": "published",
     "bodyHtmlFile": "content/bodies/agent-architecture.html"
@@ -21,7 +44,11 @@
     "id": "spec-kit",
     "title": "Spec-Kit: Iteration, Planning, and TDD Notes",
     "summary": "How to rerun plans, write tests first, and keep SpecKit iterations traceable.",
-    "tags": ["process", "tdd", "spec-kit"],
+    "tags": [
+      "process",
+      "tdd",
+      "spec-kit"
+    ],
     "publishedAt": "2026-02-17",
     "status": "published",
     "bodyHtmlFile": "content/bodies/Spec-Kit.html"
@@ -30,7 +57,11 @@
     "id": "sniperbot-zero-to-one",
     "title": "SniperBot: Zero to One (Part 1)",
     "summary": "How we built a real-time Twitter sniper bot with AI, end to end, for non-coders.",
-    "tags": ["AI", "automation", "trading"],
+    "tags": [
+      "AI",
+      "automation",
+      "trading"
+    ],
     "publishedAt": "2026-02-05",
     "status": "published",
     "bodyHtmlFile": "content/bodies/SniperBot-Zero-To-One.html",
@@ -40,7 +71,11 @@
     "id": "nvidia-research",
     "title": "NVIDIA AI Infrastructure Research Report",
     "summary": "Rack-scale GB200 NVL72, cluster archetypes, deployment paths, costs, and supply chain.",
-    "tags": ["AI", "infrastructure", "research"],
+    "tags": [
+      "AI",
+      "infrastructure",
+      "research"
+    ],
     "publishedAt": "2026-02-11",
     "status": "published",
     "bodyHtmlFile": "content/bodies/NVIDIA-AI-Infrastructure-Research.html"

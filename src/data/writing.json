@@ -1,5 +1,21 @@
 [
   {
+    "id": "simple-forecast-still-works",
+    "title": "It's 2026. Who Still Uses a Weighted Average?",
+    "summary": "I forecast daily volume for a cross-border e-commerce sorting warehouse with a 30-line EWMA plus day-of-week bias calibration. It beat every baseline (7.5% vs 12.3% MAPE) and keeps finish-time estimates within half an hour. A case for matching the tool to the problem in the LLM era.",
+    "tags": [
+      "forecasting",
+      "python",
+      "operations"
+    ],
+    "publishedAt": "2026-07-29",
+    "url": "/blog/simple-forecast-still-works/",
+    "external": false,
+    "status": "published",
+    "title_zh": "都 2026 年了,谁还用加权平均?",
+    "summary_zh": "我给一个跨境电商分拣仓做日单量预测:30 行 EWMA 加按星期几的偏差校准,跑赢所有对照(MAPE 7.5% 对 12.3%),收工时间预估误差半小时以内。写给大模型时代的一个反方向案例:工具要配问题。"
+  },
+  {
     "id": "sync-docs-knowledge-base",
     "title": "Designing /sync-docs: A Cross-Project Knowledge Base for Claude Code",
     "title_zh": "设计 /sync-docs：给 Claude Code 做一个跨项目知识库",

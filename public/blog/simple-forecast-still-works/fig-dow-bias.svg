@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="288" viewBox="0 0 720 288" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+<rect width="720" height="288" rx="8" fill="#1a1a1a"/>
+<text x="20" y="28" font-size="15" fill="#ffffff" text-anchor="start" font-weight="600">平台预期偏低幅度,按星期几</text>
+<line x1="56" y1="184.0" x2="696" y2="184.0" stroke="#2c2c2a" stroke-width="1"/>
+<text x="48" y="188.0" font-size="11" fill="#898781" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">+10%</text>
+<line x1="56" y1="124.0" x2="696" y2="124.0" stroke="#2c2c2a" stroke-width="1"/>
+<text x="48" y="128.0" font-size="11" fill="#898781" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">+20%</text>
+<line x1="56" y1="64.0" x2="696" y2="64.0" stroke="#2c2c2a" stroke-width="1"/>
+<text x="48" y="68.0" font-size="11" fill="#898781" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">+30%</text>
+<rect x="89.7" y="109.3" width="24" height="134.7" rx="4" fill="#3987e5"/>
+<text x="101.71428571428572" y="102.3032023039199" font-size="12" fill="#ffffff" text-anchor="middle" font-weight="600" font-variant-numeric="tabular-nums">+22%</text>
+<text x="101.71428571428572" y="262" font-size="12" fill="#c3c2b7" text-anchor="middle" font-weight="normal">周一</text>
+<text x="101.71428571428572" y="278" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">n=12</text>
+<rect x="181.1" y="72.5" width="24" height="171.5" rx="4" fill="#3987e5"/>
+<text x="193.14285714285714" y="65.51248471349723" font-size="12" fill="#ffffff" text-anchor="middle" font-weight="600" font-variant-numeric="tabular-nums">+29%</text>
+<text x="193.14285714285714" y="262" font-size="12" fill="#c3c2b7" text-anchor="middle" font-weight="normal">周二</text>
+<text x="193.14285714285714" y="278" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">n=11</text>
+<rect x="272.6" y="172.5" width="24" height="71.5" rx="4" fill="#3987e5"/>
+<text x="284.57142857142856" y="165.4699359718677" font-size="12" fill="#ffffff" text-anchor="middle" font-weight="600" font-variant-numeric="tabular-nums">+12%</text>
+<text x="284.57142857142856" y="262" font-size="12" fill="#c3c2b7" text-anchor="middle" font-weight="normal">周三</text>
+<text x="284.57142857142856" y="278" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">n=11</text>
+<rect x="364.0" y="214.3" width="24" height="29.7" rx="4" fill="#3987e5"/>
+<text x="376.0" y="207.32454630894904" font-size="12" fill="#ffffff" text-anchor="middle" font-weight="600" font-variant-numeric="tabular-nums">+5%</text>
+<text x="376.0" y="262" font-size="12" fill="#c3c2b7" text-anchor="middle" font-weight="normal">周四</text>
+<text x="376.0" y="278" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">n=11</text>
+<rect x="455.4" y="208.6" width="24" height="35.4" rx="4" fill="#3987e5"/>
+<text x="467.42857142857144" y="201.6024406327904" font-size="12" fill="#ffffff" text-anchor="middle" font-weight="600" font-variant-numeric="tabular-nums">+6%</text>
+<text x="467.42857142857144" y="262" font-size="12" fill="#c3c2b7" text-anchor="middle" font-weight="normal">周五</text>
+<text x="467.42857142857144" y="278" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">n=12</text>
+<rect x="546.9" y="217.0" width="24" height="27.0" rx="4" fill="#3987e5"/>
+<text x="558.8571428571429" y="209.99784472091324" font-size="12" fill="#ffffff" text-anchor="middle" font-weight="600" font-variant-numeric="tabular-nums">+5%</text>
+<text x="558.8571428571429" y="262" font-size="12" fill="#c3c2b7" text-anchor="middle" font-weight="normal">周六</text>
+<text x="558.8571428571429" y="278" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">n=10</text>
+<rect x="638.3" y="120.7" width="24" height="123.3" rx="4" fill="#3987e5"/>
+<text x="650.2857142857143" y="113.67113972758493" font-size="12" fill="#ffffff" text-anchor="middle" font-weight="600" font-variant-numeric="tabular-nums">+21%</text>
+<text x="650.2857142857143" y="262" font-size="12" fill="#c3c2b7" text-anchor="middle" font-weight="normal">周日</text>
+<text x="650.2857142857143" y="278" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">n=12</text>
+<line x1="56" y1="244" x2="696" y2="244" stroke="#383835" stroke-width="1"/>
+</svg>

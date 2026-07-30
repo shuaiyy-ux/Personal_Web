@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="210" viewBox="0 0 720 210" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+<rect width="720" height="210" rx="8" fill="#1a1a1a"/>
+<text x="20" y="28" font-size="15" fill="#ffffff" text-anchor="start" font-weight="600">Mean error (MAPE), three methods</text>
+<text x="218" y="68.0" font-size="12" fill="#c3c2b7" text-anchor="end" font-weight="normal">Platform estimate as-is</text>
+<rect x="230" y="52" width="351.4" height="24" rx="4" fill="#4a4a47"/>
+<text x="591.4285714285713" y="68.0" font-size="13" fill="#c3c2b7" text-anchor="start" font-weight="600" font-variant-numeric="tabular-nums">12.3%</text>
+<text x="218" y="114.0" font-size="12" fill="#c3c2b7" text-anchor="end" font-weight="normal">History-only extrapolation</text>
+<rect x="230" y="98" width="270.9" height="24" rx="4" fill="#4a4a47"/>
+<text x="510.85714285714283" y="114.0" font-size="13" fill="#c3c2b7" text-anchor="start" font-weight="600" font-variant-numeric="tabular-nums">9.5%</text>
+<text x="218" y="160.0" font-size="12" fill="#ffffff" text-anchor="end" font-weight="600">Estimate + bias calibration</text>
+<rect x="230" y="144" width="215.1" height="24" rx="4" fill="#3987e5"/>
+<text x="455.1428571428571" y="160.0" font-size="13" fill="#ffffff" text-anchor="start" font-weight="600" font-variant-numeric="tabular-nums">7.5%</text>
+<line x1="230" y1="46" x2="230" y2="172" stroke="#383835" stroke-width="1"/>
+</svg>
