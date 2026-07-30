@@ -354,6 +354,17 @@
     grid-template-columns: repeat(2, 1fr);
     gap: var(--space-2);
   }
+
+  /* SVG figures carry fixed-size labels; below this width they keep a
+     readable size and scroll horizontally instead of shrinking to fit. */
+  .project-detail__body p:has(> img[src$='.svg']:only-child) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .project-detail__body p:has(> img[src$='.svg']:only-child) > img {
+    min-width: 680px;
+  }
 }
 
 /* -- Inline code -- */

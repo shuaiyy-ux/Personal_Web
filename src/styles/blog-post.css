@@ -50,6 +50,10 @@
 
 .blog-post__body {
   display: grid;
+  /* minmax(0, 1fr) keeps unbreakable children (min-width figures, long code
+     tokens, mermaid SVGs) from widening the entire grid track past its
+     container. Same guard as .project-detail__body. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
   color: var(--color-fg);
   line-height: var(--line-height-relaxed);
@@ -71,6 +75,12 @@
 }
 
 /* -- Headings ----------------------------------------------------------- */
+/* Post bodies open with the title as an H1; the page header already renders
+   it, so the body's leading H1 is hidden to avoid the duplicate. */
+.blog-post__body > h1:first-child {
+  display: none;
+}
+
 .blog-post__body h1 {
   font-size: var(--font-size-2xl);
   letter-spacing: var(--letter-spacing-tight);
@@ -245,6 +255,17 @@
     display: block;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* SVG figures carry fixed-size labels; below this width they keep a
+     readable size and scroll horizontally instead of shrinking to fit. */
+  .blog-post__body p:has(> img[src$='.svg']:only-child) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .blog-post__body p:has(> img[src$='.svg']:only-child) > img {
+    min-width: 680px;
   }
 
   .blog-post__body th {
