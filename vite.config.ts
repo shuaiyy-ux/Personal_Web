@@ -34,6 +34,7 @@ export default defineConfig({
         main: resolve(rootDir, 'index.html'),
         blog: resolve(rootDir, 'blog/index.html'),
         'finance-analyzer': resolve(rootDir, 'tools/finance-analyzer/index.html'),
+        zotlogic: resolve(rootDir, 'zotlogic/index.html'),
       },
     },
   },
